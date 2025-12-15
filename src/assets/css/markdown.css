@@ -1,0 +1,213 @@
+.md-content {
+  font-size: 16px;
+  line-height: 1.75;
+  overflow: auto;
+}
+
+.md-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.2rem auto;
+}
+
+.md-content p {
+  margin-bottom: 1.2rem;
+}
+
+.md-content ul {
+  margin: 1.2rem 0;
+}
+
+.md-content a {
+  font-weight: 500;
+  color: var(--md-c-green);
+  transition: color .25s;
+  text-decoration-style: dotted;
+}
+
+.md-content h2 {
+  margin: 2.4rem 0 1.2rem;
+  border-top: 1px solid var(--md-c-divider-light);
+  padding-top: 1.2rem;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+
+.md-content h3 {
+  font-size: 19px;
+  letter-spacing: -.01em;
+  margin: 1.2rem 0 1.2rem;
+}
+
+.md-content table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.md-content th,
+.md-content td {
+  border: 1px solid var(--md-c-divider-light-2);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.md-content thead th {
+  font-weight: 700;
+  text-align: left;
+  background-color: var(--md-c-divider-light-2);
+}
+
+.md-content :not(pre) > code {
+  background-color: var(--md-c-white-mute);
+  padding: .15em .5em;
+  border-radius: 4px;
+  color: var(--md-c-text-light-code);
+  transition: color .5s, background-color .5s;
+}
+
+.md-content .code-block {
+  position: relative;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.2rem 0;
+}
+
+.md-content .code-block pre {
+  margin: 0;
+  padding: 14px 0;
+  overflow-x: auto;
+}
+
+.md-content .code-block code {
+  display: block;
+  padding: 0 24px;
+  width: fit-content;
+  line-height: var(--md-doc-code-line-height);
+  font-size: var(--md-doc-code-font-size);
+}
+
+/* Badge language */
+.md-content .code-block .code-lang {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  z-index: 2;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color .5s;
+  color: var(--md-c-text-dark-3);
+}
+
+/* Copy button */
+.md-content .code-block .code-copy {
+  position: absolute;
+  display: block;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  align-items: center;
+  border: none;
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+  opacity: 0;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--md-c-text-dark-1);
+  transition: opacity .15s ease, background-color .15s ease;
+}
+
+.md-content .code-block .code-copy::before {
+  position: absolute;
+  content: 'Copied!';
+  right: 100%;
+  margin-right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--md-c-green-lighter);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.md-content .code-block:hover .code-copy {
+  opacity: 1;
+}
+
+.md-content .code-copy:hover {
+  background-color: var(--md-c-text-dark-4);
+}
+
+.md-content .code-copy.copied {
+  color: var(--md-c-green-lighter);
+}
+
+.md-content .code-copy.copied::before {
+  opacity: 1;
+}
+
+.md-content .md-custom-block {
+  position: relative;
+  margin: 28px 0;
+  padding: 20px 24px 4px 42px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #0000008c;
+  background-color: var(--md-c-white-soft);
+}
+
+.md-content .md-custom-block::before {
+  content: "ⓘ";
+  position: absolute;
+  font-weight: 600;
+  font-size: 15px;
+  top: 20px;
+  left: 17px;
+}
+
+.md-content .md-warning.md-custom-block::before {
+  content: "⚠";
+  font-size: 18px;
+  font-weight: 500;
+  top: 17px;
+  left: 16px;
+}
+
+.md-content .md-tip.md-custom-block {
+  border: 1px solid var(--md-c-green-lighter);
+}
+
+.md-content .md-tip.md-custom-block::before {
+  color: var(--md-c-green-lighter);
+}
+
+.md-content .md-warning.md-custom-block {
+  border: 1px solid var(--md-c-yellow);
+}
+
+.md-content .md-warning.md-custom-block::before {
+  color: var(--md-c-yellow);
+}
+
+.md-content .md-custom-block-title {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--md-c-text-light-1);
+  transition: color .5s;
+}
+
+.md-content .md-custom-block p {
+  margin-bottom: 16px;
+}

@@ -1,7 +1,10 @@
 <script setup>
-import { onBeforeMount } from 'vue'
+import { computed, onBeforeMount } from 'vue'
+import { useRoute, RouterView } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 
+const route = useRoute()
+const layout = computed(() => route.meta.layout || 'div')
 const docs = useDocsStore()
 
 onBeforeMount(async () => {
@@ -11,7 +14,9 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <div></div>
+  <component :is="layout">
+    <RouterView />
+  </component>
 </template>
 
 <style scoped></style>

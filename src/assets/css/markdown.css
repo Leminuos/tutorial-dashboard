@@ -211,3 +211,34 @@
 .md-content .md-custom-block p {
   margin-bottom: 16px;
 }
+
+@media (max-width: 960px) {
+  .md-content {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .md-content h2 {
+    font-size: 20px;
+  }
+
+  .md-content h3 {
+    font-size: 17px;
+  }
+
+  .md-content table {
+    font-size: 13px;
+  }
+
+  .md-content .md-custom-block {
+    font-size: 13px;
+  }
+
+  .md-content .md-custom-block-title {
+    font-size: 14px;
+  }
+
+  .md-content .code-block code {
+    font-size: 13px;
+  }
+}

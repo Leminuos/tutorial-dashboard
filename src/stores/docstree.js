@@ -70,9 +70,11 @@ async function fetchGithubToJson(url) {
 function titleFromFilename(filename) {
   const base = filename.replace(/\.md$/i, "")
 
-  return base
+  const text = base
     .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .toLowerCase()
+
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 function buildDocsTree(mdFiles) {

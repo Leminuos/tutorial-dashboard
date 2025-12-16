@@ -131,12 +131,20 @@ onBeforeUnmount(() => {
 <style scoped>
 .md-page {
   display: flex;
-  padding: 48px 0;
+  padding: 24px 0;
+}
+
+@media (min-width: 960px) {
+  .md-page {
+    padding: 48px 0;
+  }
 }
 
 .md-content {
+  display: block;
   max-width: 688px;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 .md-toc {

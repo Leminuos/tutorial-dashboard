@@ -46,8 +46,6 @@ const closeSidebarOnMobile = () => {
 
 function updateViewport() {
   isMobile.value = window.innerWidth < 960
-
-  if (!isMobile.value) sidebarOpen.value = true
 }
 
 onMounted(() => {

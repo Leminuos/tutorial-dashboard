@@ -3,6 +3,11 @@ import { useRoute, RouterLink } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 import { computed } from 'vue'
 
+const emit = defineEmits(['select'])
+const props = defineProps({
+  toggleSidebar: { type: Boolean, required: true }
+})
+
 const route = useRoute()
 const docs = useDocsStore()
 
@@ -14,7 +19,7 @@ const currentDoc = computed(() => {
 </script>
 
 <template>
-  <aside id="sidebar" class="docs-sidebar">
+  <aside id="sidebar" class="docs-sidebar" :class="{ active: props.toggleSidebar }">
     <div class="sidebar-header">
       <h1 class="header">{{ currentDoc?.title || "Unknown" }}</h1>
     </div>
@@ -31,6 +36,7 @@ const currentDoc = computed(() => {
         class="link"
         :class="{ active: page.id === route.params.page }"
         :to="`/docs/${currentDoc?.id}/${chapter.id}/${page.id}`"
+        @click="emit('select')"
         v-for="page in chapter?.pages"
       >
         <p class="link-text">
@@ -47,24 +53,29 @@ const currentDoc = computed(() => {
   top: 0;
   bottom: 0;
   left: 0;
-  background-color: var(---md-c-white);
+  z-index: 1000;
+  width: calc(var(--md-sidebar-expand) + 8px);
+  background-color: var(--md-c-white);
   border-right: 1px solid var(--md-c-divider-light-2);
-  transition: 0.5s ease-out;
   overflow: auto;
-  display: none;
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.docs-sidebar.active {
+  padding: 32px 16px;
+  transform: translateX(0);
 }
 
 @media (min-width: 960px) {
   .docs-sidebar {
-    display: block;
     padding: 32px 16px;
-    width: calc(var(--md-sidebar-expand) + 8px);
+    transform: translateX(0);
   }
 }
 
 @media (min-width: 1280px) {
   .docs-sidebar {
-    display: block;
     padding: 32px;
     width: calc(var(--md-sidebar-expand) + 32px);
   }

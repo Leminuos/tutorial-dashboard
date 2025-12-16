@@ -36,6 +36,7 @@
   --md-c-text-dark-3: rgba(235, 235, 235, .38);
   --md-c-text-dark-4: rgba(235, 235, 235, .18);
   --md-c-text-dark-code: var(--md-c-indigo-light);
+  --md-c-transparent: rgba(0, 0, 0, 0.35);
   --md-c-green: #42b883;
   --md-c-green-light: #42d392;
   --md-c-green-lighter: #35eb9a;

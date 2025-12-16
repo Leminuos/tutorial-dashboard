@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
 
 .md-toc {
   position: sticky;
-  top: calc(var(--md-nav-height) + 24px);
+  top: 24px;
   width: 224px;
   max-height: calc(100vh - 48px);
   overflow: auto;

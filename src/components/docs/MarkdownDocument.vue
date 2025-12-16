@@ -70,17 +70,26 @@ function onContentClick(e) {
 }
 
 watchEffect(async () => {
-  const res = await fetch(props.src)
-  const md_text = await res.text()
-  const md_url = res.url
-  const { html: rawHtml, toc } = render(md_text, md_url);
+  try {
+    const res = await fetch(props.src)
+    const md_text = await res.text()
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`);
 
-  html.value = await highlightMarkdownHtml(rawHtml, {
-    theme: 'one-dark-pro',
-    wrap: wrapShikiBlock
-  })
+    const md_url = res.url
+    const { html: rawHtml, toc } = render(md_text, md_url);
 
-  tocItems.value = toc
+    html.value = await highlightMarkdownHtml(rawHtml, {
+      theme: 'one-dark-pro',
+      wrap: wrapShikiBlock
+    })
+
+    tocItems.value = toc
+  } catch {
+    console.error("Fetch failed:", err)
+
+    html.value = "Loading..."
+    tocItems.value = []
+  }
 
   await nextTick()
   setupScrollSpy()

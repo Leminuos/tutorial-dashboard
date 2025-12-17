@@ -50,6 +50,11 @@ const onToc = () => {
   tocOpen.value = !tocOpen.value
 }
 
+const clockTocOnMobile = () => {
+  if (!isMobile.value) return
+  tocOpen.value = false
+}
+
 function updateViewport() {
   isMobile.value = window.innerWidth < 960
 }
@@ -88,6 +93,7 @@ onUnmounted(() => {
       :src="markdownSrc"
       :toc-active="tocOpen"
       :mobile="isMobile"
+      @select-toc="clockTocOnMobile"
     />
 
     <footer-document />

@@ -12,6 +12,8 @@ const props = defineProps({
   tocActive: { type: Boolean },
 })
 
+const emit = defineEmits(['select-toc'])
+
 const route = useRoute()
 const html = ref('Loading...')
 const tocItems = ref([])
@@ -127,6 +129,7 @@ onBeforeUnmount(() => {
           class="toc-link"
           :class="{ active: !props.mobile && item.id === activeId }"
           :style="{ paddingLeft: `${(item.level - 2) * 12}px` }"
+          @click="emit('select-toc')"
         >
           {{ item.text }}
         </a>

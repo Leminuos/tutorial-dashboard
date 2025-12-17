@@ -44,6 +44,8 @@ const currentDoc = computed(() => {
         </p>
       </router-link>
     </section>
+
+    <div class="sidebar-footer">Designed by Bui Nguyen</div>
   </aside>
 </template>
 
@@ -146,5 +148,13 @@ const currentDoc = computed(() => {
 .link:hover .link-text {
   color: var(--md-c-brand-text-1);
   transition: color .25s;
+}
+
+.sidebar-footer {
+  padding-top: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  border-top: 1px solid var(--md-c-divider-light-2);
+  color: var(--md-c-text-light-1);
 }
 </style>

@@ -83,6 +83,9 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
   margin-right: 15px;
   cursor: pointer;
   transition: color .5s;
+  user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
 }
 
 .this-page:hover {

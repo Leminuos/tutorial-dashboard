@@ -171,7 +171,7 @@ onBeforeUnmount(() => {
   position: fixed;
   top: calc(var(--md-nav-height) + 20px);
   left: 50%;
-  width: 100%;
+  width: calc(100% - 24px);
   max-width: 688px;
   max-height: calc(50vh - 48px);
   transform: translateX(-50%);

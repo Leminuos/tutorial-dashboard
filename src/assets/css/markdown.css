@@ -75,8 +75,8 @@
   border-radius: 50%;
   background-color: var(--md-c-text-light-3);
   transition: background-color .5s;
-  left: -2rem;
-  top: 1.2rem;
+  left: -1.8rem;
+  top: 1.1rem;
 }
 
 .md-content :not(pre) > code {

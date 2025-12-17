@@ -1,12 +1,12 @@
 <script setup>
-const emit = defineEmits(['toggle-sidebar'])
+const emit = defineEmits(['toggle-sidebar', 'this-page'])
 </script>
 
 <template>
   <header id="header" class="docs-navbar">
     <div class="container">
       <div class="toggle-sidebar" @click="emit('toggle-sidebar')"><span></span></div>
-      <div class="this-page">On this page</div>
+      <div class="this-page" @click="emit('this-page')">On this page</div>
     </div>
   </header>
 </template>
@@ -89,23 +89,9 @@ const emit = defineEmits(['toggle-sidebar'])
   color: var(--md-c-text-light-1);
 }
 
-@media (min-width: 1280px) {
-  .docs-navbar {
-    display: none;
-  }
-}
-
 @media (min-width: 960px) {
   .docs-navbar {
-    margin-left: calc(var(--md-sidebar-expand) + 8px);
-  }
-
-  .toggle-sidebar {
     display: none;
-  }
-
-  .container {
-    justify-content: end;
   }
 }
 

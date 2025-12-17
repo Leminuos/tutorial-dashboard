@@ -1,14 +1,18 @@
 <script setup>
 import '@/assets/css/markdown.css'
+import { useRoute } from 'vue-router'
 import { ref, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { createMarkdownRenderer } from '@/service/markdown/createMarkdownRenderer'
 import { useShikiHighlighter } from '@/service/shiki/useShikiHighlighter'
 import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
 
 const props = defineProps({
-  src: { type: String, required: true }
+  src: { type: String, required: true },
+  mobile: { type: Boolean },
+  tocActive: { type: Boolean },
 })
 
+const route = useRoute()
 const html = ref('Loading...')
 const tocItems = ref([])
 
@@ -91,8 +95,11 @@ watchEffect(async () => {
     tocItems.value = []
   }
 
-  await nextTick()
-  setupScrollSpy()
+  if (!props.mobile)
+  {
+    await nextTick()
+    setupScrollSpy()
+  }
 })
 
 onMounted(async () => {
@@ -109,16 +116,16 @@ onBeforeUnmount(() => {
   <div class="md-page">
     <article ref="contentEl" class="md-content" v-html="html"></article>
 
-    <aside class="md-toc">
+    <aside class="md-toc" :class="{popup: tocActive}">
       <div class="toc-title">MỤC LỤC</div>
 
       <nav class="toc-nav">
         <a
           v-for="item in tocItems"
           :key="item.id"
-          :href="'#' + item.id"
+          :href="`#/docs/${route.params.section}/${route.params.chapter}/${route.params.page}#${item.id}`"
           class="toc-link"
-          :class="{ active: item.id === activeId }"
+          :class="{ active: !props.mobile && item.id === activeId }"
           :style="{ paddingLeft: `${(item.level - 2) * 12}px` }"
         >
           {{ item.text }}
@@ -154,6 +161,28 @@ onBeforeUnmount(() => {
   max-height: calc(100vh - 48px);
   overflow: auto;
   display: none;
+}
+
+.md-toc.popup {
+  display: block;
+  position: fixed;
+  top: calc(var(--md-nav-height) + 20px);
+  left: 50%;
+  width: 100%;
+  max-width: 688px;
+  max-height: calc(50vh - 48px);
+  transform: translateX(-50%);
+  border-radius: 8px;
+  border: 1px solid var(--md-c-divider-light-1);
+  background-color: var(--md-c-white);
+  padding: 16px 20px;
+  overflow: auto;
+  box-shadow: var(--md-shadow-3);
+}
+
+.md-toc.popup .toc-title {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--md-c-divider-light-2);
 }
 
 .md-toc .toc-title {

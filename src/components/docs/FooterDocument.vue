@@ -10,7 +10,7 @@ const docs = useDocsStore()
 const nav = computed(() => {
   const list = docs.flatLists
 
-  if (!list.length) return { prev: null, next: null }
+  if (!list?.length) return { prev: null, next: null }
 
   const idx = list.findIndex((x) => x.chapterId === route.params.chapter && x.pageId === route.params.page)
   if (idx < 0) return { prev: null, next: null }

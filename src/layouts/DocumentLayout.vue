@@ -31,8 +31,9 @@ const markdownSrc = computed(() => {
   return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`
 })
 
-const sidebarOpen = ref(false)
+const tocOpen = ref(false)
 const isMobile = ref(false)
+const sidebarOpen = ref(false)
 
 const onToggleSidebar = () => {
   if (!isMobile.value) return
@@ -42,6 +43,11 @@ const onToggleSidebar = () => {
 const closeSidebarOnMobile = () => {
   if (!isMobile.value) return
   sidebarOpen.value = false
+}
+
+const onToc = () => {
+  if (!isMobile.value) return
+  tocOpen.value = !tocOpen.value
 }
 
 function updateViewport() {
@@ -61,7 +67,7 @@ onUnmounted(() => {
 
 <template>
   <!-- header -->
-  <header-document @toggle-sidebar="onToggleSidebar"/>
+  <header-document @toggle-sidebar="onToggleSidebar" @this-page="onToc"/>
 
   <!-- sidebar -->
   <div
@@ -78,7 +84,11 @@ onUnmounted(() => {
   <!-- Content -->
   <div id="content" class="docs-content">
 
-    <markdown-document :src="markdownSrc" />
+    <markdown-document
+      :src="markdownSrc"
+      :toc-active="tocOpen"
+      :mobile="isMobile"
+    />
 
     <footer-document />
 

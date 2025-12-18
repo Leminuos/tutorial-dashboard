@@ -104,10 +104,6 @@ onUnmounted(() => {
 
 <style scoped>
 
-.docs-content {
-  margin-top: var(--md-nav-height);
-}
-
 @media (max-width: 960px) {
   .sidebar-overlay {
     position: fixed;
@@ -119,7 +115,7 @@ onUnmounted(() => {
 
 @media (min-width: 960px) {
   .docs-content {
-    margin-top: 0;
+    margin-top: 36px;
     margin-left: calc(var(--md-sidebar-expand) + 8px);
     padding-right: 8px;
   }

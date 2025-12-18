@@ -17,7 +17,7 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
   top: 0;
   right: 0;
   left: 0;
-  z-index: 900;
+  z-index: 800;
   height: 40px;
   background-color: var(--md-c-white);
   border-bottom: 1px solid var(--md-c-divider-light-2);

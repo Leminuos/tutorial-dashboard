@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
 
 .md-toc {
   position: sticky;
-  top: 24px;
+  top: calc(var(--md-nav-height) + 12px);
   width: 224px;
   max-height: calc(100vh - 48px);
   overflow: auto;
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 .md-toc.popup {
   display: block;
   position: fixed;
-  top: calc(var(--md-nav-height) + 20px);
+  top: calc(var(--md-nav-height) + 60px);
   left: 50%;
   width: calc(100% - 24px);
   max-width: 688px;

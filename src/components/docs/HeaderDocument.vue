@@ -3,22 +3,22 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
 </script>
 
 <template>
-  <header id="header" class="docs-navbar">
+  <nav class="docs-navbar">
     <div class="container">
       <div class="toggle-sidebar" @click="emit('toggle-sidebar')"><span></span></div>
       <div class="this-page" @click="emit('this-page')">On this page</div>
     </div>
-  </header>
+  </nav>
 </template>
 
 <style scoped>
 .docs-navbar {
-  position: fixed;
+  position: sticky;
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1000;
-  height: var(--md-nav-height);
+  z-index: 900;
+  height: 40px;
   background-color: var(--md-c-white);
   border-bottom: 1px solid var(--md-c-divider-light-2);
   transition: 0.5s ease-out;

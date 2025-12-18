@@ -24,7 +24,7 @@ const nav = computed(() => {
 </script>
 
 <template>
-  <footer id="footer" class="docs-navfooter">
+  <nav class="docs-navfooter">
     <div class="navbar">
       <div class="nav-left">
         <RouterLink v-if="nav.prev" :to="nav.prev.to" class="nav-link">
@@ -40,7 +40,7 @@ const nav = computed(() => {
         </RouterLink>
       </div>
     </div>
-  </footer>
+  </nav>
 </template>
 
 <style scoped>

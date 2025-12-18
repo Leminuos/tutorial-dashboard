@@ -1,11 +1,24 @@
-import MarkdownDocument from '@/components/docs/MarkdownDocument.vue'
+import MarkdownComponent from '@/components/docs/MarkdownComponent.vue'
 import { defineAsyncComponent } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 const docs = [
   {
-    path: '/docs/:section/:chapter/:page',
+    path: '/docs/linux-kernel/',
     name: 'docs',
+    redirect: () => ({
+      name: 'page',
+      params: {
+        section: 'linux-kernel',
+        chapter: 'get-started',
+        page: 'vim-editor',
+      },
+    }),
+  },
+  {
+    path: '/docs/:section/:chapter/:page',
+    name: 'page',
+    component: MarkdownComponent,
     meta: {
       layout: defineAsyncComponent(() => import('@/layouts/DocumentLayout.vue'))
     },
@@ -15,11 +28,10 @@ const docs = [
 const routes = [
   {
     path: '/',
-    redirect: () => {
-      return {
-        path: "docs/linux-kernel/get-started/vim-editor",
-      }
-    }
+    name: 'home',
+    meta: {
+      layout: defineAsyncComponent(() => import('@/layouts/MainLayout.vue'))
+    },
   },
   {
     path: '/docs',

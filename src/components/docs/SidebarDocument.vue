@@ -71,6 +71,7 @@ const currentDoc = computed(() => {
 
 @media (min-width: 960px) {
   .docs-sidebar {
+    top: var(--md-nav-height);
     padding: 32px 16px;
     transform: translateX(0);
   }

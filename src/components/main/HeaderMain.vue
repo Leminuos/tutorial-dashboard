@@ -257,10 +257,10 @@ function onToggleDropdown()
 }
 
 .dropdown-item {
-  border-bottom: 1px solid var(--md-c-divider-light-1);
-  height: 40px;
+  padding: 12px 0;
   overflow: hidden;
   font-weight: 600;
+  border-bottom: 1px solid var(--md-c-divider-light-1);
   transition: border-color .5s;
   color: var(--md-c-text-light-1);
 }

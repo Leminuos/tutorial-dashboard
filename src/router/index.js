@@ -4,8 +4,20 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const docs = [
   {
+    path: '/docs/embedded/',
+    name: 'embedded',
+    redirect: () => ({
+      name: 'page',
+      params: {
+        section: 'embedded',
+        chapter: 'essential',
+        page: 'cortex-mx-overview',
+      },
+    }),
+  },
+  {
     path: '/docs/linux-kernel/',
-    name: 'docs',
+    name: 'linux',
     redirect: () => ({
       name: 'page',
       params: {

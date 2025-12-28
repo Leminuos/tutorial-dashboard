@@ -154,7 +154,7 @@ onBeforeUnmount(() => {
         <a
           v-for="item in tocItems"
           :key="item.id"
-          :href="`#/docs/${route.params.section}/${route.params.chapter}/${route.params.page}#${item.id}`"
+          :href="`#${item.id}`"
           class="toc-link"
           :class="{ active: !props.mobile && item.id === activeId }"
           :style="{ paddingLeft: `${(item.level - 2) * 12}px` }"

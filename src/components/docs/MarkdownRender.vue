@@ -5,6 +5,7 @@ import { ref, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { createMarkdownRenderer } from '@/service/markdown/createMarkdownRenderer'
 import { useShikiHighlighter } from '@/service/shiki/useShikiHighlighter'
 import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
+import { useCopyToClipboard } from '@/composables/useCopyToClipboard'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -24,11 +25,13 @@ const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
 
+const { copyToClipboard } = useCopyToClipboard()
+
 function wrapShikiBlock(shikiHtml, lang) {
   const safeLang = (lang || 'text').toLowerCase()
 
   return `
-    <div class="code-block"">
+    <div class="code-block">
       <span class="code-lang">${safeLang}</span>
       <button class="code-copy" type="button" aria-label="Copy code">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -40,76 +43,58 @@ function wrapShikiBlock(shikiHtml, lang) {
   `
 }
 
-async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(ta);
-    return ok;
-  }
-}
-
 function onContentClick(e) {
-  const btn = e.target.closest('.code-copy');
-  if (!btn) return;
+  const btn = e.target.closest('.code-copy')
+  if (!btn) return
 
-  const block = btn.closest('.code-block');
-  const pre = block?.querySelector('pre');
-  const code = pre?.textContent || '';
+  const block = btn.closest('.code-block')
+  const pre = block?.querySelector('pre')
+  const code = pre?.textContent || ''
 
   copyToClipboard(code).then((ok) => {
-    if (!ok) return;
+    if (!ok) return
 
-    btn.classList.add('copied');
+    btn.classList.add('copied')
     setTimeout(() => {
-      btn.classList.remove('copied');
-    }, 1200);
-  });
+      btn.classList.remove('copied')
+    }, 1200)
+  })
 }
 
 watchEffect(async () => {
   try {
     const res = await fetch(props.src)
     const md_text = await res.text()
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`)
 
     const md_url = res.url
-    const { html: rawHtml, toc } = render(md_text, md_url);
+    const { html: rawHtml, toc } = render(md_text, md_url)
 
     html.value = await highlightMarkdownHtml(rawHtml, {
       theme: 'one-dark-pro',
-      wrap: wrapShikiBlock
+      wrap: wrapShikiBlock,
     })
 
     tocItems.value = toc
-  } catch {
-    console.error("Fetch failed:", err)
+  } catch (err) {
+    console.error('Fetch failed:', err)
 
-    html.value = "Loading..."
+    html.value = 'Loading...'
     tocItems.value = []
   }
 
-  if (!props.mobile)
-  {
+  if (!props.mobile) {
     await nextTick()
     setupScrollSpy()
   }
 })
 
-onMounted(async () => {
-  contentEl.value?.addEventListener('click', onContentClick);
-});
+onMounted(() => {
+  contentEl.value?.addEventListener('click', onContentClick)
+})
 
 onBeforeUnmount(() => {
-  contentEl.value?.removeEventListener('click', onContentClick);
+  contentEl.value?.removeEventListener('click', onContentClick)
 })
 
 </script>

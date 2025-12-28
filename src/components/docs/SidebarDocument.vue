@@ -1,21 +1,14 @@
 <script setup>
 import { useRoute, RouterLink } from 'vue-router'
-import { useDocsStore } from '@/stores/useDocsTree'
-import { computed } from 'vue'
+import { useDocNavigation } from '@/composables/docs/useDocNavigation'
 
 const emit = defineEmits(['select'])
 const props = defineProps({
-  toggleSidebar: { type: Boolean, required: true }
+  toggleSidebar: { type: Boolean, required: true },
 })
 
 const route = useRoute()
-const docs = useDocsStore()
-
-const currentDoc = computed(() => {
-  const tree = docs.tree
-  if (!tree?.docs?.length) return null
-  return tree.docs.find((d) => String(d.id) === route.params.section) ?? null
-})
+const { currentDoc } = useDocNavigation()
 </script>
 
 <template>

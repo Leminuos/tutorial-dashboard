@@ -6,7 +6,17 @@ export const useDocsStore = defineStore('docs', {
     flatLists: null,
   }),
 
-  getters: {},
+  getters: {
+    /**
+     * Get a document by section ID
+     * @param {string} sectionId - Section ID
+     * @returns {object | null}
+     */
+    getDocBySectionId: (state) => (sectionId) => {
+      if (!state.tree?.docs?.length) return null
+      return state.tree.docs.find((d) => String(d.id) === String(sectionId)) ?? null
+    },
+  },
 
   actions: {
     async load() {

@@ -144,6 +144,10 @@ const currentDoc = computed(() => {
   font-weight: 500;
   color: var(--md-c-text-light-2);
   transition: color .5s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
 }
 
 .link:hover .link-text {

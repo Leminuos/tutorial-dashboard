@@ -61,6 +61,50 @@ function onContentClick(e) {
   })
 }
 
+function onTocClick(e) {
+  const link = e.target.closest('.toc-link')
+  if (!link) return
+
+  e.preventDefault()
+  emit('select-toc')
+
+  const href = link.getAttribute('href')
+  if (!href) return
+
+  // Extract the heading ID from href (format: #/docs/.../...#heading-id)
+  // The last part after the second # is the heading ID
+  const hashMatch = href.match(/#([^#]+)$/)
+  if (!hashMatch) return
+
+  const targetId = hashMatch[1]
+
+  // Wait for next tick to ensure DOM is ready
+  nextTick(() => {
+    const el = document.getElementById(targetId)
+    if (el) {
+      // Get header height from CSS variable
+      const headerHeight = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--md-nav-height') || '50'
+      )
+      const offset = headerHeight + 12 // Add some extra spacing
+
+      const elementPosition = el.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      })
+
+      // Update URL hash for proper navigation state
+      // Vue Router hash mode: the full route + anchor becomes #/route#anchor
+      const newHash = `#/docs/${route.params.section}/${route.params.chapter}/${route.params.page}#${targetId}`
+      window.history.replaceState(null, '', newHash)
+    }
+  })
+}
+
 watchEffect(async () => {
   try {
     const res = await fetch(props.src)
@@ -106,7 +150,7 @@ onBeforeUnmount(() => {
     <aside class="md-toc" :class="{popup: tocActive}">
       <div class="toc-title">MỤC LỤC</div>
 
-      <nav class="toc-nav">
+      <nav class="toc-nav" @click="onTocClick">
         <a
           v-for="item in tocItems"
           :key="item.id"
@@ -114,7 +158,6 @@ onBeforeUnmount(() => {
           class="toc-link"
           :class="{ active: !props.mobile && item.id === activeId }"
           :style="{ paddingLeft: `${(item.level - 2) * 12}px` }"
-          @click="emit('select-toc')"
         >
           {{ item.text }}
         </a>

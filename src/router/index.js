@@ -56,8 +56,39 @@ const router = createRouter({
   routes,
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
-    if (to.hash) return { el: to.hash, behavior: 'smooth' }
-    return { left: 0, top: 0 }
+
+    // Handle hash anchors on route change (e.g., direct navigation to URL with anchor)
+    // The double-hash format is: #/docs/.../...#heading-id
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const hash = window.location.hash
+        const hashMatch = hash.match(/#([^#]+)$/)
+        if (hashMatch) {
+          const targetId = hashMatch[1]
+          const el = document.getElementById(targetId)
+          if (el) {
+            // Get header height from CSS variable (default: 50px)
+            const headerHeight = parseInt(
+              getComputedStyle(document.documentElement)
+                .getPropertyValue('--md-nav-height') || '50'
+            )
+            const offset = headerHeight + 12 // Add some extra spacing
+
+            const elementPosition = el.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - offset
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth',
+            })
+
+            resolve({ left: 0, top: offsetPosition })
+            return
+          }
+        }
+        resolve({ left: 0, top: 0 })
+      }, 100)
+    })
   },
 })
 

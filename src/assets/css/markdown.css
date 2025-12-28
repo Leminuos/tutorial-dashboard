@@ -28,12 +28,20 @@
   padding-top: 1.2rem;
   font-size: 24px;
   letter-spacing: 0.02em;
+  scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h3 {
   font-size: 19px;
   letter-spacing: -.01em;
   margin: 1.2rem 0 1.2rem;
+  scroll-margin-top: calc(var(--md-nav-height) + 12px);
+}
+
+.md-content h4,
+.md-content h5,
+.md-content h6 {
+  scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content table {

@@ -20,6 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      - name: Verify submodule
+        run: |
+          test -d public/docs || (echo "Missing submodule at public/docs" && exit 1)
+          echo "Submodule OK. Listing:"
+          ls -la public/docs | head
 
       - name: Setup Node
         uses: actions/setup-node@v4

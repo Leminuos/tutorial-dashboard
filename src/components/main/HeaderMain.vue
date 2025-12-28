@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
-import { useDocsStore } from '@/stores/docstree'
+import { useDocsStore } from '@/stores/useDocsTree'
 import { ref } from 'vue';
 
 const docs = useDocsStore()

@@ -3,17 +3,12 @@ import HeaderDocument from '@/components/docs/HeaderDocument.vue'
 import FooterDocument from '@/components/docs/FooterDocument.vue'
 import SidebarDocument from '@/components/docs/SidebarDocument.vue'
 import MarkdownRender from '@/components/docs/MarkdownRender.vue'
-import githubConfig from '@/config/github.config'
 import { useRoute } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useDocsStore } from '@/stores/docstree'
+import { useDocsStore } from '@/stores/useDocsTree'
 
 const route = useRoute()
 const docs = useDocsStore()
-
-const OWNER     = githubConfig.github.owner  || "YOUR_OWNER"
-const REPO      = githubConfig.github.repo   || "YOUR_REPO"
-const BRANCH    = githubConfig.github.branch || "master"
 
 const markdownSrc = computed(() => {
   const tree = docs.tree
@@ -25,10 +20,10 @@ const markdownSrc = computed(() => {
   if (!chapter) return null
 
   const page = (chapter.pages).find((p) => String(p.id) === String(route.params.page))
-  if (!chapter) return null
+  if (!page) return null
 
   const path = page.path.split('/').map(seg => encodeURIComponent(seg)).join('/')
-  return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${path}`
+  return `${import.meta.env.BASE_URL}/docs/${path}`
 })
 
 const tocOpen = ref(false)

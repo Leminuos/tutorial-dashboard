@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeMount } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
-import { useDocsStore } from '@/stores/docstree'
+import { useDocsStore } from '@/stores/useDocsTree'
 
 const route = useRoute()
 const layout = computed(() => route.meta.layout || 'div')

@@ -1,7 +1,7 @@
 <script setup>
 
 import { useRoute, RouterLink } from 'vue-router'
-import { useDocsStore } from '@/stores/docstree'
+import { useDocsStore } from '@/stores/useDocsTree'
 import { computed } from 'vue'
 
 const route = useRoute()

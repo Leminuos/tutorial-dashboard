@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 
@@ -42,12 +42,52 @@ function getFileIcon(type) {
   return icons[type] || '📄'
 }
 
-function onTocClick() {
-  emit('select-toc')
-}
-
 function onExampleClick(example, file) {
   emit('select-example', { example, file })
+}
+
+function onTocClick(e) {
+  const link = e.target.closest('.toc-link')
+  if (!link) return
+
+  e.preventDefault()
+  emit('select-toc')
+
+  const href = link.getAttribute('href')
+  if (!href) return
+
+  // Extract the heading ID from href (format: #/docs/.../...#heading-id)
+  // The last part after the second # is the heading ID
+  const hashMatch = href.match(/#([^#]+)$/)
+  if (!hashMatch) return
+
+  const targetId = hashMatch[1]
+
+  // Wait for next tick to ensure DOM is ready
+  nextTick(() => {
+    const el = document.getElementById(targetId)
+    if (el) {
+      // Get header height from CSS variable
+      const headerHeight = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--md-nav-height') || '50'
+      )
+      const offset = headerHeight + 12 // Add some extra spacing
+
+      const elementPosition = el.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      })
+
+      // Update URL hash for proper navigation state
+      // Vue Router hash mode: the full route + anchor becomes #/route#anchor
+      const newHash = `#/docs/${route.params.section}/${route.params.chapter}/${route.params.page}#${targetId}`
+      window.history.replaceState(null, '', newHash)
+    }
+  })
 }
 </script>
 
@@ -56,7 +96,7 @@ function onExampleClick(example, file) {
     <!-- Table of Contents -->
     <section class="panel-section toc-section" v-if="toc.length">
       <h3 class="section-title">MỤC LỤC</h3>
-      <nav class="toc-nav">
+      <nav class="toc-nav" @click="onTocClick">
         <a
           v-for="item in toc"
           :key="item.id"
@@ -64,7 +104,6 @@ function onExampleClick(example, file) {
           class="toc-link"
           :class="{ active: item.id === tocActive }"
           :style="{ paddingLeft: `${(item.level - 2) * 12}px` }"
-          @click="onTocClick"
         >
           {{ item.text }}
         </a>

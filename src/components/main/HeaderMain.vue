@@ -1,9 +1,12 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
+import { useSearchStore } from '@/stores/searchStore'
 import { ref, computed, watch } from 'vue'
+import SearchModal from '@/components/search/SearchModal.vue'
 
 const docs = useDocsStore()
+const searchStore = useSearchStore()
 const isDropdownMobile = ref(false)
 const activeDropdown = ref(null)
 const expandedMobileSection = ref(null)
@@ -51,6 +54,10 @@ function onToggleMobileSection(docId) {
     expandedMobileSection.value = docId
   }
 }
+
+function openSearch() {
+  searchStore.open()
+}
 </script>
 
 <template>
@@ -64,7 +71,7 @@ function onToggleMobileSection(docId) {
 
       <div class="content">
         <!-- Search -->
-        <div class="search">
+        <button class="search" @click="openSearch">
           <div class="icon-search">
             <svg xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -82,7 +89,8 @@ function onToggleMobileSection(docId) {
             </svg>
           </div>
           <span class="search-title">Search</span>
-        </div>
+          <kbd class="search-shortcut">Ctrl K</kbd>
+        </button>
 
         <!-- Desktop Navbar -->
         <nav class="navbar">
@@ -198,6 +206,9 @@ function onToggleMobileSection(docId) {
       </div>
     </div>
   </header>
+
+  <!-- Search Modal -->
+  <SearchModal />
 </template>
 
 <style scoped>
@@ -357,10 +368,15 @@ function onToggleMobileSection(docId) {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: var(--md-nav-height);
+  padding: 0 12px;
   color: var(--md-c-text-light-2);
   font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
 .search:hover {
@@ -369,6 +385,17 @@ function onToggleMobileSection(docId) {
 
 .search-title {
   display: none;
+}
+
+.search-shortcut {
+  display: none;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--md-c-white-soft);
+  border: 1px solid var(--md-c-divider-light-2);
+  border-radius: 4px;
+  color: var(--md-c-text-light-2);
 }
 
 /* Hamburger button */
@@ -605,6 +632,10 @@ function onToggleMobileSection(docId) {
   }
 
   .search-title {
+    display: inline-block;
+  }
+
+  .search-shortcut {
     display: inline-block;
   }
 }

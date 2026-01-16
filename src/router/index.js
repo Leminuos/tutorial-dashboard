@@ -3,6 +3,9 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 
 // Lazy load views
+const HomeView = defineAsyncComponent(() =>
+  import('@/views/HomeView.vue')
+)
 const SidebarDocsView = defineAsyncComponent(() =>
   import('@/views/SidebarDocsView.vue')
 )
@@ -53,6 +56,7 @@ const routes = [
   {
     path: '/',
     name: 'home',
+    component: HomeView,
     meta: {
       layout: MainLayout
     }

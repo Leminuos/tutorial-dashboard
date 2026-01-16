@@ -99,11 +99,8 @@ watchEffect(async () => {
     tocItems.value = []
   }
 
-  if (!props.mobile)
-  {
-    await nextTick()
-    setupScrollSpy()
-  }
+  await nextTick()
+  setupScrollSpy()
 })
 
 onMounted(async () => {

@@ -112,13 +112,60 @@ onMounted(async () => {
 })
 
 watch(() => props.path, loadCode)
+
+// Copy and download functionality
+const copied = ref(false)
+
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(code.value)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+function downloadFile() {
+  const blob = new Blob([code.value], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = props.fileName || props.path.split('/').pop()
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
   <div class="code-viewer">
-    <div class="code-header" v-if="fileName">
-      <span class="file-icon">📄</span>
-      <span class="file-name">{{ fileName }}</span>
+    <div class="code-header">
+      <div class="header-left">
+        <span class="file-icon">📄</span>
+        <span class="file-name">{{ fileName }}</span>
+      </div>
+      <div class="header-actions" v-if="!loading && !error">
+        <button class="action-btn" @click="copyCode" :title="copied ? 'Đã copy!' : 'Copy code'">
+          <svg v-if="!copied" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#42b883" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </button>
+        <button class="action-btn" @click="downloadFile" title="Tải xuống">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">
@@ -147,12 +194,43 @@ watch(() => props.path, loadCode)
 .code-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   padding: 10px 16px;
   background: var(--md-c-white-soft);
   border-bottom: 1px solid var(--md-c-divider-light-2);
   font-size: 13px;
   font-weight: 500;
+  color: var(--md-c-text-light-1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--md-c-text-light-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: var(--md-c-divider-light-2);
   color: var(--md-c-text-light-1);
 }
 

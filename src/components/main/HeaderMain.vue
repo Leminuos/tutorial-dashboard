@@ -1,26 +1,69 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue'
 
 const docs = useDocsStore()
-const isDropdown = ref(0)
+const isDropdownMobile = ref(false)
+const activeDropdown = ref(null)
+const expandedMobileSection = ref(null)
 
-function onToggleDropdown()
-{
-  isDropdown.value = !isDropdown.value
+// Sidebar docs - show as direct links
+const sidebarDocs = computed(() => docs.sidebarDocs)
+
+// Dropdown docs - show with hover menu
+const dropdownDocs = computed(() => docs.dropdownDocs)
+
+// Disable body scroll when mobile dropdown is open
+watch(isDropdownMobile, (isOpen) => {
+  if (isOpen) {
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+  } else {
+    document.documentElement.style.overflow = ''
+    document.body.style.overflow = ''
+    document.body.style.touchAction = ''
+    document.body.style.position = ''
+    document.body.style.width = ''
+  }
+})
+
+function onToggleDropdown() {
+  isDropdownMobile.value = !isDropdownMobile.value
+  expandedMobileSection.value = null
 }
 
+function onMouseEnter(docId) {
+  activeDropdown.value = docId
+}
+
+function onMouseLeave() {
+  activeDropdown.value = null
+}
+
+function onToggleMobileSection(docId) {
+  if (expandedMobileSection.value === docId) {
+    expandedMobileSection.value = null
+  } else {
+    expandedMobileSection.value = docId
+  }
+}
 </script>
 
 <template>
   <header id="header" class="main-header">
     <div class="navbar-container">
+      <!-- Logo -->
       <router-link to="/" class="icon-link">
         <img src="/favicon.ico" width="36" height="36">
         <span class="text">Tutorial dashboard</span>
       </router-link>
+
       <div class="content">
+        <!-- Search -->
         <div class="search">
           <div class="icon-search">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -40,13 +83,55 @@ function onToggleDropdown()
           </div>
           <span class="search-title">Search</span>
         </div>
-        <div class="navbar">
-          <div class="navbar-item" v-for="(doc, index) in docs.tree.docs" :key="index">
+
+        <!-- Desktop Navbar -->
+        <nav class="navbar">
+          <!-- Sidebar docs - direct links -->
+          <div
+            class="navbar-item"
+            v-for="doc in sidebarDocs"
+            :key="doc.id"
+          >
             <router-link :to="`/docs/${doc.id}`">
               <span>{{ doc.title.toUpperCase() }}</span>
             </router-link>
           </div>
-        </div>
+
+          <!-- Dropdown docs - hover menus -->
+          <div
+            class="navbar-item dropdown-trigger"
+            v-for="doc in dropdownDocs"
+            :key="doc.id"
+            @mouseenter="onMouseEnter(doc.id)"
+            @mouseleave="onMouseLeave"
+          >
+            <router-link :to="`/docs/${doc.id}`" class="dropdown-label">
+              {{ doc.title.toUpperCase() }}
+              <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </router-link>
+
+            <!-- Dropdown menu - only show categories -->
+            <div
+              class="dropdown-menu"
+              v-show="activeDropdown === doc.id"
+            >
+              <router-link
+                v-for="cat in doc.categories"
+                :key="cat.id"
+                :to="`/docs/${doc.id}/${cat.id}`"
+                class="dropdown-category-link"
+                @click="onMouseLeave"
+              >
+                <span class="category-icon">📁</span>
+                <span class="category-title">{{ cat.title }}</span>
+              </router-link>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Mobile hamburger -->
         <div class="hamburger-btn" @click="onToggleDropdown">
           <span class="hamburger-container">
             <span class="hamburger-top"></span>
@@ -57,16 +142,61 @@ function onToggleDropdown()
       </div>
     </div>
 
-    <div class="dropdown-screen" :class="{ active: isDropdown }" @click="onToggleDropdown">
-      <div class="dropdown-container">
-        <div class="dropdown-item" v-for="(doc, index) in docs.tree.docs" :key="index">
-          <router-link :to="`/docs/${doc.id}`">
+    <!-- Mobile dropdown -->
+    <div class="mobile-dropdown" :class="{ active: isDropdownMobile }" @click="onToggleDropdown">
+      <div class="mobile-dropdown-container" @click.stop>
+        <!-- All docs in one list -->
+        <div class="mobile-section">
+          <div class="mobile-section-title">Documentation</div>
+
+          <!-- Sidebar docs - direct links -->
+          <router-link
+            v-for="doc in sidebarDocs"
+            :key="doc.id"
+            :to="`/docs/${doc.id}`"
+            class="mobile-item"
+            @click="onToggleDropdown"
+          >
             <span>{{ doc.title }}</span>
           </router-link>
+
+          <!-- Dropdown docs - expandable -->
+          <div
+            v-for="doc in dropdownDocs"
+            :key="doc.id"
+            class="mobile-expandable"
+          >
+            <button
+              class="mobile-item expandable"
+              :class="{ expanded: expandedMobileSection === doc.id }"
+              @click="onToggleMobileSection(doc.id)"
+            >
+              <span>{{ doc.title }}</span>
+              <svg class="expand-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <!-- Categories inside dropdown doc -->
+            <div
+              class="mobile-categories"
+              v-show="expandedMobileSection === doc.id"
+            >
+              <router-link
+                v-for="cat in doc.categories"
+                :key="cat.id"
+                :to="`/docs/${doc.id}/${cat.id}`"
+                class="mobile-category-link"
+                @click="onToggleDropdown"
+              >
+                <span class="category-icon">📁</span>
+                <span>{{ cat.title }}</span>
+              </router-link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
   </header>
 </template>
 
@@ -81,6 +211,11 @@ function onToggleDropdown()
   background-color: var(--md-c-white-soft);
   border-bottom: 1px solid var(--md-c-divider-light-2);
   transition: 0.5s ease-out;
+}
+
+/* When mobile dropdown is active, header becomes fixed */
+.main-header:has(.mobile-dropdown.active) {
+  position: fixed;
 }
 
 .navbar-container {
@@ -145,6 +280,7 @@ function onToggleDropdown()
 }
 
 .navbar-item {
+  position: relative;
   color: var(--md-c-text-light-1);
   font-size: 11px;
   font-weight: 500;
@@ -157,6 +293,66 @@ function onToggleDropdown()
   color: rgba(60, 60, 60, 0.7);
 }
 
+/* Dropdown trigger */
+.dropdown-trigger {
+  cursor: pointer;
+}
+
+.dropdown-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+}
+
+.dropdown-trigger:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 200px;
+  background: var(--md-c-white);
+  border: 1px solid var(--md-c-divider-light-2);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  z-index: 1001;
+}
+
+.dropdown-category-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--md-c-text-light-1);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.dropdown-category-link:hover {
+  background: var(--md-c-green);
+  color: white;
+}
+
+.dropdown-category-link .category-icon {
+  font-size: 16px;
+}
+
+.dropdown-category-link .category-title {
+  font-weight: 500;
+}
+
+/* Search */
 .search {
   display: flex;
   justify-content: center;
@@ -175,6 +371,7 @@ function onToggleDropdown()
   display: none;
 }
 
+/* Hamburger button */
 .hamburger-btn {
   width: 40px;
   height: var(--md-nav-height);
@@ -230,43 +427,147 @@ function onToggleDropdown()
   transform: translate(8px);
 }
 
-.dropdown-screen {
+/* Mobile dropdown */
+.mobile-dropdown {
   position: fixed;
-  top: calc(var(--md-nav-height) + 20px);
+  top: var(--md-nav-height);
   bottom: 0;
   right: 0;
   left: 0;
   width: 100%;
-  z-index: 999;
-  overflow-y: auto;
+  z-index: 998;
   display: none;
 }
 
-.dropdown-screen.active {
+.mobile-dropdown.active {
   display: block;
 }
 
-.dropdown-container {
-  margin: 0 auto;
-  padding: 24px 32px 96px 32px;
-  max-width: 288px;
-  border-radius: 8px;
-  border: 1px solid var(--md-c-divider-light-1);
-  background-color: var(--md-c-white);
-  box-shadow: var(--md-shadow-3);
+/* Overlay to block background content */
+.mobile-dropdown::before {
+  content: '';
+  position: fixed;
+  top: var(--md-nav-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-c-white);
+  z-index: -1;
 }
 
-.dropdown-item {
-  padding: 12px 0;
-  overflow: hidden;
+.mobile-dropdown-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  background: var(--md-c-white);
+  overflow-y: auto;
+}
+
+.mobile-section {
+  background: var(--md-c-white);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.mobile-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--md-c-green);
+  margin-bottom: 16px;
+}
+
+.mobile-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  margin: 0 -16px;
+  font-size: 16px;
   font-weight: 600;
-  border-bottom: 1px solid var(--md-c-divider-light-1);
-  transition: border-color .5s;
   color: var(--md-c-text-light-1);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  width: calc(100% + 32px);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
-.dropdown-item:hover {
+.mobile-item:hover,
+.mobile-item:active {
+  background: var(--md-c-white-soft);
+  color: var(--md-c-green);
+}
+
+.mobile-item.expandable {
+  font-weight: 600;
+}
+
+.mobile-item .expand-icon {
+  opacity: 0.5;
+  transition: all 0.25s ease;
+}
+
+.mobile-item.expanded {
+  color: var(--md-c-green);
+  background: var(--md-c-white-soft);
+}
+
+.mobile-item.expanded .expand-icon {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.mobile-expandable {
+  width: 100%;
+}
+
+.mobile-categories {
+  padding: 8px 0 0 12px;
+  margin-left: 8px;
+  border-left: 2px solid var(--md-c-divider-light-2);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-category-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 4px 0;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--md-c-text-light-2);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobile-category-link:hover,
+.mobile-category-link:active {
+  background: var(--md-c-green);
+  color: white;
+}
+
+.mobile-category-link .category-icon {
+  font-size: 16px;
 }
 
 @media (min-width: 960px) {
@@ -292,20 +593,19 @@ function onToggleDropdown()
 
   .navbar {
     display: flex;
-    gap: 10px;
+    gap: 20px;
   }
 
   .hamburger-btn {
     display: none;
   }
 
-  .dropdown-screen {
-    display: none;
+  .mobile-dropdown {
+    display: none !important;
   }
 
   .search-title {
     display: inline-block;
   }
 }
-
 </style>

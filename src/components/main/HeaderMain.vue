@@ -10,14 +10,9 @@ const docs = useDocsStore()
 const searchStore = useSearchStore()
 const themeStore = useThemeStore()
 const isDropdownMobile = ref(false)
-const activeDropdown = ref(null)
-const expandedMobileSection = ref(null)
 
 // Tutorial docs - show as direct links
 const tutorialDocs = computed(() => docs.tutorialDocs)
-
-// Folder docs - show with hover menu
-const folderDocs = computed(() => docs.folderDocs)
 
 // Disable body scroll when mobile dropdown is open
 watch(isDropdownMobile, (isOpen) => {
@@ -38,23 +33,6 @@ watch(isDropdownMobile, (isOpen) => {
 
 function onToggleDropdown() {
   isDropdownMobile.value = !isDropdownMobile.value
-  expandedMobileSection.value = null
-}
-
-function onMouseEnter(docId) {
-  activeDropdown.value = docId
-}
-
-function onMouseLeave() {
-  activeDropdown.value = null
-}
-
-function onToggleMobileSection(docId) {
-  if (expandedMobileSection.value === docId) {
-    expandedMobileSection.value = null
-  } else {
-    expandedMobileSection.value = docId
-  }
 }
 
 function openSearch() {
@@ -107,37 +85,11 @@ function openSearch() {
             </router-link>
           </div>
 
-          <!-- Folder docs - hover menus -->
-          <div
-            class="navbar-item dropdown-trigger"
-            v-for="doc in folderDocs"
-            :key="doc.id"
-            @mouseenter="onMouseEnter(doc.id)"
-            @mouseleave="onMouseLeave"
-          >
-            <router-link :to="`/docs/${doc.id}`" class="dropdown-label">
-              {{ doc.title.toUpperCase() }}
-              <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+          <!-- Explorer Link -->
+          <div class="navbar-item">
+            <router-link to="/explorer" class="explorer-link" title="File Explorer">
+              FILE EXPLORER
             </router-link>
-
-            <!-- Dropdown menu - show top-level folders -->
-            <div
-              class="dropdown-menu"
-              v-show="activeDropdown === doc.id"
-            >
-              <router-link
-                v-for="folder in doc.children?.filter(c => c.type === 'folder')"
-                :key="folder.id"
-                :to="`/docs/${doc.id}/${folder.id}`"
-                class="dropdown-category-link"
-                @click="onMouseLeave"
-              >
-                <span class="category-icon">📁</span>
-                <span class="category-title">{{ folder.title }}</span>
-              </router-link>
-            </div>
           </div>
 
           <!-- Theme switch -->
@@ -187,41 +139,17 @@ function openSearch() {
           >
             <span>{{ doc.title }}</span>
           </router-link>
+        </div>
 
-          <!-- Folder docs - expandable -->
-          <div
-            v-for="doc in folderDocs"
-            :key="doc.id"
-            class="mobile-expandable"
+        <!-- Explorer Link Mobile -->
+        <div class="mobile-explorer-section">
+          <router-link
+            to="/explorer"
+            class="mobile-explorer-item"
+            @click="onToggleDropdown"
           >
-            <button
-              class="mobile-item expandable"
-              :class="{ expanded: expandedMobileSection === doc.id }"
-              @click="onToggleMobileSection(doc.id)"
-            >
-              <span>{{ doc.title }}</span>
-              <svg class="expand-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-
-            <!-- Top-level folders inside folder doc -->
-            <div
-              class="mobile-categories"
-              v-show="expandedMobileSection === doc.id"
-            >
-              <router-link
-                v-for="folder in doc.children?.filter(c => c.type === 'folder')"
-                :key="folder.id"
-                :to="`/docs/${doc.id}/${folder.id}`"
-                class="mobile-category-link"
-                @click="onToggleDropdown"
-              >
-                <span class="category-icon">📁</span>
-                <span>{{ folder.title }}</span>
-              </router-link>
-            </div>
-          </div>
+            <span class="mobile-explorer-title">File explorer</span>
+          </router-link>
         </div>
 
         <!-- Mobile Theme Switch -->
@@ -343,63 +271,13 @@ function openSearch() {
   color: var(--md-c-text-3);
 }
 
-/* Dropdown trigger */
-.dropdown-trigger {
-  cursor: pointer;
-}
-
-.dropdown-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.dropdown-arrow {
-  transition: transform 0.2s;
-}
-
-.dropdown-trigger:hover .dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-/* Dropdown menu */
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 200px;
-  background: var(--md-c-bg);
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  z-index: 1001;
-}
-
-.dropdown-category-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
-  color: var(--md-c-text-1);
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.dropdown-category-link:hover {
-  background: var(--md-c-brand);
-  color: white;
-}
-
-.dropdown-category-link .category-icon {
+.explorer-icon {
   font-size: 16px;
 }
 
-.dropdown-category-link .category-title {
-  font-weight: 500;
+.explorer-icon-mobile {
+  font-size: 16px;
+  margin-right: 12px;
 }
 
 /* Search */
@@ -447,7 +325,6 @@ function openSearch() {
 .theme-switch {
   display: none;
   align-items: center;
-  margin-left: 8px;
   cursor: pointer;
 }
 
@@ -624,71 +501,6 @@ function openSearch() {
   color: var(--md-c-brand);
 }
 
-.mobile-item.expandable {
-  font-weight: 600;
-}
-
-.mobile-item .expand-icon {
-  opacity: 0.5;
-  transition: all 0.25s ease;
-}
-
-.mobile-item.expanded {
-  color: var(--md-c-brand);
-  background: var(--md-c-bg-soft);
-}
-
-.mobile-item.expanded .expand-icon {
-  transform: rotate(180deg);
-  opacity: 1;
-}
-
-.mobile-expandable {
-  width: 100%;
-}
-
-.mobile-categories {
-  padding: 8px 0 0 12px;
-  margin-left: 8px;
-  border-left: 2px solid var(--md-c-divider-light);
-  animation: slideDown 0.2s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.mobile-category-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  margin: 4px 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--md-c-text-2);
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.mobile-category-link:hover,
-.mobile-category-link:active {
-  background: var(--md-c-brand);
-  color: white;
-}
-
-.mobile-category-link .category-icon {
-  font-size: 16px;
-}
-
 @media (min-width: 960px) {
   .main-header {
     position: fixed;
@@ -737,7 +549,8 @@ function openSearch() {
 }
 
 /* Mobile Theme Section */
-.mobile-theme-section {
+.mobile-theme-section,
+.mobile-explorer-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -747,10 +560,19 @@ function openSearch() {
   border-radius: 12px;
 }
 
-.mobile-theme-label {
+.mobile-theme-label,
+.mobile-explorer-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--md-c-text-1);
+}
+
+.mobile-explorer-section:hover {
+  background: var(--md-c-bg-mute);
+}
+
+.mobile-explorer-section:hover .mobile-explorer-title {
+  color: var(--md-c-brand);
 }
 
 .mobile-theme-switch {

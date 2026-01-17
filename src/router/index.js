@@ -12,6 +12,9 @@ const TutorialDocsView = defineAsyncComponent(() =>
 const FolderDocsView = defineAsyncComponent(() =>
   import('@/views/FolderDocsView.vue')
 )
+const FileExplorerLanding = defineAsyncComponent(() =>
+  import('@/views/FileExplorerLanding.vue')
+)
 
 // Layouts
 const DocumentLayout = defineAsyncComponent(() =>
@@ -62,43 +65,17 @@ const routes = [
     }
   },
 
-  // Docs section redirect
+  // File Explorer Landing
   {
-    path: '/docs/:section',
-    name: 'docs-section',
-    redirect: (to) => {
-      const sectionId = to.params.section
-
-      // Check if tutorial doc - redirect to first page
-      if (isTutorialDoc(sectionId)) {
-        const defaultPage = getDefaultTutorialPage(sectionId)
-        if (defaultPage) {
-          return {
-            name: 'tutorial-page',
-            params: defaultPage
-          }
-        }
-      }
-
-      // Folder doc - go to landing page
-      return {
-        name: 'folder-landing',
-        params: { section: sectionId }
-      }
-    }
-  },
-
-  // Folder docs landing: /docs/:section/landing
-  {
-    path: '/docs/:section/landing',
-    name: 'folder-landing',
-    component: FolderDocsView,
+    path: '/explorer',
+    name: 'file-explorer',
+    component: FileExplorerLanding,
     meta: {
-      layout: DocumentLayout
+      layout: MainLayout
     }
   },
 
-  // Tutorial docs: /docs/:section/:chapter/:page (must come before catch-all)
+  // Tutorial docs: /docs/:section/:chapter/:page
   {
     path: '/docs/:section/:chapter/:page',
     name: 'tutorial-page',
@@ -107,14 +84,63 @@ const routes = [
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
+      // Ensure it is a tutorial doc
       if (!isTutorialDoc(to.params.section)) {
-        // Not a tutorial doc, redirect to folder view with path
+        // Redirect to folder view (root path) logic if accidentally hit
+        next(`/${to.params.section}`)
+      } else {
+        next()
+      }
+    }
+  },
+
+  // Tutorial Doc Redirect: /docs/:section -> Redirect to first page if tutorial
+  {
+    path: '/docs/:section',
+    name: 'docs-section',
+    beforeEnter: (to, from, next) => {
+      const sectionId = to.params.section
+
+      if (isTutorialDoc(sectionId)) {
+        const defaultPage = getDefaultTutorialPage(sectionId)
+        if (defaultPage) {
+          next({
+            name: 'tutorial-page',
+            params: defaultPage
+          })
+          return
+        }
+      }
+
+      // If not tutorial, maybe it's a folder doc accessed via old link?
+      // Redirect to new root path
+      next(`/${sectionId}`)
+    }
+  },
+
+  // Folder Doc Landing: /:section
+  // Must be after other root routes
+  {
+    path: '/:section',
+    name: 'folder-root',
+    component: FolderDocsView,
+    meta: {
+      layout: DocumentLayout
+    },
+    beforeEnter: (to, from, next) => {
+      // Check if this is a valid doc section
+      const docs = useDocsStore()
+      const doc = docs.getDocById(to.params.section)
+
+      if (!doc) {
+        next()
+        return
+      }
+
+      if (doc.layout === 'tutorial') {
         next({
-          name: 'folder-path',
-          params: {
-            section: to.params.section,
-            path: `${to.params.chapter}/${to.params.page}`
-          }
+          name: 'docs-section',
+          params: { section: to.params.section }
         })
       } else {
         next()
@@ -122,58 +148,24 @@ const routes = [
     }
   },
 
-  // Folder docs with dynamic path (catch-all for 1+ segments after section)
-  // This matches paths like /docs/project/smart-farm or /docs/project/smart-farm/yocto
+  // Folder Doc Deep Link: /:section/:path+
   {
-    path: '/docs/:section/:path+',
+    path: '/:section/:path+',
     name: 'folder-path',
     component: FolderDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      // If this is a tutorial doc, redirect appropriately
-      if (isTutorialDoc(to.params.section)) {
-        // Parse path - it could be an array or string depending on Vue Router version
-        const pathParts = Array.isArray(to.params.path)
-          ? to.params.path
-          : to.params.path.split('/').filter(Boolean)
+       const docs = useDocsStore()
+       const doc = docs.getDocById(to.params.section)
 
-        if (pathParts.length >= 2) {
-          // Has chapter and page
-          next({
-            name: 'tutorial-page',
-            params: {
-              section: to.params.section,
-              chapter: pathParts[0],
-              page: pathParts[1]
-            }
-          })
-        } else if (pathParts.length === 1) {
-          // Has only chapter, redirect to first page
-          const docs = useDocsStore()
-          const doc = docs.getDocById(to.params.section)
-          const chapter = doc?.chapters?.find(c => c.id === pathParts[0])
-          const firstPage = chapter?.pages?.[0]
-          if (firstPage) {
-            next({
-              name: 'tutorial-page',
-              params: {
-                section: to.params.section,
-                chapter: pathParts[0],
-                page: firstPage.id
-              }
-            })
-          } else {
-            next()
-          }
-        } else {
-          next()
-        }
-      } else {
-        // Folder doc - proceed with file explorer view
-        next()
-      }
+       if (doc && doc.layout === 'tutorial') {
+         const path = Array.isArray(to.params.path) ? to.params.path.join('/') : to.params.path
+         next(`/docs/${to.params.section}/${path}`)
+       } else {
+         next()
+       }
     }
   }
 ]

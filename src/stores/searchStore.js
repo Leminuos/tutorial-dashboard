@@ -57,7 +57,7 @@ export const useSearchStore = defineStore('search', () => {
               title: child.title || child.name,
               section: doc.title,
               chapter: parentTitle,
-              path: `/docs/${doc.id}/${childPath}`,
+              path: `/${doc.id}/${childPath}`,
               type: 'folder'
             })
             // Recurse into subfolder
@@ -69,7 +69,7 @@ export const useSearchStore = defineStore('search', () => {
               title: child.title || child.name,
               section: doc.title,
               chapter: parentTitle,
-              path: `/docs/${doc.id}/${parentPath || ''}`,
+              path: `/${doc.id}/${childPath}`,
               type: 'file',
               rawPath: child.path
             })

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 
 import FileViewer from '@/components/viewers/FileViewer.vue'
@@ -47,10 +47,16 @@ const files = computed(() => currentItems.value.filter(item => item.type === 'fi
 // Breadcrumb
 const breadcrumb = computed(() => {
   const parts = []
+
+  parts.push({
+    text: 'Root',
+    to: '/explorer'
+  })
+
   if (currentDoc.value) {
     parts.push({
       text: currentDoc.value.title,
-      to: `/docs/${currentDoc.value.id}/landing`
+      to: `/${currentDoc.value.id}`
     })
   }
 
@@ -62,7 +68,7 @@ const breadcrumb = computed(() => {
     if (node) {
       parts.push({
         text: node.title || node.name,
-        to: `/docs/${currentDoc.value?.id}/${currentPath}`
+        to: `/${currentDoc.value?.id}/${currentPath}`
       })
     }
   }
@@ -84,6 +90,7 @@ function getFileIcon(type) {
     pdf: '📕',
     excel: '📊',
     powerpoint: '📽️',
+    word: '📝',
     code: '💻',
     image: '🖼️'
   }
@@ -96,6 +103,7 @@ function getFileColor(type) {
     pdf: '#e53935',
     excel: '#2e7d32',
     powerpoint: '#ff6d00',
+    word: '#2b579a',
     code: '#1976d2',
     image: '#9c27b0'
   }
@@ -113,15 +121,29 @@ function getFolderLink(folder) {
     pathString = currentPath || ''
   }
   const newPath = pathString ? `${pathString}/${folder.id}` : folder.id
-  return `/docs/${route.params.section}/${newPath}`
+  return `/${route.params.section}/${newPath}`
 }
 
 function selectFile(file) {
   selectedFile.value = file
 }
 
+const router = useRouter()
+
 function closeViewer() {
-  selectedFile.value = null
+  if (selectedFile.value) {
+    // If we are at a file path (currentNode is file), go up
+    if (currentNode.value?.type === 'file') {
+      const currentPath = pathSegments.value
+      // Remove last segment (filename)
+      const parentPath = currentPath.slice(0, -1).join('/')
+      const separator = parentPath ? '/' : ''
+      router.push(`/${route.params.section}${separator}${parentPath}`)
+    } else {
+      // Just clear selection if we are in a folder view
+      selectedFile.value = null
+    }
+  }
 }
 
 // Get child count for a folder
@@ -134,10 +156,16 @@ function getChildCount(folder) {
   return parts.join(', ') || 'Empty'
 }
 
-// Close viewer on route change
-watch(() => route.params, () => {
-  selectedFile.value = null
-})
+// Auto-select file if currentNode is a file
+watch(currentNode, (node) => {
+  if (node && node.type === 'file') {
+    selectedFile.value = node
+  } else {
+    // Only clear if we are not navigating to another file
+    // Wait, if node is folder, we should clear
+    selectedFile.value = null
+  }
+}, { immediate: true })
 </script>
 
 <template>

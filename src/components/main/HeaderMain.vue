@@ -10,9 +10,13 @@ const docs = useDocsStore()
 const searchStore = useSearchStore()
 const themeStore = useThemeStore()
 const isDropdownMobile = ref(false)
+const expandedMobileSection = ref(null)
 
-// Tutorial docs - show as direct links
+// Tutorial docs
 const tutorialDocs = computed(() => docs.tutorialDocs)
+
+// Post docs
+const postDocs = computed(() => docs.postDocs)
 
 // Disable body scroll when mobile dropdown is open
 watch(isDropdownMobile, (isOpen) => {
@@ -33,6 +37,15 @@ watch(isDropdownMobile, (isOpen) => {
 
 function onToggleDropdown() {
   isDropdownMobile.value = !isDropdownMobile.value
+  expandedMobileSection.value = null
+}
+
+function toggleMobileExpand(docId) {
+  if (expandedMobileSection.value === docId) {
+    expandedMobileSection.value = null
+  } else {
+    expandedMobileSection.value = docId
+  }
 }
 
 function openSearch() {
@@ -85,6 +98,31 @@ function openSearch() {
             </router-link>
           </div>
 
+          <!-- Dropdown items (Posts only) -->
+          <div class="navbar-item dropdown-trigger" v-for="post in postDocs" :key="post.id">
+            <div class="dropdown-label">
+              <span>{{ post.title.toUpperCase() }}</span>
+              <svg class="dropdown-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div class="dropdown-menu" v-if="post.children && post.children.length">
+              <router-link
+                v-for="child in post.children.filter(c => c.type === 'folder')"
+                :key="child.id"
+                :to="`/posts/${post.id}/${child.id}`"
+                class="dropdown-category-link"
+              >
+                <span class="category-title">{{ child.title || child.name }}</span>
+                <svg class="category-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </router-link>
+            </div>
+          </div>
+
           <!-- Explorer Link -->
           <div class="navbar-item">
             <router-link to="/explorer" class="explorer-link" title="File Explorer">
@@ -130,15 +168,43 @@ function openSearch() {
           <div class="mobile-section-title">Documentation</div>
 
           <!-- Tutorial docs - direct links -->
-          <router-link
+          <div
             v-for="doc in tutorialDocs"
             :key="doc.id"
-            :to="`/docs/${doc.id}`"
             class="mobile-item"
             @click="onToggleDropdown"
           >
             <span>{{ doc.title }}</span>
-          </router-link>
+          </div>
+
+          <!-- Posts Docs - expandable -->
+          <div v-for="post in postDocs" :key="post.id" class="mobile-expandable">
+            <div
+              class="mobile-item expandable"
+              :class="{ expanded: expandedMobileSection === post.id }"
+              @click="toggleMobileExpand(post.id)"
+            >
+               <span class="mobile-item-text">{{ post.title }}</span>
+               <svg class="mobile-arrow" :class="{ expanded: expandedMobileSection === post.id }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                 <polyline points="6 9 12 15 18 9"></polyline>
+               </svg>
+            </div>
+
+            <div class="mobile-categories" v-show="expandedMobileSection === post.id">
+              <router-link
+                v-for="child in post.children.filter(c => c.type === 'folder')"
+                :key="child.id"
+                :to="`/posts/${post.id}/${child.id}`"
+                class="mobile-sub-item"
+                @click="onToggleDropdown"
+              >
+                <span class="category-title">{{ child.title || child.name }}</span>
+                <svg class="category-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </router-link>
+            </div>
+          </div>
         </div>
 
         <!-- Explorer Link Mobile -->
@@ -271,6 +337,79 @@ function openSearch() {
   color: var(--md-c-text-3);
 }
 
+/* Dropdown trigger */
+.dropdown-trigger {
+  cursor: pointer;
+}
+
+.dropdown-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dropdown-arrow {
+  transition: transform 0.2s;
+}
+
+.dropdown-trigger:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-trigger:hover .dropdown-menu {
+  display: block;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 280px;
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  z-index: 1001;
+  display: none;
+}
+
+.dropdown-category-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--md-c-text-1);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.dropdown-category-link:hover {
+  background: var(--md-c-brand);
+  color: white;
+}
+
+.dropdown-category-link .category-title {
+  font-weight: 500;
+  flex: 1;
+}
+
+.dropdown-category-link .category-arrow {
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.dropdown-category-link:hover .category-arrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* Explorer */
 .explorer-icon {
   font-size: 16px;
 }
@@ -499,6 +638,83 @@ function openSearch() {
 .mobile-item:active {
   background: var(--md-c-bg-soft);
   color: var(--md-c-brand);
+}
+
+.mobile-item.expandable {
+  font-weight: 600;
+}
+
+.mobile-item .expand-icon {
+  opacity: 0.5;
+  transition: all 0.25s ease;
+}
+
+.mobile-item.expanded {
+  color: var(--md-c-brand);
+  background: var(--md-c-bg-soft);
+}
+
+.mobile-item.expanded .expand-icon {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.mobile-expandable {
+  width: 100%;
+}
+
+.mobile-categories {
+  padding: 8px 0 0 12px;
+  margin-left: 8px;
+  border-left: 2px solid var(--md-c-divider-light);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-sub-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-c-text-2);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.mobile-sub-item:hover,
+.mobile-sub-item:active {
+  background: var(--md-c-brand);
+  color: white;
+}
+
+.mobile-sub-item .category-title {
+  flex: 1;
+}
+
+.mobile-sub-item .category-arrow {
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.mobile-sub-item:hover .category-arrow,
+.mobile-sub-item:active .category-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 @media (min-width: 960px) {

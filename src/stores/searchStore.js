@@ -43,29 +43,25 @@ export const useSearchStore = defineStore('search', () => {
 
     // Index folder docs (recursive tree structure)
     for (const doc of docs.folderDocs) {
-      // Recursive function to index all children
-      function indexChildren(node, parentPath, parentTitle) {
+      function indexFolderChildren(node, parentPath, parentTitle) {
         if (!node.children) return
 
         for (const child of node.children) {
           const childPath = parentPath ? `${parentPath}/${child.id}` : child.id
 
           if (child.type === 'folder') {
-            // Index folder
             index.push({
-              id: `${doc.id}-${childPath.replace(/\//g, '-')}`,
+              id: `folder-${doc.id}-${childPath.replace(/\//g, '-')}`,
               title: child.title || child.name,
               section: doc.title,
               chapter: parentTitle,
               path: `/${doc.id}/${childPath}`,
               type: 'folder'
             })
-            // Recurse into subfolder
-            indexChildren(child, childPath, child.title || child.name)
+            indexFolderChildren(child, childPath, child.title || child.name)
           } else {
-            // Index file
             index.push({
-              id: `${doc.id}-${childPath.replace(/\//g, '-')}`,
+              id: `file-${doc.id}-${childPath.replace(/\//g, '-')}`,
               title: child.title || child.name,
               section: doc.title,
               chapter: parentTitle,
@@ -77,10 +73,49 @@ export const useSearchStore = defineStore('search', () => {
         }
       }
 
-      indexChildren(doc, '', doc.title)
+      indexFolderChildren(doc, '', doc.title)
+    }
+
+    // Index post docs
+    for (const doc of docs.postDocs) {
+      function indexPostChildren(node, parentPath, parentTitle) {
+        if (!node.children) return
+
+        for (const child of node.children) {
+          const childPath = parentPath ? `${parentPath}/${child.id}` : child.id
+
+          if (child.type === 'folder') {
+            // This is a post category or individual post folder
+            index.push({
+              id: `post-${doc.id}-${childPath.replace(/\//g, '-')}`,
+              title: child.title || child.name,
+              section: doc.title,
+              chapter: parentTitle || 'Posts',
+              path: `/posts/view/${doc.id}/${childPath}`,
+              type: 'post'
+            })
+            // Recurse into subfolder
+            indexPostChildren(child, childPath, child.title || child.name)
+          } else if (child.fileType === 'markdown') {
+            // Index markdown files as post content
+            index.push({
+              id: `post-${doc.id}-${childPath.replace(/\//g, '-')}`,
+              title: child.title || child.name,
+              section: doc.title,
+              chapter: parentTitle || 'Posts',
+              path: `/posts/view/${doc.id}/${childPath}`,
+              type: 'post',
+              rawPath: child.path
+            })
+          }
+        }
+      }
+
+      indexPostChildren(doc, '', doc.title)
     }
 
     searchIndex.value = index
+    console.log('Search index built with', index.length, 'items')
   }
 
   // Perform search
@@ -153,10 +188,8 @@ export const useSearchStore = defineStore('search', () => {
     results.value = []
     selectedIndex.value = 0
 
-    // Build index if not already built
-    if (searchIndex.value.length === 0) {
-      buildIndex()
-    }
+    // Rebuild index every time to ensure fresh data
+    buildIndex()
   }
 
   function close() {

@@ -75,6 +75,20 @@ const routes = [
     }
   },
 
+    // Post Layout Routes
+    // List View (e.g. /posts/vi-dieu-khien/esp32)
+    {
+      path: '/posts/:category(.*)',
+      name: 'post-list',
+      component: () => import('../views/PostListView.vue')
+    },
+    // Detail View (e.g. /posts/view/vi-dieu-khien/esp32/overview)
+    {
+      path: '/posts/view/:section/:path+',
+      name: 'post-detail',
+      component: () => import('../views/PostDetailView.vue')
+    },
+
   // Tutorial docs: /docs/:section/:chapter/:page
   {
     path: '/docs/:section/:chapter/:page',

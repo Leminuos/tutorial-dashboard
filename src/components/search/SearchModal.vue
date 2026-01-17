@@ -384,4 +384,55 @@ function highlightMatch(text, query) {
   transform: scale(0.95) translateY(-10px);
   opacity: 0;
 }
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .search-overlay {
+    padding-top: 20px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .search-modal {
+    margin: 0;
+    max-width: none;
+    border-radius: 8px;
+  }
+
+  .search-header {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .search-input {
+    font-size: 16px;
+    min-width: 0;
+  }
+
+  .close-btn kbd {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  .result-item {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+
+  .result-title {
+    font-size: 14px;
+  }
+
+  .result-path {
+    font-size: 11px;
+  }
+
+  .keyboard-hints {
+    display: none;
+  }
+
+  .search-hint p {
+    font-size: 14px;
+  }
+}
 </style>

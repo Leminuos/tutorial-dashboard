@@ -13,6 +13,7 @@ export const FILE_TYPES = {
     '.c', '.h', '.cpp', '.hpp', '.cc',
     '.py', '.pyw',
     '.json',
+    '.txt',
     '.yaml', '.yml',
     '.sh', '.bash', '.zsh',
     '.html',

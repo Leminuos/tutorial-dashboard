@@ -1,7 +1,7 @@
 export default {
   github: {
     owner: "Leminuos",
-    repo: "linux-tutorial",
+    repo: "tutorials",
     branch: "master",
     token: ""
   }

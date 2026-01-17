@@ -16,7 +16,7 @@ const docs = useDocsStore()
 // Get current page data
 const currentPage = computed(() => {
   const { section, chapter, page } = route.params
-  return docs.getSidebarPage(section, chapter, page)
+  return docs.getTutorialPage(section, chapter, page)
 })
 
 // Get examples for current page

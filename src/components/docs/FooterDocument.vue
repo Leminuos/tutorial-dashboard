@@ -8,7 +8,13 @@ const route = useRoute()
 const docs = useDocsStore()
 
 const nav = computed(() => {
-  const list = docs.flatLists
+  const allList = docs.flatLists
+  const currentSection = route.params.section
+
+  if (!allList?.length || !currentSection) return { prev: null, next: null }
+
+  // Filter to only pages within the same section
+  const list = allList.filter((x) => x.sectionId === currentSection)
 
   if (!list?.length) return { prev: null, next: null }
 

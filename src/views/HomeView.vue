@@ -18,11 +18,20 @@ function getPageCount(doc) {
     }
     return count
   } else {
-    let count = 0
-    for (const cat of doc.categories || []) {
-      count += cat.subcategories?.length || 0
+    // Folder layout - count files recursively
+    function countFiles(node) {
+      if (!node.children) return 0
+      let count = 0
+      for (const child of node.children) {
+        if (child.type === 'file') {
+          count++
+        } else if (child.type === 'folder') {
+          count += countFiles(child)
+        }
+      }
+      return count
     }
-    return count
+    return countFiles(doc)
   }
 }
 

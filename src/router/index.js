@@ -88,31 +88,6 @@ const routes = [
     }
   },
 
-  // Tutorial docs: /docs/:section/:chapter/:page
-  {
-    path: '/docs/:section/:chapter/:page',
-    name: 'tutorial-page',
-    component: TutorialDocsView,
-    meta: {
-      layout: DocumentLayout
-    },
-    beforeEnter: (to, from, next) => {
-      if (!isTutorialDoc(to.params.section)) {
-        // Not a tutorial doc, redirect to folder view
-        next({
-          name: 'folder-page',
-          params: {
-            section: to.params.section,
-            category: to.params.chapter,
-            subcategory: to.params.page
-          }
-        })
-      } else {
-        next()
-      }
-    }
-  },
-
   // Folder docs landing: /docs/:section/landing
   {
     path: '/docs/:section/landing',
@@ -123,61 +98,80 @@ const routes = [
     }
   },
 
-  // Folder docs with category only: /docs/:section/:category
+  // Tutorial docs: /docs/:section/:chapter/:page (must come before catch-all)
   {
-    path: '/docs/:section/:category',
-    name: 'folder-category',
-    component: FolderDocsView,
+    path: '/docs/:section/:chapter/:page',
+    name: 'tutorial-page',
+    component: TutorialDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      // If this is a tutorial doc, category is actually a chapter
-      // We need to redirect to first page of that chapter
-      if (isTutorialDoc(to.params.section)) {
-        const docs = useDocsStore()
-        const doc = docs.getDocById(to.params.section)
-        const chapter = doc?.chapters?.find(c => c.id === to.params.category)
-        const firstPage = chapter?.pages?.[0]
-        if (firstPage) {
-          next({
-            name: 'tutorial-page',
-            params: {
-              section: to.params.section,
-              chapter: to.params.category,
-              page: firstPage.id
-            }
-          })
-        } else {
-          next()
-        }
+      if (!isTutorialDoc(to.params.section)) {
+        // Not a tutorial doc, redirect to folder view with path
+        next({
+          name: 'folder-path',
+          params: {
+            section: to.params.section,
+            path: `${to.params.chapter}/${to.params.page}`
+          }
+        })
       } else {
-        // Folder doc - show category page
         next()
       }
     }
   },
 
-  // Folder docs with subcategory: /docs/:section/:category/:subcategory
+  // Folder docs with dynamic path (catch-all for 1+ segments after section)
+  // This matches paths like /docs/project/smart-farm or /docs/project/smart-farm/yocto
   {
-    path: '/docs/:section/:category/:subcategory',
-    name: 'folder-page',
+    path: '/docs/:section/:path+',
+    name: 'folder-path',
     component: FolderDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
+      // If this is a tutorial doc, redirect appropriately
       if (isTutorialDoc(to.params.section)) {
-        // Redirect to tutorial page view
-        next({
-          name: 'tutorial-page',
-          params: {
-            section: to.params.section,
-            chapter: to.params.category,
-            page: to.params.subcategory
+        // Parse path - it could be an array or string depending on Vue Router version
+        const pathParts = Array.isArray(to.params.path)
+          ? to.params.path
+          : to.params.path.split('/').filter(Boolean)
+
+        if (pathParts.length >= 2) {
+          // Has chapter and page
+          next({
+            name: 'tutorial-page',
+            params: {
+              section: to.params.section,
+              chapter: pathParts[0],
+              page: pathParts[1]
+            }
+          })
+        } else if (pathParts.length === 1) {
+          // Has only chapter, redirect to first page
+          const docs = useDocsStore()
+          const doc = docs.getDocById(to.params.section)
+          const chapter = doc?.chapters?.find(c => c.id === pathParts[0])
+          const firstPage = chapter?.pages?.[0]
+          if (firstPage) {
+            next({
+              name: 'tutorial-page',
+              params: {
+                section: to.params.section,
+                chapter: pathParts[0],
+                page: firstPage.id
+              }
+            })
+          } else {
+            next()
           }
-        })
+        } else {
+          next()
+        }
       } else {
+        // Folder doc - proceed with file explorer view
         next()
       }
     }

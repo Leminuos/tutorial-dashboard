@@ -9,49 +9,69 @@ import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 const route = useRoute()
 const docs = useDocsStore()
 
+// Parse path segments from route
+// With :path+ pattern, route.params.path is an array
+const pathSegments = computed(() => {
+  const path = route.params.path
+  if (!path) return []
+  // Handle both array and string formats
+  if (Array.isArray(path)) {
+    return path.filter(Boolean)
+  }
+  return path.split('/').filter(Boolean)
+})
+
 // Current doc data
 const currentDoc = computed(() => {
   return docs.getDocById(route.params.section)
 })
 
-// Current category
-const currentCategory = computed(() => {
-  const categoryId = route.params.category
-  if (!categoryId || !currentDoc.value) return null
-  return currentDoc.value.categories?.find(c => c.id === categoryId)
+// Current folder node (navigated position in tree)
+const currentNode = computed(() => {
+  if (!currentDoc.value) return null
+  if (pathSegments.value.length === 0) {
+    return currentDoc.value // Root level
+  }
+  return docs.getFolderNode(route.params.section, pathSegments.value)
 })
 
-// Current subcategory
-const currentSubcategory = computed(() => {
-  const subcategoryId = route.params.subcategory
-  if (!subcategoryId || !currentCategory.value) return null
-  return currentCategory.value.subcategories?.find(s => s.id === subcategoryId)
+// Items at current level (folders + files)
+const currentItems = computed(() => {
+  return currentNode.value?.children || []
 })
 
-// Files in current subcategory
-const files = computed(() => {
-  return currentSubcategory.value?.files || []
-})
-
-// Navigation level
-const navLevel = computed(() => {
-  if (route.params.subcategory) return 'subcategory'
-  if (route.params.category) return 'category'
-  return 'landing'
-})
+// Separate folders and files
+const folders = computed(() => currentItems.value.filter(item => item.type === 'folder'))
+const files = computed(() => currentItems.value.filter(item => item.type === 'file'))
 
 // Breadcrumb
 const breadcrumb = computed(() => {
   const parts = []
   if (currentDoc.value) {
-    parts.push({ text: currentDoc.value.title, to: `/docs/${currentDoc.value.id}/landing` })
+    parts.push({
+      text: currentDoc.value.title,
+      to: `/docs/${currentDoc.value.id}/landing`
+    })
   }
-  if (currentCategory.value) {
-    parts.push({ text: currentCategory.value.title, to: `/docs/${currentDoc.value.id}/${currentCategory.value.id}` })
+
+  // Add path segments
+  let currentPath = ''
+  for (const segment of pathSegments.value) {
+    currentPath += (currentPath ? '/' : '') + segment
+    const node = docs.getFolderNode(route.params.section, currentPath.split('/'))
+    if (node) {
+      parts.push({
+        text: node.title || node.name,
+        to: `/docs/${currentDoc.value?.id}/${currentPath}`
+      })
+    }
   }
-  if (currentSubcategory.value) {
-    parts.push({ text: currentSubcategory.value.title, to: null })
+
+  // Last item should not be a link
+  if (parts.length > 0) {
+    parts[parts.length - 1].to = null
   }
+
   return parts
 })
 
@@ -82,12 +102,36 @@ function getFileColor(type) {
   return colors[type] || '#757575'
 }
 
+// Get folder link for router-link
+function getFolderLink(folder) {
+  // Handle both array and string path formats
+  const currentPath = route.params.path
+  let pathString = ''
+  if (Array.isArray(currentPath)) {
+    pathString = currentPath.join('/')
+  } else {
+    pathString = currentPath || ''
+  }
+  const newPath = pathString ? `${pathString}/${folder.id}` : folder.id
+  return `/docs/${route.params.section}/${newPath}`
+}
+
 function selectFile(file) {
   selectedFile.value = file
 }
 
 function closeViewer() {
   selectedFile.value = null
+}
+
+// Get child count for a folder
+function getChildCount(folder) {
+  const folderCount = folder.children?.filter(c => c.type === 'folder').length || 0
+  const fileCount = folder.children?.filter(c => c.type === 'file').length || 0
+  const parts = []
+  if (folderCount > 0) parts.push(`${folderCount} folders`)
+  if (fileCount > 0) parts.push(`${fileCount} files`)
+  return parts.join(', ') || 'Empty'
 }
 
 // Close viewer on route change
@@ -111,70 +155,46 @@ watch(() => route.params, () => {
         </template>
       </div>
 
-      <!-- Landing page - show all categories -->
-      <div v-if="navLevel === 'landing'" class="landing">
-        <h1 class="landing-title">{{ currentDoc?.title }}</h1>
+      <!-- Page title -->
+      <h1 class="page-title">{{ currentNode?.title || currentDoc?.title }}</h1>
 
-        <div class="categories-grid">
-          <router-link
-            v-for="cat in currentDoc?.categories"
-            :key="cat.id"
-            :to="`/docs/${currentDoc?.id}/${cat.id}`"
-            class="category-card"
-          >
-            <span class="category-icon">📁</span>
-            <span class="category-name">{{ cat.title }}</span>
-            <span class="subcategory-count">{{ cat.subcategories?.length }} folders</span>
-          </router-link>
-        </div>
+      <!-- Combined items grid (folders + files) -->
+      <div class="items-grid">
+        <!-- Folders -->
+        <router-link
+          v-for="folder in folders"
+          :key="'folder-' + folder.id"
+          :to="getFolderLink(folder)"
+          class="item-card folder-card"
+        >
+          <span class="item-icon folder-icon">📁</span>
+          <div class="item-info">
+            <span class="item-name">{{ folder.title }}</span>
+            <span class="item-meta">{{ getChildCount(folder) }}</span>
+          </div>
+          <span class="item-arrow">→</span>
+        </router-link>
+
+        <!-- Files -->
+        <button
+          v-for="file in files"
+          :key="'file-' + file.path"
+          class="item-card file-card"
+          @click="selectFile(file)"
+        >
+          <div class="item-icon file-icon-wrapper" :style="{ background: getFileColor(file.fileType) }">
+            <span>{{ getFileIcon(file.fileType) }}</span>
+          </div>
+          <div class="item-info">
+            <span class="item-name">{{ file.name }}</span>
+            <span class="item-meta">{{ file.fileType?.toUpperCase() }}</span>
+          </div>
+        </button>
       </div>
 
-      <!-- Category page - show subcategories -->
-      <div v-else-if="navLevel === 'category'" class="category-content">
-        <h1 class="page-title">{{ currentCategory?.title }}</h1>
-
-        <div class="subcategories-grid">
-          <router-link
-            v-for="sub in currentCategory?.subcategories"
-            :key="sub.id"
-            :to="`/docs/${currentDoc?.id}/${currentCategory?.id}/${sub.id}`"
-            class="subcategory-card"
-          >
-            <span class="folder-icon">📁</span>
-            <div class="subcategory-info">
-              <span class="subcategory-name">{{ sub.title }}</span>
-              <span class="file-count">{{ sub.files?.length }} files</span>
-            </div>
-          </router-link>
-        </div>
-      </div>
-
-      <!-- Subcategory page - show files -->
-      <div v-else class="subcategory-content">
-        <h1 class="page-title">{{ currentSubcategory?.title }}</h1>
-
-        <!-- Files grid -->
-        <div class="files-grid">
-          <button
-            v-for="file in files"
-            :key="file.path"
-            class="file-card"
-            @click="selectFile(file)"
-          >
-            <div class="file-icon-wrapper" :style="{ background: getFileColor(file.type) }">
-              <span class="file-icon">{{ getFileIcon(file.type) }}</span>
-            </div>
-            <div class="file-info">
-              <span class="file-name">{{ file.name }}</span>
-              <span class="file-type">{{ file.type.toUpperCase() }}</span>
-            </div>
-          </button>
-        </div>
-
-        <!-- Empty state -->
-        <div v-if="!files.length" class="empty">
-          No files in this folder
-        </div>
+      <!-- Empty state -->
+      <div v-if="!currentItems.length" class="empty">
+        This folder is empty
       </div>
     </div>
 
@@ -190,7 +210,7 @@ watch(() => route.params, () => {
       <div class="viewer-content">
         <!-- Markdown gets special treatment -->
         <markdown-viewer
-          v-if="selectedFile.type === 'markdown'"
+          v-if="selectedFile.fileType === 'markdown'"
           :src="buildRawUrl(selectedFile.path)"
         />
         <file-viewer
@@ -274,56 +294,7 @@ watch(() => route.params, () => {
   color: var(--md-c-divider-light);
 }
 
-/* Landing page */
-.landing-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--md-c-text-1);
-  margin-bottom: 32px;
-}
-
-.categories-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-}
-
-.category-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: var(--md-c-bg-soft);
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 10px;
-  text-decoration: none;
-  color: var(--md-c-text-1);
-  transition: all 0.2s;
-}
-
-.category-card:hover {
-  border-color: var(--md-c-brand);
-  background: var(--md-c-bg);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.category-card .category-icon {
-  font-size: 24px;
-}
-
-.category-name {
-  font-size: 16px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.subcategory-count {
-  font-size: 12px;
-  color: var(--md-c-text-2);
-}
-
-/* Category page */
+/* Page title */
 .page-title {
   font-size: 28px;
   font-weight: 700;
@@ -331,115 +302,97 @@ watch(() => route.params, () => {
   margin-bottom: 24px;
 }
 
-.subcategories-grid {
+/* Items grid (folders + files combined) */
+.items-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
-.subcategory-card {
+.item-card {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 14px 16px;
   background: var(--md-c-bg-soft);
   border: 1px solid var(--md-c-divider-light);
   border-radius: 10px;
-  text-decoration: none;
-  color: var(--md-c-text-1);
+  cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
+  text-align: left;
 }
 
-.subcategory-card:hover {
+.item-card:hover {
   border-color: var(--md-c-brand);
   background: var(--md-c-brand);
   color: white;
 }
 
-.subcategory-card:hover .file-count {
-  color: rgba(255, 255, 255, 0.8);
+.item-icon {
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .folder-icon {
-  font-size: 20px;
+  font-size: 24px;
 }
 
-.subcategory-info {
+.file-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.subcategory-name {
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.file-count {
-  font-size: 12px;
-  color: var(--md-c-text-2);
-  transition: color 0.2s;
-}
-
-/* Subcategory content - Files */
-.files-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-}
-
-.file-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: var(--md-c-bg-soft);
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
-
-.file-card:hover {
-  border-color: var(--md-c-brand);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.file-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.file-icon {
-  font-size: 20px;
-}
-
-.file-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.file-name {
+.item-name {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--md-c-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.file-type {
-  font-size: 11px;
+.item-card:hover .item-name {
+  color: white;
+}
+
+.item-meta {
+  font-size: 12px;
   color: var(--md-c-text-2);
+  transition: color 0.2s;
+}
+
+.item-card:hover .item-meta {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.item-arrow {
+  font-size: 16px;
+  color: var(--md-c-text-2);
+  transition: all 0.2s;
+}
+
+.item-card:hover .item-arrow {
+  color: white;
+  transform: translateX(4px);
+}
+
+/* File card specific */
+.file-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .empty {
@@ -511,17 +464,14 @@ watch(() => route.params, () => {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .back-btn:hover {
   background: var(--md-c-brand);
   color: white;
   border-color: var(--md-c-brand);
-}
-
-.back-btn {
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .viewer-title {

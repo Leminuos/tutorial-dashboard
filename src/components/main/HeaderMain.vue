@@ -122,20 +122,20 @@ function openSearch() {
               </svg>
             </router-link>
 
-            <!-- Dropdown menu - only show categories -->
+            <!-- Dropdown menu - show top-level folders -->
             <div
               class="dropdown-menu"
               v-show="activeDropdown === doc.id"
             >
               <router-link
-                v-for="cat in doc.categories"
-                :key="cat.id"
-                :to="`/docs/${doc.id}/${cat.id}`"
+                v-for="folder in doc.children?.filter(c => c.type === 'folder')"
+                :key="folder.id"
+                :to="`/docs/${doc.id}/${folder.id}`"
                 class="dropdown-category-link"
                 @click="onMouseLeave"
               >
                 <span class="category-icon">📁</span>
-                <span class="category-title">{{ cat.title }}</span>
+                <span class="category-title">{{ folder.title }}</span>
               </router-link>
             </div>
           </div>
@@ -205,20 +205,20 @@ function openSearch() {
               </svg>
             </button>
 
-            <!-- Categories inside dropdown doc -->
+            <!-- Top-level folders inside folder doc -->
             <div
               class="mobile-categories"
               v-show="expandedMobileSection === doc.id"
             >
               <router-link
-                v-for="cat in doc.categories"
-                :key="cat.id"
-                :to="`/docs/${doc.id}/${cat.id}`"
+                v-for="folder in doc.children?.filter(c => c.type === 'folder')"
+                :key="folder.id"
+                :to="`/docs/${doc.id}/${folder.id}`"
                 class="mobile-category-link"
                 @click="onToggleDropdown"
               >
                 <span class="category-icon">📁</span>
-                <span>{{ cat.title }}</span>
+                <span>{{ folder.title }}</span>
               </router-link>
             </div>
           </div>

@@ -93,6 +93,26 @@ export const useDocsStore = defineStore('docs', {
       if (!category) return null
 
       return category.subcategories?.find(s => s.id === subcategoryId) || null
+    },
+
+    /**
+     * Get folder node by path segments for folder docs (file explorer style)
+     * @param {string} sectionId - The doc section id
+     * @param {string[]} pathSegments - Array of folder IDs to traverse
+     * @returns {object|null} - The folder/file node at the path
+     */
+    getFolderNode(sectionId, pathSegments = []) {
+      const doc = this.getDocById(sectionId)
+      if (!doc || doc.layout !== 'folder') return null
+
+      let current = doc
+      for (const segment of pathSegments) {
+        if (!current.children) return null
+        const child = current.children.find(c => c.id === segment)
+        if (!child) return null
+        current = child
+      }
+      return current
     }
   }
 })
@@ -168,7 +188,7 @@ function titleFromFilename(filename, isFile = false) {
  * Extract order number from filename
  */
 function extractOrder(filename) {
-  const match = filename.match(/^(\d+)\s*[\.\-_]/)
+  const match = filename.match(/^(\d+)\s*[.\-_]/)
   return match ? parseInt(match[1], 10) : 999
 }
 
@@ -212,7 +232,7 @@ function buildDocsTree(allPaths, docConfig) {
 
   const docs = []
 
-  for (const [docName, docData] of docsMap) {
+  for (const [, docData] of docsMap) {
     if (docData.layout === 'tutorial') {
       docs.push(buildTutorialDoc(docData))
     } else {
@@ -335,65 +355,84 @@ function buildTutorialDoc(docData) {
 }
 
 /**
- * Build folder doc structure
- * Structure: Doc > Category > Subcategory > Files
+ * Build folder doc structure (File Explorer Style)
+ * Structure: Recursive tree with folders and files at any level
  */
 function buildFolderDoc(docData) {
-  const categoriesMap = new Map()
-
-  for (const filePath of docData.files) {
-    const parts = filePath.split('/')
-    // Expected: DocName/Category/Subcategory/file.ext
-    if (parts.length < 4) continue
-
-    const categoryName = parts[1]
-    const subcategoryName = parts[2]
-    const fileName = parts[parts.length - 1]
-
-    // Initialize category
-    if (!categoriesMap.has(categoryName)) {
-      categoriesMap.set(categoryName, {
-        id: slugify(categoryName),
-        title: categoryName,
-        subcategoriesMap: new Map()
-      })
-    }
-
-    const category = categoriesMap.get(categoryName)
-
-    // Initialize subcategory
-    if (!category.subcategoriesMap.has(subcategoryName)) {
-      category.subcategoriesMap.set(subcategoryName, {
-        id: slugify(subcategoryName),
-        title: subcategoryName,
-        files: []
-      })
-    }
-
-    const subcategory = category.subcategoriesMap.get(subcategoryName)
-
-    // Add file
-    subcategory.files.push({
-      name: fileName,
-      path: filePath,
-      type: getFileType(fileName)
-    })
-  }
-
-  // Convert maps to arrays
-  const categories = Array.from(categoriesMap.values())
-    .map(cat => ({
-      id: cat.id,
-      title: cat.title,
-      subcategories: Array.from(cat.subcategoriesMap.values())
-    }))
-
-  return {
+  // Build a nested tree structure
+  const root = {
     id: docData.id,
     title: docData.title,
     layout: 'folder',
-    categories
+    children: []
   }
+
+  // Helper to get or create a folder node
+  function getOrCreateFolder(parent, folderName) {
+    let folder = parent.children.find(c => c.name === folderName && c.type === 'folder')
+    if (!folder) {
+      folder = {
+        id: slugify(folderName),
+        name: folderName,
+        title: titleFromFilename(folderName, false),
+        type: 'folder',
+        order: extractOrder(folderName),
+        children: []
+      }
+      parent.children.push(folder)
+    }
+    return folder
+  }
+
+  // Process each file path
+  for (const filePath of docData.files) {
+    const parts = filePath.split('/')
+    // Skip the doc name itself (parts[0])
+    if (parts.length < 2) continue
+
+    const fileName = parts[parts.length - 1]
+    const fileType = getFileType(fileName)
+
+    // Navigate/create folder structure
+    let current = root
+    for (let i = 1; i < parts.length - 1; i++) {
+      current = getOrCreateFolder(current, parts[i])
+    }
+
+    // Add the file to current folder
+    current.children.push({
+      id: slugify(fileName),
+      name: fileName,
+      title: titleFromFilename(fileName, true),
+      type: 'file',
+      fileType: fileType,
+      path: filePath,
+      order: extractOrder(fileName)
+    })
+  }
+
+  // Sort children recursively (folders first, then files, both by order)
+  function sortChildren(node) {
+    if (!node.children) return
+    node.children.sort((a, b) => {
+      // Folders first
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1
+      }
+      // Then by order
+      return a.order - b.order
+    })
+    // Recurse into folders
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        sortChildren(child)
+      }
+    }
+  }
+
+  sortChildren(root)
+
+  return root
 }
 
 /**
@@ -417,17 +456,26 @@ function flatPages(docsTree) {
         }
       }
     } else {
-      for (const cat of d.categories || []) {
-        for (const sub of cat.subcategories || []) {
-          items.push({
-            sectionId: d.id,
-            categoryId: cat.id,
-            subcategoryId: sub.id,
-            title: sub.title,
-            to: `/docs/${d.id}/${cat.id}/${sub.id}`,
-          })
+      // Folder layout - recursively collect files
+      function collectFiles(node, pathParts) {
+        if (!node.children) return
+        for (const child of node.children) {
+          const childPath = [...pathParts, child.id]
+          if (child.type === 'folder') {
+            collectFiles(child, childPath)
+          } else {
+            items.push({
+              sectionId: d.id,
+              folderId: pathParts.join('/'),
+              fileId: child.id,
+              title: child.title || child.name,
+              path: child.path,
+              to: `/docs/${d.id}/${pathParts.join('/')}`,
+            })
+          }
         }
       }
+      collectFiles(d, [])
     }
   }
 

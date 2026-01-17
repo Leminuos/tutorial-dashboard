@@ -41,30 +41,43 @@ export const useSearchStore = defineStore('search', () => {
       }
     }
 
-    // Index folder docs
+    // Index folder docs (recursive tree structure)
     for (const doc of docs.folderDocs) {
-      for (const category of doc.categories || []) {
-        // Add category as searchable
-        index.push({
-          id: `${doc.id}-${category.id}`,
-          title: category.title,
-          section: doc.title,
-          chapter: null,
-          path: `/docs/${doc.id}/${category.id}`,
-          type: 'folder-category'
-        })
+      // Recursive function to index all children
+      function indexChildren(node, parentPath, parentTitle) {
+        if (!node.children) return
 
-        for (const sub of category.subcategories || []) {
-          index.push({
-            id: `${doc.id}-${category.id}-${sub.id}`,
-            title: sub.title,
-            section: doc.title,
-            chapter: category.title,
-            path: `/docs/${doc.id}/${category.id}/${sub.id}`,
-            type: 'folder-subcategory'
-          })
+        for (const child of node.children) {
+          const childPath = parentPath ? `${parentPath}/${child.id}` : child.id
+
+          if (child.type === 'folder') {
+            // Index folder
+            index.push({
+              id: `${doc.id}-${childPath.replace(/\//g, '-')}`,
+              title: child.title || child.name,
+              section: doc.title,
+              chapter: parentTitle,
+              path: `/docs/${doc.id}/${childPath}`,
+              type: 'folder'
+            })
+            // Recurse into subfolder
+            indexChildren(child, childPath, child.title || child.name)
+          } else {
+            // Index file
+            index.push({
+              id: `${doc.id}-${childPath.replace(/\//g, '-')}`,
+              title: child.title || child.name,
+              section: doc.title,
+              chapter: parentTitle,
+              path: `/docs/${doc.id}/${parentPath || ''}`,
+              type: 'file',
+              rawPath: child.path
+            })
+          }
         }
       }
+
+      indexChildren(doc, '', doc.title)
     }
 
     searchIndex.value = index

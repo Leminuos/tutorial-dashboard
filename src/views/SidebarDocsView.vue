@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 
@@ -54,9 +54,15 @@ const onToc = () => {
   tocOpen.value = !tocOpen.value
 }
 
-const closeTocOnMobile = () => {
+const closeTocOnMobile = (e) => {
   if (!isMobile.value) return
   tocOpen.value = false
+  onTocClick(e)
+}
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  closeTocOnMobile()
 }
 
 const onSelectExample = ({ file }) => {
@@ -77,17 +83,74 @@ const onTocActive = (id) => {
 }
 
 // Viewport handling
+const isHeaderHidden = ref(false)
+
 function updateViewport() {
   isMobile.value = window.innerWidth < 960
 }
 
+function handleScroll() {
+  // Get the nav height from CSS variable
+  const navHeight = parseInt(
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--md-nav-height') || '50'
+  )
+  isHeaderHidden.value = window.scrollY > navHeight
+}
+
+function onTocClick(e) {
+  const link = e.target.closest('.mobile-toc-link')
+  if (!link) return
+
+  e.preventDefault()
+
+  const href = link.getAttribute('href')
+  if (!href) return
+
+  // Extract the heading ID from href (format: #/docs/.../...#heading-id)
+  // The last part after the second # is the heading ID
+  const hashMatch = href.match(/#([^#]+)$/)
+  if (!hashMatch) return
+
+  const targetId = hashMatch[1]
+
+  // Wait for next tick to ensure DOM is ready
+  nextTick(() => {
+    const el = document.getElementById(targetId)
+    if (el) {
+      // Get header height from CSS variable
+      const headerHeight = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--md-nav-height') || '50'
+      )
+      const offset = headerHeight + 12 // Add some extra spacing
+
+      const elementPosition = el.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      })
+
+      // Update URL hash for proper navigation state
+      // Vue Router hash mode: the full route + anchor becomes #/route#anchor
+      const newHash = `#/docs/${route.params.section}/${route.params.chapter}/${route.params.page}#${targetId}`
+      window.history.replaceState(null, '', newHash)
+    }
+  })
+}
+
 onMounted(() => {
   updateViewport()
+  handleScroll()
   window.addEventListener('resize', updateViewport)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateViewport)
+  window.removeEventListener('scroll', handleScroll)
 })
 
 // Close file viewer when route changes
@@ -99,9 +162,31 @@ watch(() => route.params, () => {
 <template>
   <!-- Header -->
   <header-document
+    :toc-open="tocOpen"
     @toggle-sidebar="onToggleSidebar"
-    @this-page="onToc"
+    @toggle-toc="onToc"
   />
+
+  <!-- Mobile TOC dropdown -->
+  <div v-if="isMobile && tocOpen" class="mobile-toc-dropdown" :class="{ 'header-hidden': isHeaderHidden }">
+    <a
+      href="#"
+      class="mobile-toc-top"
+      @click.prevent="scrollToTop"
+    >
+      Return to top
+    </a>
+    <a
+      v-for="item in toc"
+      :key="item.id"
+      :href="`#${item.id}`"
+      class="mobile-toc-link"
+      :class="{ active: tocActive === item.id }"
+      @click="closeTocOnMobile"
+    >
+      {{ item.text }}
+    </a>
+  </div>
 
   <!-- Sidebar overlay -->
   <div
@@ -130,12 +215,10 @@ watch(() => route.params, () => {
         Loading content...
       </div>
 
-      <!-- Right panel (TOC + Examples) -->
+      <!-- Right panel (TOC + Examples) - Desktop only -->
       <right-panel
         :toc="toc"
-        :toc-open="tocOpen"
         :toc-active="tocActive"
-        @select-toc="closeTocOnMobile"
         @select-example="onSelectExample"
       />
     </div>
@@ -162,6 +245,11 @@ watch(() => route.params, () => {
 </template>
 
 <style scoped>
+/* Mobile: Add padding for fixed navbar */
+.docs-content {
+  padding-top: 48px;
+}
+
 @media (max-width: 960px) {
   .sidebar-overlay {
     position: fixed;
@@ -173,6 +261,7 @@ watch(() => route.params, () => {
 
 @media (min-width: 960px) {
   .docs-content {
+    padding-top: 0;
     margin-top: 36px;
     margin-left: calc(var(--md-sidebar-expand) + 8px);
     padding-right: 8px;
@@ -283,5 +372,61 @@ watch(() => route.params, () => {
   flex: 1;
   overflow: auto;
   padding: 16px;
+}
+
+/* Mobile TOC dropdown */
+.mobile-toc-dropdown {
+  position: fixed;
+  top: calc(var(--md-nav-height) + 48px);
+  left: 0;
+  right: 0;
+  z-index: 799;
+  background: var(--md-c-bg);
+  border-bottom: 1px solid var(--md-c-divider-light);
+  padding: 12px 24px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.mobile-toc-dropdown.header-hidden {
+  top: 48px;
+}
+
+.mobile-toc-top {
+  display: block;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-c-brand);
+  text-decoration: none;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  transition: color 0.2s;
+}
+
+.mobile-toc-top:hover {
+  color: var(--md-c-brand-light);
+}
+
+.mobile-toc-link {
+  display: block;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--md-c-text-2);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s;
+  border-left: 2px solid transparent;
+}
+
+.mobile-toc-link:hover,
+.mobile-toc-link.active {
+  color: var(--md-c-text-1);
+  font-weight: 600;
+}
+
+.mobile-toc-link.active {
+  border-left-color: var(--md-c-brand);
 }
 </style>

@@ -5,11 +5,10 @@ import { useDocsStore } from '@/stores/docstree'
 
 const props = defineProps({
   toc: { type: Array, default: () => [] },
-  tocOpen: { type: Boolean, default: true },
   tocActive: { type: String, default: '' },
 })
 
-const emit = defineEmits(['select-toc', 'select-example'])
+const emit = defineEmits(['select-example'])
 
 const route = useRoute()
 const docs = useDocsStore()
@@ -92,7 +91,7 @@ function onTocClick(e) {
 </script>
 
 <template>
-  <aside class="right-panel" :class="{ open: tocOpen }">
+  <aside class="right-panel">
     <!-- Table of Contents -->
     <section class="panel-section toc-section" v-if="toc.length">
       <h3 class="section-title">MỤC LỤC</h3>
@@ -174,23 +173,6 @@ function onTocClick(e) {
   }
 }
 
-/* Mobile styles */
-.right-panel.open {
-  position: fixed;
-  top: var(--md-nav-height);
-  right: 0;
-  bottom: 0;
-  width: 280px;
-  max-height: none;
-  background: var(--md-c-bg);
-  border-left: 1px solid var(--md-c-divider-light);
-  padding: 24px 16px;
-  z-index: 999;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  display: block;
-}
-
 .panel-section {
   margin-bottom: 24px;
 }
@@ -204,10 +186,9 @@ function onTocClick(e) {
 
 .toc-link {
   display: block;
-  padding: 4px 0;
+  padding: 6px 0;
   color: var(--md-c-text-2);
   font-size: 14px;
-  line-height: 1.35;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

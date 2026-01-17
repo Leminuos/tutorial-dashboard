@@ -14,6 +14,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "docx-preview": "^0.3.7",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-container": "^4.0.0",

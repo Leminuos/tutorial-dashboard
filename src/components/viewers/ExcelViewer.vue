@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { buildRawUrl } from '@/stores/docstree'
 import * as XLSX from 'xlsx'
 
@@ -10,6 +10,7 @@ const props = defineProps({
 
 const loading = ref(true)
 const error = ref(null)
+const workbook = ref(null)
 const sheets = ref([])
 const activeSheet = ref(0)
 const tableData = ref([])
@@ -27,12 +28,12 @@ async function loadExcel() {
     }
 
     const arrayBuffer = await res.arrayBuffer()
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+    workbook.value = XLSX.read(arrayBuffer, { type: 'array' })
 
-    sheets.value = workbook.SheetNames
+    sheets.value = workbook.value.SheetNames
     activeSheet.value = 0
 
-    loadSheetData(workbook, 0)
+    loadSheetData(0)
   } catch (err) {
     error.value = err.message
     console.error('Failed to load Excel:', err)
@@ -41,9 +42,11 @@ async function loadExcel() {
   }
 }
 
-function loadSheetData(workbook, index) {
+function loadSheetData(index) {
+  if (!workbook.value) return
+
   const sheetName = sheets.value[index]
-  const worksheet = workbook.Sheets[sheetName]
+  const worksheet = workbook.value.Sheets[sheetName]
 
   // Convert to array of arrays
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
@@ -52,9 +55,24 @@ function loadSheetData(workbook, index) {
 
 function switchSheet(index) {
   activeSheet.value = index
-  // Reload the Excel to get sheet data
-  loadExcel()
+  loadSheetData(index)
 }
+
+// Generate Excel-style column headers (A, B, C... AA, AB...)
+function getColHeader(index) {
+  let label = ''
+  let i = index
+  while (i >= 0) {
+    label = String.fromCharCode(65 + (i % 26)) + label
+    i = Math.floor(i / 26) - 1
+  }
+  return label
+}
+
+const maxCols = computed(() => {
+  if (!tableData.value.length) return 0
+  return Math.max(...tableData.value.map(row => row.length))
+})
 
 onMounted(loadExcel)
 watch(() => props.path, loadExcel)
@@ -62,13 +80,17 @@ watch(() => props.path, loadExcel)
 
 <template>
   <div class="excel-viewer">
+    <!-- Excel Toolbar/Header -->
     <div class="excel-header">
-      <span class="file-icon">📊</span>
-      <span class="file-name">{{ fileName || 'Excel File' }}</span>
+      <div class="title-bar">
+        <span class="file-icon">📊</span>
+        <span class="file-name">{{ fileName || 'Workbook.xlsx' }}</span>
+        <span class="app-name">- Excel</span>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">
-      Loading Excel...
+      <div class="spinner"></div> Loading Workbook...
     </div>
 
     <div v-else-if="error" class="error">
@@ -76,39 +98,57 @@ watch(() => props.path, loadExcel)
     </div>
 
     <template v-else>
-      <!-- Sheet tabs -->
-      <div class="sheet-tabs" v-if="sheets.length > 1">
-        <button
-          v-for="(sheet, index) in sheets"
-          :key="sheet"
-          :class="['sheet-tab', { active: activeSheet === index }]"
-          @click="switchSheet(index)"
-        >
-          {{ sheet }}
-        </button>
+      <!-- Table Area -->
+      <div class="table-area">
+        <div class="table-container">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <!-- Corner Header -->
+                <th class="row-header-col">◢</th>
+                <!-- Column Headers -->
+                <th v-for="i in maxCols" :key="i" class="col-header">
+                  {{ getColHeader(i - 1) }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rowIndex) in tableData" :key="rowIndex">
+                <!-- Row Number -->
+                <td class="row-header">{{ rowIndex + 1 }}</td>
+                <!-- Data Cells -->
+                <td
+                  v-for="(ctx, colIndex) in maxCols"
+                  :key="colIndex"
+                  :class="{ 'empty-cell': !row[colIndex] }"
+                >
+                  {{ row[colIndex] || '' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div v-if="!tableData.length" class="empty">
+            Empty Sheet
+          </div>
+        </div>
       </div>
 
-      <!-- Table -->
-      <div class="table-container">
-        <table class="excel-table">
-          <thead v-if="tableData.length">
-            <tr>
-              <th v-for="(cell, i) in tableData[0]" :key="i">
-                {{ cell }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in tableData.slice(1)" :key="rowIndex">
-              <td v-for="(cell, cellIndex) in row" :key="cellIndex">
-                {{ cell }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div v-if="!tableData.length" class="empty">
-          No data in this sheet
+      <!-- Sheet Tabs (Bottom) -->
+      <div class="sheet-bar" v-if="sheets.length > 0">
+        <div class="sheet-nav">
+          <button class="nav-btn">◀</button>
+          <button class="nav-btn">▶</button>
+        </div>
+        <div class="sheets-list">
+          <button
+            v-for="(sheet, index) in sheets"
+            :key="sheet"
+            :class="['sheet-tab', { active: activeSheet === index }]"
+            @click="switchSheet(index)"
+          >
+            {{ sheet }}
+          </button>
         </div>
       </div>
     </template>
@@ -117,109 +157,187 @@ watch(() => props.path, loadExcel)
 
 <style scoped>
 .excel-viewer {
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
   overflow: hidden;
-  background: var(--md-c-bg);
+  font-family: 'Segoe UI', sans-serif;
+  color: #000;
 }
 
+/* Header mimicking Excel Green Title Bar */
 .excel-header {
+  background: #217346;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  background: var(--md-c-bg-soft);
-  border-bottom: 1px solid var(--md-c-divider-light);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--md-c-text-1);
 }
 
-.file-icon {
-  font-size: 14px;
+.app-name {
+  opacity: 0.8;
+  font-weight: 400;
 }
 
-.file-name {
+/* Table Area */
+.table-area {
+  flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.loading,
-.error,
-.empty {
-  padding: 24px;
-  text-align: center;
-  color: var(--md-c-text-2);
-}
-
-.error {
-  color: #e53935;
-}
-
-.sheet-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 8px 16px;
-  background: var(--md-c-bg-soft);
-  border-bottom: 1px solid var(--md-c-divider-light);
-  overflow-x: auto;
-}
-
-.sheet-tab {
-  padding: 6px 12px;
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 4px;
-  background: var(--md-c-bg);
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-
-.sheet-tab:hover {
-  background: var(--md-c-divider);
-}
-
-.sheet-tab.active {
-  background: var(--md-c-brand);
-  color: white;
-  border-color: var(--md-c-brand);
+  position: relative;
+  background: #e6e6e6; /* Grid gap color */
 }
 
 .table-container {
-  overflow-x: auto;
-  max-height: 60vh;
-  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: white;
 }
 
 .excel-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
 }
 
 .excel-table th,
 .excel-table td {
-  padding: 8px 12px;
-  border: 1px solid var(--md-c-divider-light);
-  text-align: left;
+  border-right: 1px solid #e1e1e1;
+  border-bottom: 1px solid #e1e1e1;
+  padding: 4px 8px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
-.excel-table th {
-  background: var(--md-c-bg-soft);
+/* Headers */
+.col-header,
+.row-header,
+.row-header-col {
+  background: #f8f9fa;
+  color: #666;
   font-weight: 600;
-  color: var(--md-c-text-1);
+  text-align: center;
   position: sticky;
+  z-index: 10;
+  user-select: none;
+}
+
+/* Column Headers (A, B, C...) */
+.col-header {
   top: 0;
+  border-bottom: 2px solid #ccc;
+  min-width: 80px;
 }
 
-.excel-table td {
-  color: var(--md-c-text-2);
+/* Corner Cell */
+.row-header-col {
+  top: 0;
+  left: 0;
+  z-index: 20; /* Higher than headers */
+  border-bottom: 2px solid #ccc;
+  background: #f8f9fa;
+  color: #ccc;
+  width: 40px;
+  min-width: 40px;
 }
 
-.excel-table tr:hover td {
-  background: var(--md-c-bg-soft);
+/* Row Headers (1, 2, 3...) */
+.row-header {
+  left: 0;
+  position: sticky;
+  background: #f8f9fa;
+  border-right: 2px solid #ccc;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Data Cells */
+.excel-table td:not(.row-header) {
+  background: white;
+  color: #333;
+  cursor: cell;
+}
+
+.excel-table td:hover:not(.row-header) {
+  background: #f0f0f0;
+}
+
+/* Bottom Sheet Bar */
+.sheet-bar {
+  display: flex;
+  align-items: center;
+  background: #f3f3f3;
+  border-top: 1px solid #d1d5db;
+  height: 32px;
+  padding: 0 4px;
+}
+
+.sheet-nav {
+  display: flex;
+  gap: 2px;
+  margin-right: 12px;
+}
+
+.nav-btn {
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sheets-list {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+}
+
+.sheet-tab {
+  height: 100%;
+  padding: 0 20px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.sheet-tab:hover {
+  background: #eaeaea;
+}
+
+.sheet-tab.active {
+  background: white;
+  color: #217346;
+  font-weight: 600;
+  border-bottom: 2px solid #217346;
+}
+
+.loading, .error {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: #999;
 }
 </style>

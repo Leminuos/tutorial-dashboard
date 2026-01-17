@@ -217,6 +217,7 @@ watch(() => route.params, () => {
           v-else
           :path="selectedFile.path"
           :file-name="selectedFile.name"
+          @close="closeViewer"
         />
       </div>
     </div>

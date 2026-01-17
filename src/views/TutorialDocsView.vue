@@ -238,6 +238,7 @@ watch(() => route.params, () => {
         <file-viewer
           :path="selectedFile.path"
           :file-name="selectedFile.name"
+          @close="closeFileViewer"
         />
       </div>
     </div>

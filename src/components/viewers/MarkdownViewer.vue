@@ -7,6 +7,7 @@ import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
 
 const props = defineProps({
   src: { type: String, required: true },
+  maxWidth: { type: String, default: '688px' },
 })
 
 const emit = defineEmits(['toc-update', 'toc-active'])
@@ -114,13 +115,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <article ref="contentEl" class="md-content" v-html="html"></article>
+  <article ref="contentEl" class="md-content" :style="{ '--md-content-max-width': props.maxWidth }" v-html="html"></article>
 </template>
 
 <style scoped>
 .md-content {
   display: block;
-  max-width: 688px;
+  max-width: var(--md-content-max-width, 688px);
   margin: 0 auto;
   padding: 0 10px;
   overflow-x: hidden;

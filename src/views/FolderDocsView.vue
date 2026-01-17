@@ -240,6 +240,7 @@ watch(currentNode, (node) => {
         <markdown-viewer
           v-if="selectedFile.fileType === 'markdown'"
           :src="buildRawUrl(selectedFile.path)"
+          max-width="100%"
         />
         <file-viewer
           v-else

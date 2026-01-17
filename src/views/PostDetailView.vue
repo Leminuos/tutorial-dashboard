@@ -113,6 +113,7 @@ function formatDate(dateStr) {
            <markdown-viewer
               v-if="displayFile.fileType === 'markdown'"
               :src="buildRawUrl(displayFile.path)"
+              max-width="100%"
               class="markdown-body"
             />
             <file-viewer

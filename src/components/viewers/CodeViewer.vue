@@ -185,10 +185,10 @@ function downloadFile() {
 
 <style scoped>
 .code-viewer {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
 }
 
 .code-header {
@@ -196,11 +196,11 @@ function downloadFile() {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   font-size: 13px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .header-left {
@@ -224,14 +224,14 @@ function downloadFile() {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: var(--md-c-divider-light-2);
-  color: var(--md-c-text-light-1);
+  background: var(--md-c-divider-light);
+  color: var(--md-c-text-1);
 }
 
 .file-icon {
@@ -242,7 +242,7 @@ function downloadFile() {
 .error {
   padding: 24px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .error {
@@ -271,7 +271,7 @@ function downloadFile() {
   font-size: 13px;
   line-height: 1.6;
   overflow-x: auto;
-  background: #f8f9fa;
+  background: var(--md-c-bg-soft);
 }
 
 .plain code {

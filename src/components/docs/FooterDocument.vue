@@ -58,17 +58,17 @@ const nav = computed(() => {
   padding-top: 12px;
   padding-bottom: 48px;
   margin: 0 auto;
-  border-top:1px solid var(--md-c-divider-light-2);
+  border-top:1px solid var(--md-c-divider-light);
   margin-top:24px;
 }
 
 .nav-left, .nav-right { flex: 1; }
-.nav-link:hover{ background: var(--md-c-white-mute); }
+.nav-link:hover{ background: var(--md-c-bg-mute); }
 
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   padding-top: 8px;
 }
 
@@ -88,7 +88,7 @@ const nav = computed(() => {
 
 .hint{
   font-size: 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }

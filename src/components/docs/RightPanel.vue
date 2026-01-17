@@ -165,24 +165,7 @@ function onTocClick(e) {
   max-height: calc(100vh - var(--md-nav-height) - 72px);
   display: none;
   overflow-y: auto;
-}
-
-/* Custom scrollbar */
-.right-panel::-webkit-scrollbar {
-  width: 4px;
-}
-
-.right-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.right-panel::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
-}
-
-.right-panel::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  padding-right: 12px;
 }
 
 @media (min-width: 1280px) {
@@ -199,8 +182,8 @@ function onTocClick(e) {
   bottom: 0;
   width: 280px;
   max-height: none;
-  background: var(--md-c-white);
-  border-left: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  border-left: 1px solid var(--md-c-divider-light);
   padding: 24px 16px;
   z-index: 999;
   transform: translateX(100%);
@@ -222,7 +205,7 @@ function onTocClick(e) {
 .toc-link {
   display: block;
   padding: 4px 0;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   font-size: 14px;
   line-height: 1.35;
   overflow: hidden;
@@ -234,7 +217,7 @@ function onTocClick(e) {
 
 .toc-link.active,
 .toc-link:hover {
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   font-weight: 600;
 }
 
@@ -246,7 +229,7 @@ function onTocClick(e) {
 }
 
 .example-group {
-  background: var(--md-c-white-soft);
+  background: var(--md-c-bg-soft);
   border-radius: 8px;
   padding: 10px;
 }
@@ -257,7 +240,7 @@ function onTocClick(e) {
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   margin-bottom: 8px;
 }
 
@@ -277,8 +260,8 @@ function onTocClick(e) {
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  background: var(--md-c-white);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
@@ -286,8 +269,8 @@ function onTocClick(e) {
 }
 
 .file-btn:hover {
-  background: var(--md-c-green);
-  border-color: var(--md-c-green);
+  background: var(--md-c-brand);
+  border-color: var(--md-c-brand);
   color: white;
 }
 

@@ -59,6 +59,27 @@
   --md-shadow-4: 0 14px 44px rgba(0, 0, 0, .12), 0 3px 9px rgba(0, 0, 0, .12);
   --md-shadow-5: 0 18px 56px rgba(0, 0, 0, .16), 0 4px 12px rgba(0, 0, 0, .16);
 
+  --md-c-bg: var(--md-c-white);
+  --md-c-bg-soft: var(--md-c-white-soft);
+  --md-c-bg-mute: var(--md-c-white-mute);
+  --md-c-divider: var(--md-c-divider-light-1);
+  --md-c-divider-light: var(--md-c-divider-light-2);
+  --md-c-divider-inverse: var(--md-c-divider-dark-1);
+  --md-c-divider-inverse-light: var(--md-c-divider-dark-2);
+  --md-c-text-1: var(--md-c-text-light-1);
+  --md-c-text-2: var(--md-c-text-light-2);
+  --md-c-text-3: var(--md-c-text-light-3);
+  --md-c-text-4: var(--md-c-text-light-4);
+  --md-c-text-code: var(--md-c-text-light-code);
+  --md-c-text-inverse-1: var(--md-c-text-dark-1);
+  --md-c-text-inverse-2: var(--md-c-text-dark-2);
+  --md-c-text-inverse-3: var(--md-c-text-dark-3);
+  --md-c-text-inverse-4: var(--md-c-text-dark-4);
+  --md-c-brand: var(--md-c-green);
+  --md-c-brand-light: var(--md-c-green-light);
+  --md-c-brand-dark: var(--md-c-green-dark);
+  --md-c-brand-highlight: var(--md-c-brand-dark);
+
   --md-doc-code-font-size: 14px;
   --md-doc-code-line-height: 1.5;
   --md-c-divider-light: rgba(60, 60, 60, .12);
@@ -72,11 +93,36 @@ html {
   font-size: 62.5%;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
               "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  background-color: var(--md-c-white);
+  background-color: var(--md-c-bg);
   overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 body {
   font-size: 1.6rem;
   font-weight: 400;
+  color: var(--md-c-text-1);
+}
+
+/* Dark mode overrides */
+html.dark {
+  --md-c-bg: var(--md-c-black);
+  --md-c-bg-soft: var(--md-c-black-soft);
+  --md-c-bg-mute: var(--md-c-black-mute);
+  --md-c-divider: var(--md-c-divider-dark-1);
+  --md-c-divider-light: var(--md-c-divider-dark-2);
+  --md-c-divider-inverse: var(--md-c-divider-light-1);
+  --md-c-divider-inverse-light: var(--md-c-divider-light-2);
+  --md-c-text-1: var(--md-c-text-dark-1);
+  --md-c-text-2: var(--md-c-text-dark-2);
+  --md-c-text-3: var(--md-c-text-dark-3);
+  --md-c-text-4: var(--md-c-text-dark-4);
+  --md-c-text-code: var(--md-c-text-dark-code);
+  --md-c-text-inverse-1: var(--md-c-text-light-1);
+  --md-c-text-inverse-2: var(--md-c-text-light-2);
+  --md-c-text-inverse-3: var(--md-c-text-light-3);
+  --md-c-text-inverse-4: var(--md-c-text-light-4);
+  --md-c-brand-highlight: var(--md-c-brand-light);
+
+  color-scheme: dark;
 }

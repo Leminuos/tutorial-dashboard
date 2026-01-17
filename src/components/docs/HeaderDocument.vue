@@ -19,8 +19,8 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
   left: 0;
   z-index: 800;
   height: 40px;
-  background-color: var(--md-c-white);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background-color: var(--md-c-bg);
+  border-bottom: 1px solid var(--md-c-divider-light);
   transition: 0.5s ease-out;
 }
 
@@ -49,7 +49,7 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: var(--md-c-text-light-3);
+  background-color: var(--md-c-text-3);
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
@@ -72,14 +72,14 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
 .toggle-sidebar:hover span,
 .toggle-sidebar:hover::before,
 .toggle-sidebar:hover::after {
-  background-color: var(--md-c-text-light-1);
+  background-color: var(--md-c-text-1);
 }
 
 .this-page {
   font-size: 12px;
   font-weight: 500;
   line-height: 24px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   margin-right: 15px;
   cursor: pointer;
   transition: color .5s;
@@ -89,7 +89,7 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
 }
 
 .this-page:hover {
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 @media (min-width: 960px) {

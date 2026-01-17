@@ -203,7 +203,7 @@ function highlightMatch(text, query) {
   width: 100%;
   max-width: 600px;
   margin: 0 16px;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
@@ -214,12 +214,12 @@ function highlightMatch(text, query) {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  border-bottom: 1px solid var(--md-c-divider-light);
 }
 
 .search-icon {
   flex-shrink: 0;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .search-input {
@@ -228,11 +228,11 @@ function highlightMatch(text, query) {
   outline: none;
   font-size: 18px;
   background: transparent;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .search-input::placeholder {
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .close-btn {
@@ -247,10 +247,10 @@ function highlightMatch(text, query) {
   padding: 4px 8px;
   font-size: 11px;
   font-family: inherit;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 4px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .search-results {
@@ -269,11 +269,11 @@ function highlightMatch(text, query) {
 
 .result-item:hover,
 .result-item.selected {
-  background: var(--md-c-white-soft);
+  background: var(--md-c-bg-soft);
 }
 
 .result-item.selected {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
 }
 
@@ -318,24 +318,24 @@ function highlightMatch(text, query) {
 .result-path {
   display: block;
   font-size: 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   margin-top: 2px;
 }
 
 .result-arrow {
   flex-shrink: 0;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .no-results,
 .search-hint {
   padding: 32px 20px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .no-results strong {
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .hint {
@@ -358,8 +358,8 @@ function highlightMatch(text, query) {
   margin: 0 2px;
   font-size: 11px;
   font-family: inherit;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 4px;
 }
 

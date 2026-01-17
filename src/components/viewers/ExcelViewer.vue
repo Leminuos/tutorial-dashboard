@@ -117,10 +117,10 @@ watch(() => props.path, loadExcel)
 
 <style scoped>
 .excel-viewer {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
 }
 
 .excel-header {
@@ -128,11 +128,11 @@ watch(() => props.path, loadExcel)
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   font-size: 13px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .file-icon {
@@ -144,7 +144,7 @@ watch(() => props.path, loadExcel)
 .empty {
   padding: 24px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .error {
@@ -155,16 +155,16 @@ watch(() => props.path, loadExcel)
   display: flex;
   gap: 4px;
   padding: 8px 16px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   overflow-x: auto;
 }
 
 .sheet-tab {
   padding: 6px 12px;
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 4px;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
@@ -172,13 +172,13 @@ watch(() => props.path, loadExcel)
 }
 
 .sheet-tab:hover {
-  background: var(--md-c-divider-light-1);
+  background: var(--md-c-divider);
 }
 
 .sheet-tab.active {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
-  border-color: var(--md-c-green);
+  border-color: var(--md-c-brand);
 }
 
 .table-container {
@@ -196,24 +196,24 @@ watch(() => props.path, loadExcel)
 .excel-table th,
 .excel-table td {
   padding: 8px 12px;
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   text-align: left;
   white-space: nowrap;
 }
 
 .excel-table th {
-  background: var(--md-c-white-soft);
+  background: var(--md-c-bg-soft);
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   position: sticky;
   top: 0;
 }
 
 .excel-table td {
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .excel-table tr:hover td {
-  background: var(--md-c-white-soft);
+  background: var(--md-c-bg-soft);
 }
 </style>

@@ -221,7 +221,7 @@ watch(() => route.params, () => {
 .loading {
   padding: 48px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 /* File modal */
@@ -240,7 +240,7 @@ watch(() => route.params, () => {
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -252,14 +252,14 @@ watch(() => route.params, () => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
 }
 
 .file-modal-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .close-btn {
@@ -268,15 +268,15 @@ watch(() => route.params, () => {
   border: none;
   background: transparent;
   font-size: 24px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
 }
 
 .close-btn:hover {
-  background: var(--md-c-divider-light-1);
-  color: var(--md-c-text-light-1);
+  background: var(--md-c-divider);
+  color: var(--md-c-text-1);
 }
 
 .file-modal-content {

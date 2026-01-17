@@ -71,10 +71,10 @@ watch(() => props.path, () => {
 
 <style scoped>
 .pdf-viewer {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
 }
 
 .pdf-header {
@@ -82,11 +82,11 @@ watch(() => props.path, () => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   font-size: 13px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .file-icon {
@@ -100,20 +100,20 @@ watch(() => props.path, () => {
 .download-btn {
   padding: 4px 8px;
   border-radius: 4px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .download-btn:hover {
-  background: var(--md-c-divider-light-1);
-  color: var(--md-c-text-light-1);
+  background: var(--md-c-divider);
+  color: var(--md-c-text-1);
 }
 
 .loading {
   padding: 24px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .error {
@@ -125,7 +125,7 @@ watch(() => props.path, () => {
 .fallback-link {
   display: block;
   margin-top: 12px;
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
 }
 
 .pdf-frame {

@@ -17,7 +17,7 @@
 
 .md-content a {
   font-weight: 500;
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   transition: color .25s;
   text-decoration-style: dotted;
 }
@@ -59,7 +59,7 @@
 
 .md-content th,
 .md-content td {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   padding: 10px 12px;
   vertical-align: top;
 }
@@ -67,7 +67,7 @@
 .md-content thead th {
   font-weight: 700;
   text-align: left;
-  background-color: var(--md-c-divider-light-2);
+  background-color: var(--md-c-divider-light);
 }
 
 .md-content ul {
@@ -85,17 +85,17 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background-color: var(--md-c-text-light-3);
+  background-color: var(--md-c-text-3);
   transition: background-color .5s;
   left: -1.8rem;
   top: 1.1rem;
 }
 
 .md-content :not(pre) > code {
-  background-color: var(--md-c-white-mute);
+  background-color: var(--md-c-bg-mute);
   padding: .15em .5em;
   border-radius: 4px;
-  color: var(--md-c-text-light-code);
+  color: var(--md-c-text-code);
   transition: color .5s, background-color .5s;
 }
 
@@ -192,8 +192,8 @@
   font-size: 14px;
   line-height: 1.6;
   font-weight: 500;
-  color: #0000008c;
-  background-color: var(--md-c-white-soft);
+  color: var(--md-c-text-2);
+  background-color: var(--md-c-bg-soft);
 }
 
 .md-content .md-custom-block::before {
@@ -233,7 +233,7 @@
   margin-bottom: 8px;
   font-size: 15px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   transition: color .5s;
 }
 

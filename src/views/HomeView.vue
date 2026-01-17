@@ -142,7 +142,7 @@ function openSearch() {
   justify-content: center;
   min-height: 50vh;
   padding: 60px 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--md-c-bg-soft);
 }
 
 .hero-content {
@@ -166,7 +166,7 @@ function openSearch() {
 
 .hero-tagline {
   font-size: 18px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   line-height: 1.6;
   margin-bottom: 32px;
 }
@@ -193,7 +193,7 @@ function openSearch() {
 }
 
 .btn-primary {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
 }
 
@@ -204,14 +204,14 @@ function openSearch() {
 }
 
 .btn-secondary {
-  background: white;
-  color: var(--md-c-text-light-1);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  color: var(--md-c-text-1);
+  border: 1px solid var(--md-c-divider-light);
 }
 
 .btn-secondary:hover {
-  border-color: var(--md-c-green);
-  color: var(--md-c-green);
+  border-color: var(--md-c-brand);
+  color: var(--md-c-brand);
 }
 
 /* Sections */
@@ -227,7 +227,7 @@ function openSearch() {
   font-weight: 700;
   text-align: center;
   margin-bottom: 40px;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 /* Docs Grid */
@@ -240,15 +240,15 @@ function openSearch() {
 .doc-card {
   position: relative;
   padding: 28px;
-  background: white;
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 16px;
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .doc-card:hover {
-  border-color: var(--md-c-green);
+  border-color: var(--md-c-brand);
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
@@ -261,13 +261,13 @@ function openSearch() {
 .doc-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   margin-bottom: 8px;
 }
 
 .doc-count {
   font-size: 14px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .doc-arrow {
@@ -275,12 +275,12 @@ function openSearch() {
   top: 28px;
   right: 28px;
   font-size: 20px;
-  color: var(--md-c-divider-light-2);
+  color: var(--md-c-divider-light);
   transition: all 0.3s;
 }
 
 .doc-card:hover .doc-arrow {
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   transform: translateX(4px);
 }
 
@@ -293,7 +293,7 @@ function openSearch() {
 
 .feature-card {
   padding: 24px;
-  background: var(--md-c-white-soft);
+  background: var(--md-c-bg-soft);
   border-radius: 12px;
   text-align: center;
 }
@@ -306,13 +306,13 @@ function openSearch() {
 .feature-card h3 {
   font-size: 16px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   margin-bottom: 8px;
 }
 
 .feature-card p {
   font-size: 14px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   line-height: 1.5;
 }
 

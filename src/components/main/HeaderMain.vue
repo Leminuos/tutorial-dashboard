@@ -2,11 +2,13 @@
 import { RouterLink } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 import { useSearchStore } from '@/stores/searchStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { ref, computed, watch } from 'vue'
 import SearchModal from '@/components/search/SearchModal.vue'
 
 const docs = useDocsStore()
 const searchStore = useSearchStore()
+const themeStore = useThemeStore()
 const isDropdownMobile = ref(false)
 const activeDropdown = ref(null)
 const expandedMobileSection = ref(null)
@@ -137,6 +139,24 @@ function openSearch() {
               </router-link>
             </div>
           </div>
+
+          <!-- Theme switch -->
+          <div class="theme-switch" @click="themeStore.toggleTheme" :title="themeStore.isDark ? 'Chế độ sáng' : 'Chế độ tối'">
+            <div class="switch-track" :class="{ dark: themeStore.isDark }">
+              <div class="switch-thumb">
+                <svg v-if="!themeStore.isDark" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"></line>
+                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"></line>
+                </svg>
+                <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <!-- Mobile hamburger -->
@@ -203,6 +223,25 @@ function openSearch() {
             </div>
           </div>
         </div>
+
+        <!-- Mobile Theme Switch -->
+        <div class="mobile-theme-section">
+          <span class="mobile-theme-label">Giao diện</span>
+          <div class="mobile-theme-switch" @click="themeStore.toggleTheme">
+            <div class="mobile-switch-track" :class="{ dark: themeStore.isDark }">
+              <div class="mobile-switch-thumb">
+                <svg v-if="!themeStore.isDark" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"></line>
+                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"></line>
+                </svg>
+                <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -219,8 +258,8 @@ function openSearch() {
   left: 0;
   z-index: 1000;
   height: var(--md-nav-height);
-  background-color: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background-color: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   transition: 0.5s ease-out;
 }
 
@@ -275,7 +314,7 @@ function openSearch() {
   padding-left: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .content {
@@ -292,7 +331,7 @@ function openSearch() {
 
 .navbar-item {
   position: relative;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   font-size: 11px;
   font-weight: 500;
   transition: color .25s;
@@ -301,7 +340,7 @@ function openSearch() {
 }
 
 .navbar-item:hover {
-  color: rgba(60, 60, 60, 0.7);
+  color: var(--md-c-text-3);
 }
 
 /* Dropdown trigger */
@@ -330,8 +369,8 @@ function openSearch() {
   left: 50%;
   transform: translateX(-50%);
   min-width: 200px;
-  background: var(--md-c-white);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   padding: 12px;
@@ -344,14 +383,14 @@ function openSearch() {
   gap: 10px;
   padding: 10px 14px;
   font-size: 14px;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.2s;
 }
 
 .dropdown-category-link:hover {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
 }
 
@@ -371,7 +410,7 @@ function openSearch() {
   gap: 8px;
   height: var(--md-nav-height);
   padding: 0 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   font-size: 14px;
   background: none;
   border: none;
@@ -380,7 +419,7 @@ function openSearch() {
 }
 
 .search:hover {
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .search-title {
@@ -392,10 +431,63 @@ function openSearch() {
   padding: 3px 6px;
   font-size: 11px;
   font-family: inherit;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 4px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
+  transition: all 0.2s;
+}
+
+.search:hover .search-shortcut {
+  border: 1px solid var(--md-c-brand);
+  color: var(--md-c-brand);
+}
+
+/* Theme switch */
+.theme-switch {
+  display: none;
+  align-items: center;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.switch-track {
+  position: relative;
+  border-radius: 11px;
+  display: block;
+  width: 40px;
+  height: 22px;
+  background: var(--md-c-bg-mute);
+  border: 1px solid var(--md-c-divider);
+  transition: border-color .25s, background-color .25s;
+}
+
+.switch-track:hover {
+  border: 1px solid var(--md-c-gray);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 18px;
+  height: 18px;
+  background: var(--md-c-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+.switch-track.dark .switch-thumb {
+  transform: translateX(18px);
+  background-color: var(--md-c-bg);
+}
+
+.switch-thumb svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Hamburger button */
@@ -420,7 +512,7 @@ function openSearch() {
   position: absolute;
   width: 16px;
   height: 2px;
-  background-color: var(--md-c-text-light-1);
+  background-color: var(--md-c-text-1);
   transition: top .25s, background-color .5s, transform .25s;
 }
 
@@ -478,7 +570,7 @@ function openSearch() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   z-index: -1;
 }
 
@@ -487,12 +579,12 @@ function openSearch() {
   width: 100%;
   height: 100%;
   padding: 24px;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   overflow-y: auto;
 }
 
 .mobile-section {
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -504,7 +596,7 @@ function openSearch() {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   margin-bottom: 16px;
 }
 
@@ -516,7 +608,7 @@ function openSearch() {
   margin: 0 -16px;
   font-size: 16px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   text-decoration: none;
   background: transparent;
   border: none;
@@ -528,8 +620,8 @@ function openSearch() {
 
 .mobile-item:hover,
 .mobile-item:active {
-  background: var(--md-c-white-soft);
-  color: var(--md-c-green);
+  background: var(--md-c-bg-soft);
+  color: var(--md-c-brand);
 }
 
 .mobile-item.expandable {
@@ -542,8 +634,8 @@ function openSearch() {
 }
 
 .mobile-item.expanded {
-  color: var(--md-c-green);
-  background: var(--md-c-white-soft);
+  color: var(--md-c-brand);
+  background: var(--md-c-bg-soft);
 }
 
 .mobile-item.expanded .expand-icon {
@@ -558,7 +650,7 @@ function openSearch() {
 .mobile-categories {
   padding: 8px 0 0 12px;
   margin-left: 8px;
-  border-left: 2px solid var(--md-c-divider-light-2);
+  border-left: 2px solid var(--md-c-divider-light);
   animation: slideDown 0.2s ease;
 }
 
@@ -581,7 +673,7 @@ function openSearch() {
   margin: 4px 0;
   font-size: 15px;
   font-weight: 500;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -589,7 +681,7 @@ function openSearch() {
 
 .mobile-category-link:hover,
 .mobile-category-link:active {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
 }
 
@@ -638,5 +730,69 @@ function openSearch() {
   .search-shortcut {
     display: inline-block;
   }
+
+  .theme-switch {
+    display: flex;
+  }
+}
+
+/* Mobile Theme Section */
+.mobile-theme-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-top: 16px;
+  background: var(--md-c-bg-soft);
+  border-radius: 12px;
+}
+
+.mobile-theme-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--md-c-text-1);
+}
+
+.mobile-theme-switch {
+  cursor: pointer;
+}
+
+.mobile-switch-track {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--md-c-bg-mute);
+  border: 1px solid var(--md-c-divider);
+  transition: all 0.25s;
+}
+
+.mobile-switch-track:hover {
+  border: 1px solid var(--md-c-gray);
+}
+
+.mobile-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  background: var(--md-c-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+  color: var(--md-c-text-2);
+}
+
+.mobile-switch-track.dark .mobile-switch-thumb {
+  transform: translateX(22px);
+  background: var(--md-c-bg);
+}
+
+.mobile-switch-thumb svg {
+  width: 14px;
+  height: 14px;
 }
 </style>

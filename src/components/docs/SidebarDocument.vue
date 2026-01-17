@@ -57,8 +57,8 @@ const currentDoc = computed(() => {
   left: 0;
   z-index: 1000;
   width: calc(var(--md-sidebar-expand) + 8px);
-  background-color: var(--md-c-white);
-  border-right: 1px solid var(--md-c-divider-light-2);
+  background-color: var(--md-c-bg);
+  border-right: 1px solid var(--md-c-divider-light);
   overflow: auto;
   transform: translateX(-100%);
   transition: transform 0.5s ease;
@@ -106,10 +106,10 @@ const currentDoc = computed(() => {
 }
 
 .sidebar-header {
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   padding-bottom: 24px;
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--md-c-divider-light-1);
+  border-bottom: 1px solid var(--md-c-divider);
 }
 
 .sidebar-group {
@@ -124,7 +124,7 @@ const currentDoc = computed(() => {
   line-height: 20px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   transition: color .5s;
 }
 
@@ -134,7 +134,7 @@ const currentDoc = computed(() => {
 }
 
 .link.active .link-text {
-  color: var(--md-c-green) !important;
+  color: var(--md-c-brand) !important;
   transition: color .25s;
 }
 
@@ -142,7 +142,7 @@ const currentDoc = computed(() => {
   line-height: 20px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   transition: color .5s;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -151,7 +151,7 @@ const currentDoc = computed(() => {
 }
 
 .link:hover .link-text {
-  color: var(--md-c-brand-text-1);
+  color: var(--md-c-text-1);
   transition: color .25s;
 }
 
@@ -159,7 +159,7 @@ const currentDoc = computed(() => {
   padding-top: 20px;
   font-size: 12px;
   font-weight: 700;
-  border-top: 1px solid var(--md-c-divider-light-2);
-  color: var(--md-c-text-light-1);
+  border-top: 1px solid var(--md-c-divider-light);
+  color: var(--md-c-text-1);
 }
 </style>

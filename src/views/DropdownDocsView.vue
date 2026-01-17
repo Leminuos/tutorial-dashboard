@@ -230,10 +230,10 @@ watch(() => route.params, () => {
 
 /* Content border wrapper */
 .content-border {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 12px;
   padding: 24px;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   margin-top: 24px;
   margin-bottom: 48px;
 }
@@ -254,33 +254,33 @@ watch(() => route.params, () => {
   gap: 8px;
   margin-bottom: 24px;
   font-size: 14px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .breadcrumb-link {
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .breadcrumb-link:hover {
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
 }
 
 .breadcrumb-current {
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   font-weight: 500;
 }
 
 .separator {
-  color: var(--md-c-divider-light-2);
+  color: var(--md-c-divider-light);
 }
 
 /* Landing page */
 .landing-title {
   font-size: 32px;
   font-weight: 700;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   margin-bottom: 32px;
 }
 
@@ -295,17 +295,17 @@ watch(() => route.params, () => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 10px;
   text-decoration: none;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   transition: all 0.2s;
 }
 
 .category-card:hover {
-  border-color: var(--md-c-green);
-  background: var(--md-c-white);
+  border-color: var(--md-c-brand);
+  background: var(--md-c-bg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
@@ -322,14 +322,14 @@ watch(() => route.params, () => {
 
 .subcategory-count {
   font-size: 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 /* Category page */
 .page-title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   margin-bottom: 24px;
 }
 
@@ -344,17 +344,17 @@ watch(() => route.params, () => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 10px;
   text-decoration: none;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   transition: all 0.2s;
 }
 
 .subcategory-card:hover {
-  border-color: var(--md-c-green);
-  background: var(--md-c-green);
+  border-color: var(--md-c-brand);
+  background: var(--md-c-brand);
   color: white;
 }
 
@@ -379,7 +379,7 @@ watch(() => route.params, () => {
 
 .file-count {
   font-size: 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   transition: color 0.2s;
 }
 
@@ -395,8 +395,8 @@ watch(() => route.params, () => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--md-c-white-soft);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
@@ -404,7 +404,7 @@ watch(() => route.params, () => {
 }
 
 .file-card:hover {
-  border-color: var(--md-c-green);
+  border-color: var(--md-c-brand);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
@@ -433,7 +433,7 @@ watch(() => route.params, () => {
 .file-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -441,13 +441,13 @@ watch(() => route.params, () => {
 
 .file-type {
   font-size: 11px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .empty {
   padding: 48px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 /* File viewer */
@@ -456,7 +456,7 @@ watch(() => route.params, () => {
   inset: 0;
   top: var(--md-nav-height);
   z-index: 100;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
   display: flex;
   flex-direction: column;
 }
@@ -466,14 +466,14 @@ watch(() => route.params, () => {
   align-items: center;
   gap: 16px;
   padding: 16px 24px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
 }
 
 .back-btn {
   padding: 8px 16px;
-  background: var(--md-c-white);
-  border: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
@@ -481,15 +481,15 @@ watch(() => route.params, () => {
 }
 
 .back-btn:hover {
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
-  border-color: var(--md-c-green);
+  border-color: var(--md-c-brand);
 }
 
 .viewer-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .viewer-content {

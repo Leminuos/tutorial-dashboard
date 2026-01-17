@@ -72,10 +72,10 @@ watch(() => props.path, () => {
 
 <style scoped>
 .pptx-viewer {
-  border: 1px solid var(--md-c-divider-light-2);
+  border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   overflow: hidden;
-  background: var(--md-c-white);
+  background: var(--md-c-bg);
 }
 
 .pptx-header {
@@ -83,11 +83,11 @@ watch(() => props.path, () => {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--md-c-white-soft);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
   font-size: 13px;
   font-weight: 500;
-  color: var(--md-c-text-light-1);
+  color: var(--md-c-text-1);
 }
 
 .file-icon {
@@ -106,13 +106,13 @@ watch(() => props.path, () => {
 }
 
 .download-btn:hover {
-  background: var(--md-c-divider-light-1);
+  background: var(--md-c-divider);
 }
 
 .loading {
   padding: 24px;
   text-align: center;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
 }
 
 .error {
@@ -125,7 +125,7 @@ watch(() => props.path, () => {
   display: inline-block;
   margin-top: 12px;
   padding: 8px 16px;
-  background: var(--md-c-green);
+  background: var(--md-c-brand);
   color: white;
   border-radius: 6px;
   text-decoration: none;

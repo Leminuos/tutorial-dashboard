@@ -5,18 +5,17 @@ import { buildRawUrl } from '@/stores/docstree'
 let renderAsync = null
 
 try {
-  // Use a variable to bypass Vite's static analysis of the import
-  // This allows the app to start even if the optional dependency is missing
-  const libName = 'docx-preview'
-  import(/* @vite-ignore */ libName).then(module => {
+  // Use string literal for better bundler support
+  import('docx-preview').then(module => {
     renderAsync = module.renderAsync
     loadWord()
-  }).catch(() => {
-    error.value = "Module 'docx-preview' not found. Please run: npm install docx-preview"
+  }).catch((err) => {
+    console.error("docx-preview import failed:", err)
+    error.value = "Document viewer component could not be loaded."
     loading.value = false
   })
-} catch {
-  // Fallback
+} catch (e) {
+  console.error("docx-preview setup failed:", e)
 }
 
 onMounted(() => {
@@ -88,9 +87,6 @@ watch(() => props.path, loadWord)
     <div v-if="error" class="error">
       <div class="error-icon">⚠️</div>
       <div class="error-msg">{{ error }}</div>
-      <div v-if="error.includes('npm install')" class="install-hint">
-        Terminal command: <code>npm install docx-preview</code>
-      </div>
     </div>
 
     <div ref="container" class="document-container"></div>

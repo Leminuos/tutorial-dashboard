@@ -13,11 +13,11 @@ const isDropdownMobile = ref(false)
 const activeDropdown = ref(null)
 const expandedMobileSection = ref(null)
 
-// Sidebar docs - show as direct links
-const sidebarDocs = computed(() => docs.sidebarDocs)
+// Tutorial docs - show as direct links
+const tutorialDocs = computed(() => docs.tutorialDocs)
 
-// Dropdown docs - show with hover menu
-const dropdownDocs = computed(() => docs.dropdownDocs)
+// Folder docs - show with hover menu
+const folderDocs = computed(() => docs.folderDocs)
 
 // Disable body scroll when mobile dropdown is open
 watch(isDropdownMobile, (isOpen) => {
@@ -96,10 +96,10 @@ function openSearch() {
 
         <!-- Desktop Navbar -->
         <nav class="navbar">
-          <!-- Sidebar docs - direct links -->
+          <!-- Tutorial docs - direct links -->
           <div
             class="navbar-item"
-            v-for="doc in sidebarDocs"
+            v-for="doc in tutorialDocs"
             :key="doc.id"
           >
             <router-link :to="`/docs/${doc.id}`">
@@ -107,10 +107,10 @@ function openSearch() {
             </router-link>
           </div>
 
-          <!-- Dropdown docs - hover menus -->
+          <!-- Folder docs - hover menus -->
           <div
             class="navbar-item dropdown-trigger"
-            v-for="doc in dropdownDocs"
+            v-for="doc in folderDocs"
             :key="doc.id"
             @mouseenter="onMouseEnter(doc.id)"
             @mouseleave="onMouseLeave"
@@ -177,9 +177,9 @@ function openSearch() {
         <div class="mobile-section">
           <div class="mobile-section-title">Documentation</div>
 
-          <!-- Sidebar docs - direct links -->
+          <!-- Tutorial docs - direct links -->
           <router-link
-            v-for="doc in sidebarDocs"
+            v-for="doc in tutorialDocs"
             :key="doc.id"
             :to="`/docs/${doc.id}`"
             class="mobile-item"
@@ -188,9 +188,9 @@ function openSearch() {
             <span>{{ doc.title }}</span>
           </router-link>
 
-          <!-- Dropdown docs - expandable -->
+          <!-- Folder docs - expandable -->
           <div
-            v-for="doc in dropdownDocs"
+            v-for="doc in folderDocs"
             :key="doc.id"
             class="mobile-expandable"
           >

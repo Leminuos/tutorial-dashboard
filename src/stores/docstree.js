@@ -19,8 +19,8 @@ export const useDocsStore = defineStore('docs', {
   }),
 
   getters: {
-    sidebarDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'sidebar') || [],
-    dropdownDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'dropdown') || [],
+    tutorialDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'tutorial') || [],
+    folderDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'folder') || [],
   },
 
   actions: {
@@ -70,11 +70,11 @@ export const useDocsStore = defineStore('docs', {
     },
 
     /**
-     * Get page data for sidebar docs
+     * Get page data for tutorial docs
      */
-    getSidebarPage(sectionId, chapterId, pageId) {
+    getTutorialPage(sectionId, chapterId, pageId) {
       const doc = this.getDocById(sectionId)
-      if (!doc || doc.layout !== 'sidebar') return null
+      if (!doc || doc.layout !== 'tutorial') return null
 
       const chapter = doc.chapters?.find(c => c.id === chapterId)
       if (!chapter) return null
@@ -83,11 +83,11 @@ export const useDocsStore = defineStore('docs', {
     },
 
     /**
-     * Get subcategory data for dropdown docs
+     * Get subcategory data for folder docs
      */
-    getDropdownSubcategory(sectionId, categoryId, subcategoryId) {
+    getFolderSubcategory(sectionId, categoryId, subcategoryId) {
       const doc = this.getDocById(sectionId)
-      if (!doc || doc.layout !== 'dropdown') return null
+      if (!doc || doc.layout !== 'folder') return null
 
       const category = doc.categories?.find(c => c.id === categoryId)
       if (!category) return null
@@ -195,7 +195,7 @@ function buildDocsTree(allPaths, docConfig) {
     // Skip hidden files/folders
     if (docName.startsWith('.')) continue
 
-    const layout = docConfig[docName]?.layout || 'sidebar'
+    const layout = docConfig[docName]?.layout || 'tutorial'
 
     if (!docsMap.has(docName)) {
       docsMap.set(docName, {
@@ -213,10 +213,10 @@ function buildDocsTree(allPaths, docConfig) {
   const docs = []
 
   for (const [docName, docData] of docsMap) {
-    if (docData.layout === 'sidebar') {
-      docs.push(buildSidebarDoc(docData))
+    if (docData.layout === 'tutorial') {
+      docs.push(buildTutorialDoc(docData))
     } else {
-      docs.push(buildDropdownDoc(docData))
+      docs.push(buildFolderDoc(docData))
     }
   }
 
@@ -224,10 +224,10 @@ function buildDocsTree(allPaths, docConfig) {
 }
 
 /**
- * Build sidebar doc structure
+ * Build tutorial doc structure
  * Structure: Doc > Chapter > Page (with examples and attachments)
  */
-function buildSidebarDoc(docData) {
+function buildTutorialDoc(docData) {
   const chaptersMap = new Map()
 
   for (const filePath of docData.files) {
@@ -329,16 +329,16 @@ function buildSidebarDoc(docData) {
   return {
     id: docData.id,
     title: docData.title,
-    layout: 'sidebar',
+    layout: 'tutorial',
     chapters
   }
 }
 
 /**
- * Build dropdown doc structure
+ * Build folder doc structure
  * Structure: Doc > Category > Subcategory > Files
  */
-function buildDropdownDoc(docData) {
+function buildFolderDoc(docData) {
   const categoriesMap = new Map()
 
   for (const filePath of docData.files) {
@@ -391,7 +391,7 @@ function buildDropdownDoc(docData) {
   return {
     id: docData.id,
     title: docData.title,
-    layout: 'dropdown',
+    layout: 'folder',
     categories
   }
 }
@@ -403,7 +403,7 @@ function flatPages(docsTree) {
   const items = []
 
   for (const d of docsTree.docs) {
-    if (d.layout === 'sidebar') {
+    if (d.layout === 'tutorial') {
       for (const ch of d.chapters || []) {
         for (const p of ch.pages || []) {
           items.push({

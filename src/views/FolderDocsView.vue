@@ -97,7 +97,7 @@ watch(() => route.params, () => {
 </script>
 
 <template>
-  <div class="dropdown-docs">
+  <div class="folder-docs">
     <!-- Content wrapper with border -->
     <div v-if="!selectedFile" class="content-border">
       <!-- Breadcrumb -->
@@ -205,25 +205,25 @@ watch(() => route.params, () => {
 </template>
 
 <style scoped>
-.dropdown-docs {
+.folder-docs {
   padding: 24px;
   min-height: calc(100vh - var(--md-nav-height));
 }
 
 @media (min-width: 960px) {
-  .dropdown-docs {
+  .folder-docs {
     padding: 48px 100px;
   }
 }
 
 @media (min-width: 1280px) {
-  .dropdown-docs {
+  .folder-docs {
     padding: 48px 150px;
   }
 }
 
 @media (min-width: 1600px) {
-  .dropdown-docs {
+  .folder-docs {
     padding: 48px 200px;
   }
 }

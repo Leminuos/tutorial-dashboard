@@ -16,7 +16,7 @@ const docs = useDocsStore()
 // Current page data
 const currentPage = computed(() => {
   const { section, chapter, page } = route.params
-  return docs.getSidebarPage(section, chapter, page)
+  return docs.getTutorialPage(section, chapter, page)
 })
 
 // Markdown source URL

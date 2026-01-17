@@ -92,9 +92,9 @@ onUnmounted(() => {
 
 function getTypeIcon(type) {
   switch (type) {
-    case 'sidebar': return '📖'
-    case 'dropdown-category': return '📁'
-    case 'dropdown-subcategory': return '📂'
+    case 'tutorial': return '📖'
+    case 'folder-category': return '📁'
+    case 'folder-subcategory': return '📂'
     default: return '📄'
   }
 }

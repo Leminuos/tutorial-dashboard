@@ -7,11 +7,11 @@ const docs = useDocsStore()
 const searchStore = useSearchStore()
 
 // All docs combined
-const allDocs = computed(() => [...docs.sidebarDocs, ...docs.dropdownDocs])
+const allDocs = computed(() => [...docs.tutorialDocs, ...docs.folderDocs])
 
 // Get page count for a doc
 function getPageCount(doc) {
-  if (doc.layout === 'sidebar') {
+  if (doc.layout === 'tutorial') {
     let count = 0
     for (const chapter of doc.chapters || []) {
       count += chapter.pages?.length || 0
@@ -39,7 +39,7 @@ function getDocIcon(doc) {
 
 // Get first page link for a doc
 function getDocLink(doc) {
-  if (doc.layout === 'sidebar') {
+  if (doc.layout === 'tutorial') {
     const chapter = doc.chapters?.[0]
     const page = chapter?.pages?.[0]
     if (chapter && page) {
@@ -94,7 +94,7 @@ function openSearch() {
           <div class="doc-icon">{{ getDocIcon(doc) }}</div>
           <h3 class="doc-title">{{ doc.title }}</h3>
           <p class="doc-count">
-            {{ getPageCount(doc) }} {{ doc.layout === 'sidebar' ? 'trang' : 'mục' }}
+            {{ getPageCount(doc) }} {{ doc.layout === 'tutorial' ? 'trang' : 'mục' }}
           </p>
           <div class="doc-arrow">→</div>
         </router-link>

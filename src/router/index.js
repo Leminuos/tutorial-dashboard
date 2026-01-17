@@ -6,11 +6,11 @@ import { useDocsStore } from '@/stores/docstree'
 const HomeView = defineAsyncComponent(() =>
   import('@/views/HomeView.vue')
 )
-const SidebarDocsView = defineAsyncComponent(() =>
-  import('@/views/SidebarDocsView.vue')
+const TutorialDocsView = defineAsyncComponent(() =>
+  import('@/views/TutorialDocsView.vue')
 )
-const DropdownDocsView = defineAsyncComponent(() =>
-  import('@/views/DropdownDocsView.vue')
+const FolderDocsView = defineAsyncComponent(() =>
+  import('@/views/FolderDocsView.vue')
 )
 
 // Layouts
@@ -22,21 +22,21 @@ const MainLayout = defineAsyncComponent(() =>
 )
 
 /**
- * Check if section uses sidebar layout
+ * Check if section uses tutorial layout
  */
-function isSidebarDoc(sectionId) {
+function isTutorialDoc(sectionId) {
   const docs = useDocsStore()
   const doc = docs.getDocById(sectionId)
-  return doc?.layout === 'sidebar'
+  return doc?.layout === 'tutorial'
 }
 
 /**
- * Get default page for sidebar docs
+ * Get default page for tutorial docs
  */
-function getDefaultSidebarPage(sectionId) {
+function getDefaultTutorialPage(sectionId) {
   const docs = useDocsStore()
   const doc = docs.getDocById(sectionId)
-  if (!doc || doc.layout !== 'sidebar') return null
+  if (!doc || doc.layout !== 'tutorial') return null
 
   const firstChapter = doc.chapters?.[0]
   const firstPage = firstChapter?.pages?.[0]
@@ -69,38 +69,38 @@ const routes = [
     redirect: (to) => {
       const sectionId = to.params.section
 
-      // Check if sidebar doc - redirect to first page
-      if (isSidebarDoc(sectionId)) {
-        const defaultPage = getDefaultSidebarPage(sectionId)
+      // Check if tutorial doc - redirect to first page
+      if (isTutorialDoc(sectionId)) {
+        const defaultPage = getDefaultTutorialPage(sectionId)
         if (defaultPage) {
           return {
-            name: 'sidebar-page',
+            name: 'tutorial-page',
             params: defaultPage
           }
         }
       }
 
-      // Dropdown doc - go to landing page
+      // Folder doc - go to landing page
       return {
-        name: 'dropdown-landing',
+        name: 'folder-landing',
         params: { section: sectionId }
       }
     }
   },
 
-  // Sidebar docs: /docs/:section/:chapter/:page
+  // Tutorial docs: /docs/:section/:chapter/:page
   {
     path: '/docs/:section/:chapter/:page',
-    name: 'sidebar-page',
-    component: SidebarDocsView,
+    name: 'tutorial-page',
+    component: TutorialDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      if (!isSidebarDoc(to.params.section)) {
-        // Not a sidebar doc, redirect to dropdown view
+      if (!isTutorialDoc(to.params.section)) {
+        // Not a tutorial doc, redirect to folder view
         next({
-          name: 'dropdown-page',
+          name: 'folder-page',
           params: {
             section: to.params.section,
             category: to.params.chapter,
@@ -113,35 +113,35 @@ const routes = [
     }
   },
 
-  // Dropdown docs landing: /docs/:section/landing
+  // Folder docs landing: /docs/:section/landing
   {
     path: '/docs/:section/landing',
-    name: 'dropdown-landing',
-    component: DropdownDocsView,
+    name: 'folder-landing',
+    component: FolderDocsView,
     meta: {
       layout: DocumentLayout
     }
   },
 
-  // Dropdown docs with category only: /docs/:section/:category
+  // Folder docs with category only: /docs/:section/:category
   {
     path: '/docs/:section/:category',
-    name: 'dropdown-category',
-    component: DropdownDocsView,
+    name: 'folder-category',
+    component: FolderDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      // If this is a sidebar doc, category is actually a chapter
+      // If this is a tutorial doc, category is actually a chapter
       // We need to redirect to first page of that chapter
-      if (isSidebarDoc(to.params.section)) {
+      if (isTutorialDoc(to.params.section)) {
         const docs = useDocsStore()
         const doc = docs.getDocById(to.params.section)
         const chapter = doc?.chapters?.find(c => c.id === to.params.category)
         const firstPage = chapter?.pages?.[0]
         if (firstPage) {
           next({
-            name: 'sidebar-page',
+            name: 'tutorial-page',
             params: {
               section: to.params.section,
               chapter: to.params.category,
@@ -152,25 +152,25 @@ const routes = [
           next()
         }
       } else {
-        // Dropdown doc - show category page
+        // Folder doc - show category page
         next()
       }
     }
   },
 
-  // Dropdown docs with subcategory: /docs/:section/:category/:subcategory
+  // Folder docs with subcategory: /docs/:section/:category/:subcategory
   {
     path: '/docs/:section/:category/:subcategory',
-    name: 'dropdown-page',
-    component: DropdownDocsView,
+    name: 'folder-page',
+    component: FolderDocsView,
     meta: {
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      if (isSidebarDoc(to.params.section)) {
-        // Redirect to sidebar page view
+      if (isTutorialDoc(to.params.section)) {
+        // Redirect to tutorial page view
         next({
-          name: 'sidebar-page',
+          name: 'tutorial-page',
           params: {
             section: to.params.section,
             chapter: to.params.category,

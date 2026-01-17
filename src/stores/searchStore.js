@@ -22,8 +22,8 @@ export const useSearchStore = defineStore('search', () => {
 
     const index = []
 
-    // Index sidebar docs
-    for (const doc of docs.sidebarDocs) {
+    // Index tutorial docs
+    for (const doc of docs.tutorialDocs) {
       for (const chapter of doc.chapters || []) {
         for (const page of chapter.pages || []) {
           if (page.path) {
@@ -33,7 +33,7 @@ export const useSearchStore = defineStore('search', () => {
               section: doc.title,
               chapter: chapter.title,
               path: `/docs/${doc.id}/${chapter.id}/${page.id}`,
-              type: 'sidebar',
+              type: 'tutorial',
               rawPath: page.path
             })
           }
@@ -41,8 +41,8 @@ export const useSearchStore = defineStore('search', () => {
       }
     }
 
-    // Index dropdown docs
-    for (const doc of docs.dropdownDocs) {
+    // Index folder docs
+    for (const doc of docs.folderDocs) {
       for (const category of doc.categories || []) {
         // Add category as searchable
         index.push({
@@ -51,7 +51,7 @@ export const useSearchStore = defineStore('search', () => {
           section: doc.title,
           chapter: null,
           path: `/docs/${doc.id}/${category.id}`,
-          type: 'dropdown-category'
+          type: 'folder-category'
         })
 
         for (const sub of category.subcategories || []) {
@@ -61,7 +61,7 @@ export const useSearchStore = defineStore('search', () => {
             section: doc.title,
             chapter: category.title,
             path: `/docs/${doc.id}/${category.id}/${sub.id}`,
-            type: 'dropdown-subcategory'
+            type: 'folder-subcategory'
           })
         }
       }

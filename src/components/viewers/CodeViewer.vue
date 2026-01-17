@@ -2,7 +2,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { buildRawUrl } from '@/stores/docstree'
 import { createHighlighter } from 'shiki'
-import shikiConfig from '@/config/shiki.config'
+import { useThemeStore } from '@/stores/themeStore'
 
 const props = defineProps({
   path: { type: String, required: true },
@@ -14,6 +14,7 @@ const highlightedCode = ref('')
 const loading = ref(true)
 const error = ref(null)
 const highlighter = ref(null)
+const themeStore = useThemeStore()
 
 // Map file extensions to Shiki language IDs
 const langMap = {
@@ -68,6 +69,18 @@ function getLanguage(fileName) {
   return langMap[ext] || 'text'
 }
 
+async function updateHighlight() {
+  if (!highlighter.value || !code.value) return
+
+  const lang = getLanguage(props.fileName || props.path)
+  const theme = themeStore.isDark ? 'github-dark' : 'github-light'
+
+  highlightedCode.value = highlighter.value.codeToHtml(code.value, {
+    lang,
+    theme
+  })
+}
+
 async function loadCode() {
   loading.value = true
   error.value = null
@@ -81,15 +94,7 @@ async function loadCode() {
     }
 
     code.value = await res.text()
-
-    // Highlight code
-    if (highlighter.value) {
-      const lang = getLanguage(props.fileName || props.path)
-      highlightedCode.value = highlighter.value.codeToHtml(code.value, {
-        lang,
-        theme: shikiConfig.theme || 'github-light'
-      })
-    }
+    await updateHighlight()
   } catch (err) {
     error.value = err.message
     console.error('Failed to load code:', err)
@@ -101,7 +106,7 @@ async function loadCode() {
 onMounted(async () => {
   try {
     highlighter.value = await createHighlighter({
-      themes: [shikiConfig.theme || 'github-light'],
+      themes: ['github-light', 'github-dark'],
       langs: Object.values(langMap).filter((v, i, a) => a.indexOf(v) === i)
     })
   } catch (err) {
@@ -112,6 +117,7 @@ onMounted(async () => {
 })
 
 watch(() => props.path, loadCode)
+watch(() => themeStore.isDark, updateHighlight)
 
 // Copy and download functionality
 const copied = ref(false)

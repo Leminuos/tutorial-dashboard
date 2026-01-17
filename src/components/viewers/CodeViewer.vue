@@ -244,6 +244,12 @@ function downloadFile() {
   font-size: 14px;
 }
 
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .loading,
 .error {
   padding: 24px;

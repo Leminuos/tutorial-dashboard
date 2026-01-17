@@ -95,6 +95,9 @@ watch(() => props.path, () => {
 
 .file-name {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .download-btn {

@@ -99,7 +99,7 @@ watch(() => route.params, () => {
 <template>
   <div class="dropdown-docs">
     <!-- Content wrapper with border -->
-    <div class="content-border">
+    <div v-if="!selectedFile" class="content-border">
       <!-- Breadcrumb -->
       <div class="breadcrumb" v-if="breadcrumb.length">
         <template v-for="(part, index) in breadcrumb" :key="index">
@@ -179,7 +179,7 @@ watch(() => route.params, () => {
     </div>
 
     <!-- Selected file viewer -->
-    <div v-if="selectedFile" class="file-viewer-container">
+    <div v-else class="file-viewer-container">
       <div class="viewer-header">
         <button class="back-btn" @click="closeViewer">
           ← Back to files
@@ -233,16 +233,14 @@ watch(() => route.params, () => {
   border: 1px solid var(--md-c-divider-light);
   border-radius: 12px;
   padding: 24px;
+  margin: 24px 0;
   background: var(--md-c-bg);
-  margin-top: 24px;
-  margin-bottom: 48px;
 }
 
 @media (min-width: 960px) {
   .content-border {
     padding: 32px;
-    margin-top: 32px;
-    margin-bottom: 64px;
+    margin: 32px 0;
   }
 }
 
@@ -455,19 +453,54 @@ watch(() => route.params, () => {
   position: fixed;
   inset: 0;
   top: var(--md-nav-height);
+  padding: 0 15px;
   z-index: 100;
   background: var(--md-c-bg);
   display: flex;
   flex-direction: column;
 }
 
+@media (min-width: 1280px) {
+  .file-viewer-container {
+    padding: 0 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .file-viewer-container {
+    padding: 0 100px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .file-viewer-container {
+    padding: 0 150px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .file-viewer-container {
+    padding: 0 200px;
+  }
+}
+
 .viewer-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 12px 16px;
+  margin: 24px 0;
   background: var(--md-c-bg-soft);
-  border-bottom: 1px solid var(--md-c-divider-light);
+  border-radius: 6px;
+  border: 1px solid var(--md-c-divider-light);
+}
+
+@media (min-width: 960px) {
+  .viewer-header {
+    padding: 16px 24px;
+    margin: 24px 0;
+    border-radius: 12px;
+  }
 }
 
 .back-btn {
@@ -486,15 +519,25 @@ watch(() => route.params, () => {
   border-color: var(--md-c-brand);
 }
 
+.back-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .viewer-title {
+  flex: 1;
+  min-width: 0;
   font-size: 16px;
   font-weight: 600;
   color: var(--md-c-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .viewer-content {
   flex: 1;
   overflow: auto;
-  padding: 24px;
+  margin-bottom: 24px;
 }
 </style>

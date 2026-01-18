@@ -2,12 +2,19 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
+import { geminiService } from '@/service/gemini/geminiService'
 
 import FileViewer from '@/components/viewers/FileViewer.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 
 const route = useRoute()
+const router = useRouter()
 const docs = useDocsStore()
+
+// AI Summary states
+const isSummarizing = ref(false)
+const summaryContent = ref('')
+const showSummaryModal = ref(false)
 
 // Parse path segments from route
 // With :path+ pattern, route.params.path is an array
@@ -128,7 +135,7 @@ function selectFile(file) {
   selectedFile.value = file
 }
 
-const router = useRouter()
+
 
 function closeViewer() {
   if (selectedFile.value) {
@@ -166,6 +173,74 @@ watch(currentNode, (node) => {
     selectedFile.value = null
   }
 }, { immediate: true })
+
+// AI Summary function
+async function summarizeContent() {
+  if (!selectedFile.value || isSummarizing.value) return
+
+  // Check if AI is configured
+  if (!geminiService.isConfigured()) {
+    summaryContent.value = '⚠️ **Tính năng AI chưa được kích hoạt**\n\nHiện tại tính năng AI Summary chưa được cấu hình. Vui lòng thử lại sau.'
+    showSummaryModal.value = true
+    return
+  }
+
+  isSummarizing.value = true
+  summaryContent.value = ''
+  showSummaryModal.value = true
+
+  const fileType = selectedFile.value.fileType
+
+  try {
+    // For binary files (PDF, Word, PowerPoint), show info message
+    if (['pdf', 'word', 'powerpoint'].includes(fileType)) {
+      // These files can't be easily read in browser
+      // Ask AI to explain based on filename
+      const fileName = selectedFile.value.name
+      const prompt = `Dựa vào tên file "${fileName}" (loại ${fileType}), hãy đoán và mô tả ngắn gọn về nội dung có thể có trong file này. Nếu không thể đoán được, hãy đưa ra các gợi ý về cách đọc và tóm tắt file ${fileType.toUpperCase()}.`
+
+      const summary = await geminiService.sendMessage(prompt)
+      summaryContent.value = `📄 **File ${fileType.toUpperCase()}**\n\n${summary}\n\n---\n*Lưu ý: Để tóm tắt chi tiết hơn, cần đọc nội dung file. Hiện tại chưa hỗ trợ trích xuất text từ file ${fileType.toUpperCase()} trực tiếp.*`
+    } else {
+      // For text-based files (markdown, code), fetch and summarize content
+      const url = buildRawUrl(selectedFile.value.path)
+      const response = await fetch(url)
+      const content = await response.text()
+
+      // Truncate if too long (keep first 8000 chars for context)
+      const truncatedContent = content.length > 8000
+        ? content.substring(0, 8000) + '\n\n[Nội dung đã được rút gọn...]'
+        : content
+
+      // Ask Gemini to summarize
+      const prompt = `Hãy tóm tắt nội dung sau đây bằng tiếng Việt, ngắn gọn và dễ hiểu. Tập trung vào các điểm chính, khái niệm quan trọng. Sử dụng bullet points nếu có nhiều ý:\n\n---\n${truncatedContent}\n---\n\nTóm tắt:`
+
+      const summary = await geminiService.sendMessage(prompt)
+      summaryContent.value = summary
+    }
+  } catch (error) {
+    console.error('Summary error:', error)
+    summaryContent.value = '❌ Không thể tóm tắt nội dung. Vui lòng thử lại sau.'
+  } finally {
+    isSummarizing.value = false
+  }
+}
+
+function closeSummaryModal() {
+  showSummaryModal.value = false
+  summaryContent.value = ''
+}
+
+// Simple markdown to HTML for summary
+function renderSummary(text) {
+  if (!text) return ''
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/\n/g, '<br>')
+}
 </script>
 
 <template>
@@ -230,9 +305,28 @@ watch(currentNode, (node) => {
     <div v-else class="file-viewer-container">
       <div class="viewer-header">
         <button class="back-btn" @click="closeViewer">
-          ← Back to files
+          <span class="back-icon">←</span>
+          <span class="back-text">Back to files</span>
         </button>
         <span class="viewer-title">{{ selectedFile.name }}</span>
+
+        <!-- AI Summary Button -->
+        <button
+          v-if="['markdown', 'code', 'pdf', 'word', 'powerpoint'].includes(selectedFile.fileType)"
+          class="ai-summary-btn"
+          :class="{ 'loading': isSummarizing }"
+          @click="summarizeContent"
+          :disabled="isSummarizing"
+          title="AI Tóm tắt"
+        >
+          <svg v-if="!isSummarizing" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+          <span v-else class="spinner"></span>
+          <span>{{ isSummarizing ? 'Đang tóm tắt...' : 'AI Tóm tắt' }}</span>
+        </button>
       </div>
 
       <div class="viewer-content">
@@ -250,6 +344,25 @@ watch(currentNode, (node) => {
         />
       </div>
     </div>
+
+    <!-- AI Summary Modal -->
+    <Teleport to="body">
+      <div v-if="showSummaryModal" class="summary-modal-overlay" @click.self="closeSummaryModal">
+        <div class="summary-modal">
+          <div class="summary-header">
+            <h3>🤖 AI Tóm tắt</h3>
+            <button class="close-modal-btn" @click="closeSummaryModal">×</button>
+          </div>
+          <div class="summary-body">
+            <div v-if="isSummarizing" class="summary-loading">
+              <div class="loading-spinner"></div>
+              <p>Đang phân tích và tóm tắt nội dung...</p>
+            </div>
+            <div v-else class="summary-content" v-html="renderSummary(summaryContent)"></div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
   </div>
 </template>
@@ -487,6 +600,9 @@ watch(currentNode, (node) => {
 }
 
 .back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 16px;
   background: var(--md-c-bg);
   border: 1px solid var(--md-c-divider-light);
@@ -504,6 +620,32 @@ watch(currentNode, (node) => {
   border-color: var(--md-c-brand);
 }
 
+.back-btn .back-icon {
+  flex-shrink: 0;
+}
+
+.back-btn .back-text {
+  margin-left: 4px;
+}
+
+@media (max-width: 640px) {
+  .back-btn .back-text {
+    display: none;
+  }
+
+  .back-btn {
+    padding: 8px 12px;
+  }
+
+  .ai-summary-btn span:last-child {
+    display: none;
+  }
+
+  .ai-summary-btn {
+    padding: 8px 12px;
+  }
+}
+
 .viewer-title {
   flex: 1;
   min-width: 0;
@@ -519,5 +661,147 @@ watch(currentNode, (node) => {
   flex: 1;
   overflow: auto;
   margin-bottom: 24px;
+}
+
+/* AI Summary Button */
+.ai-summary-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.ai-summary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ai-summary-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.ai-summary-btn .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Summary Modal */
+.summary-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.summary-modal {
+  background: var(--md-c-bg);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px 16px 0 0;
+  color: white;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-modal-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.summary-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.summary-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  color: var(--md-c-text-2);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--md-c-divider-light);
+  border-top-color: var(--md-c-brand);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.summary-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--md-c-text-1);
+}
+
+.summary-content ul {
+  padding-left: 20px;
+  margin: 12px 0;
+}
+
+.summary-content li {
+  margin-bottom: 8px;
+}
+
+.summary-content strong {
+  color: var(--md-c-brand);
 }
 </style>

@@ -1,12 +1,13 @@
 <script setup>
 import { computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 import HeaderMain from '@/components/main/HeaderMain.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 import FileViewer from '@/components/viewers/FileViewer.vue'
 
 const route = useRoute()
+const router = useRouter()
 const docs = useDocsStore()
 
 // Parse path segments
@@ -78,6 +79,10 @@ function formatDate(dateStr) {
   }
   return dateStr
 }
+
+function goBack() {
+  router.back()
+}
 </script>
 
 <template>
@@ -123,6 +128,11 @@ function formatDate(dateStr) {
             />
         </div>
       </div>
+
+      <!-- Back button -->
+      <button class="back-btn" @click="goBack">
+        ← Quay lại
+      </button>
     </div>
   </div>
 </template>
@@ -147,11 +157,10 @@ function formatDate(dateStr) {
   cursor: pointer;
   font-size: 15px;
   font-weight: 500;
-  margin-bottom: 32px;
-  padding: 0;
+  margin-left: auto;
+  padding-right: 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
   transition: opacity 0.2s;
 }
 

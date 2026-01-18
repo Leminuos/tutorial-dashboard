@@ -14,12 +14,15 @@ const categoryId = computed(() => {
 
 const currentPage = ref(1)
 const pageSize = 6
+const isLoading = ref(true)
 
 // Fetch metadata when category changes
-watch(categoryId, (newId) => {
+watch(categoryId, async (newId) => {
   if (newId) {
-    docsStore.fetchCategoryMetadata(newId)
+    isLoading.value = true
+    await docsStore.fetchCategoryMetadata(newId)
     currentPage.value = 1
+    isLoading.value = false
   }
 }, { immediate: true })
 
@@ -27,6 +30,18 @@ watch(categoryId, (newId) => {
 const metadata = computed(() => docsStore.getPostMetadata(categoryId.value) || {})
 const posts = computed(() => metadata.value.posts || [])
 const rawPath = computed(() => metadata.value.rawPath || categoryId.value)
+
+// Category info for header
+const categoryTitle = computed(() => {
+  // Extract title from categoryId (e.g., "blog/tech" -> "Tech")
+  const parts = categoryId.value?.split('/') || []
+  const lastPart = parts[parts.length - 1] || 'Posts'
+  return lastPart.charAt(0).toUpperCase() + lastPart.slice(1).replace(/-/g, ' ')
+})
+
+const categoryDescription = computed(() => {
+  return metadata.value.description || `Danh sách bài viết trong ${categoryTitle.value.toLowerCase()}`
+})
 
 // Pagination
 const totalPages = computed(() => Math.ceil(posts.value.length / pageSize))
@@ -69,6 +84,15 @@ function formatDate(dateStr) {
   }
   return dateStr
 }
+
+// Reading time estimation (based on description length, assuming ~200 words/min)
+function getReadingTime(post) {
+  const text = post.description || ''
+  // Estimate total content is about 5-10x the description
+  const estimatedWords = text.split(/\s+/).length * 8
+  const minutes = Math.max(1, Math.ceil(estimatedWords / 200))
+  return `${minutes} phút đọc`
+}
 </script>
 
 <template>
@@ -78,13 +102,32 @@ function formatDate(dateStr) {
   <div class="post-list-view">
     <div class="container">
       <!-- Page Header -->
-      <!-- <header class="page-header">
-        <h1>{{}}</h1>
-      </header> -->
+      <header class="page-header">
+        <h1>{{ categoryTitle.toUpperCase() }}</h1>
+        <p class="page-description">{{ categoryDescription }}</p>
+        <div class="post-count" v-if="!isLoading">
+          {{ posts.length }} bài viết
+        </div>
+      </header>
+
+      <!-- Skeleton Loading -->
+      <div v-if="isLoading" class="posts-list">
+        <div v-for="n in 3" :key="n" class="post-row skeleton">
+          <div class="post-thumbnail skeleton-thumbnail">
+            <div class="skeleton-shimmer"></div>
+          </div>
+          <div class="post-content">
+            <div class="skeleton-line skeleton-meta"></div>
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-desc"></div>
+            <div class="skeleton-line skeleton-desc-short"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- Empty State -->
-      <div v-if="!posts.length" class="empty-state">
-        <p>No posts found in this category.</p>
+      <div v-else-if="!posts.length" class="empty-state">
+        <p>Không tìm thấy bài viết nào trong danh mục này.</p>
       </div>
 
       <!-- Posts List (Horizontal Rows) -->
@@ -107,6 +150,7 @@ function formatDate(dateStr) {
           <div class="post-content">
             <div class="post-meta">
               <span class="post-date" v-if="post.date">{{ formatDate(post.date) }}</span>
+              <span class="post-reading-time">• {{ getReadingTime(post) }}</span>
               <span class="post-author" v-if="post.author">• {{ post.author }}</span>
             </div>
             <h2 class="post-title">{{ post.title }}</h2>
@@ -126,7 +170,7 @@ function formatDate(dateStr) {
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="!isLoading && totalPages > 1" class="pagination">
         <button
           class="page-btn"
           :disabled="currentPage === 1"
@@ -189,7 +233,105 @@ function formatDate(dateStr) {
   font-size: 18px;
   color: var(--md-c-text-2);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto 16px;
+}
+
+.post-count {
+  display: inline-block;
+  background: var(--md-c-brand);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Reading Time */
+.post-reading-time {
+  color: var(--md-c-text-3);
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+/* Skeleton Loading */
+.post-row.skeleton {
+  pointer-events: none;
+}
+
+.skeleton-thumbnail {
+  position: relative;
+  overflow: hidden;
+  background: var(--md-c-bg-mute);
+}
+
+.skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-line {
+  background: var(--md-c-bg-mute);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-meta {
+  width: 150px;
+  height: 14px;
+  margin-bottom: 12px;
+}
+
+.skeleton-title {
+  width: 80%;
+  height: 24px;
+  margin-bottom: 10px;
+}
+
+.skeleton-desc {
+  width: 100%;
+  height: 14px;
+  margin-bottom: 8px;
+}
+
+.skeleton-desc-short {
+  width: 60%;
+  height: 14px;
 }
 
 /* Empty State */

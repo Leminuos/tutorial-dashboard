@@ -230,7 +230,7 @@ watch(currentNode, (node) => {
     <div v-else class="file-viewer-container">
       <div class="viewer-header">
         <button class="back-btn" @click="closeViewer">
-          ← Back to files
+          ← <span class="back-text">Back to files</span>
         </button>
         <span class="viewer-title">{{ selectedFile.name }}</span>
       </div>
@@ -496,12 +496,22 @@ watch(currentNode, (node) => {
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .back-btn:hover {
   background: var(--md-c-brand);
   color: white;
   border-color: var(--md-c-brand);
+}
+
+@media (max-width: 768px) {
+  .back-text {
+    display: none;
+  }
 }
 
 .viewer-title {

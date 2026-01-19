@@ -18,6 +18,9 @@ const tocItems = ref([])
 
 const contentEl = ref(null)     // gắn vào element chứa v-html
 
+// Image lightbox state
+const lightboxImage = ref(null)
+
 const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
@@ -57,21 +60,39 @@ async function copyToClipboard(text) {
 }
 
 function onContentClick(e) {
+  // Handle code copy button
   const btn = e.target.closest('.code-copy');
-  if (!btn) return;
+  if (btn) {
+    const block = btn.closest('.code-block');
+    const pre = block?.querySelector('pre');
+    const code = pre?.textContent || '';
 
-  const block = btn.closest('.code-block');
-  const pre = block?.querySelector('pre');
-  const code = pre?.textContent || '';
+    copyToClipboard(code).then((ok) => {
+      if (!ok) return;
 
-  copyToClipboard(code).then((ok) => {
-    if (!ok) return;
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.classList.remove('copied');
+      }, 1200);
+    });
+    return;
+  }
 
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.classList.remove('copied');
-    }, 1200);
-  });
+  // Handle image click for lightbox
+  const img = e.target.closest('img');
+  if (img && !img.closest('.mermaid-diagram')) {
+    lightboxImage.value = img.src;
+  }
+}
+
+function closeLightbox() {
+  lightboxImage.value = null;
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Escape' && lightboxImage.value) {
+    closeLightbox();
+  }
 }
 
 watch(activeId, (id) => {
@@ -116,16 +137,33 @@ watchEffect(async () => {
 
 onMounted(async () => {
   contentEl.value?.addEventListener('click', onContentClick);
+  document.addEventListener('keydown', handleKeydown);
 });
 
 onBeforeUnmount(() => {
   contentEl.value?.removeEventListener('click', onContentClick);
+  document.removeEventListener('keydown', handleKeydown);
 })
 
 </script>
 
 <template>
   <article ref="contentEl" class="md-content" :style="{ '--md-content-max-width': props.maxWidth }" v-html="html"></article>
+
+  <!-- Image Lightbox -->
+  <Teleport to="body">
+    <Transition name="lightbox">
+      <div v-if="lightboxImage" class="lightbox-overlay" @click="closeLightbox">
+        <button class="lightbox-close" @click="closeLightbox" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <img :src="lightboxImage" class="lightbox-image" @click.stop alt="Zoomed image">
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -135,6 +173,16 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   padding: 0 10px;
   overflow-x: hidden;
+}
+
+/* Make images clickable */
+:deep(img) {
+  cursor: zoom-in;
+  transition: opacity 0.2s;
+}
+
+:deep(img:hover) {
+  opacity: 0.9;
 }
 
 /* Mermaid diagram styles */
@@ -161,5 +209,72 @@ onBeforeUnmount(() => {
   color: var(--md-c-yellow);
   font-size: 13px;
   padding: 12px;
+}
+
+/* Lightbox Styles */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: default;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Lightbox Transition */
+.lightbox-enter-active,
+.lightbox-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.lightbox-enter-active .lightbox-image,
+.lightbox-leave-active .lightbox-image {
+  transition: transform 0.2s ease;
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+  opacity: 0;
+}
+
+.lightbox-enter-from .lightbox-image {
+  transform: scale(0.9);
+}
+
+.lightbox-leave-to .lightbox-image {
+  transform: scale(0.9);
 }
 </style>

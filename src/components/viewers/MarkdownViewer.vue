@@ -4,6 +4,7 @@ import { ref, watch, watchEffect, nextTick, onMounted, onBeforeUnmount } from 'v
 import { createMarkdownRenderer } from '@/service/markdown/createMarkdownRenderer'
 import { useShikiHighlighter } from '@/service/shiki/useShikiHighlighter'
 import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
+import { useMermaidRenderer } from '@/composables/markdown/useMermaidRenderer'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -20,6 +21,7 @@ const contentEl = ref(null)     // gắn vào element chứa v-html
 const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
+const { markMermaidBlocks, renderMermaidPlaceholders } = useMermaidRenderer()
 
 function wrapShikiBlock(shikiHtml, lang) {
   const safeLang = (lang || 'text').toLowerCase()
@@ -85,7 +87,11 @@ watchEffect(async () => {
     const md_url = res.url
     const { html: rawHtml, toc } = render(md_text, md_url);
 
-    html.value = await highlightMarkdownHtml(rawHtml, {
+    // Mark mermaid blocks before Shiki highlighting
+    const markedHtml = markMermaidBlocks(rawHtml)
+
+    // Highlight code with Shiki
+    html.value = await highlightMarkdownHtml(markedHtml, {
       theme: 'one-dark-pro',
       wrap: wrapShikiBlock
     })
@@ -101,6 +107,10 @@ watchEffect(async () => {
   }
 
   await nextTick()
+
+  // Render mermaid diagrams after HTML is mounted
+  await renderMermaidPlaceholders(contentEl.value)
+
   setupScrollSpy()
 })
 
@@ -125,5 +135,31 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   padding: 0 10px;
   overflow-x: hidden;
+}
+
+/* Mermaid diagram styles */
+:deep(.mermaid-diagram) {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  overflow-x: auto;
+  padding: 16px;
+  background: var(--md-c-bg-soft);
+  border-radius: 8px;
+}
+
+:deep(.mermaid-diagram svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+:deep(.mermaid-diagram-error) {
+  border: 1px solid var(--md-c-yellow);
+}
+
+:deep(.mermaid-error) {
+  color: var(--md-c-yellow);
+  font-size: 13px;
+  padding: 12px;
 }
 </style>

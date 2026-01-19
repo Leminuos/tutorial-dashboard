@@ -15,6 +15,9 @@ const FolderDocsView = defineAsyncComponent(() =>
 const FileExplorerLanding = defineAsyncComponent(() =>
   import('@/views/FileExplorerLanding.vue')
 )
+const NotFoundView = defineAsyncComponent(() =>
+  import('@/views/NotFoundView.vue')
+)
 
 // Layouts
 const DocumentLayout = defineAsyncComponent(() =>
@@ -147,7 +150,8 @@ const routes = [
       const doc = docs.getDocById(to.params.section)
 
       if (!doc) {
-        next()
+        // Section doesn't exist, redirect to 404
+        next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
         return
       }
 
@@ -174,12 +178,28 @@ const routes = [
        const docs = useDocsStore()
        const doc = docs.getDocById(to.params.section)
 
-       if (doc && doc.layout === 'tutorial') {
+       if (!doc) {
+         // Section doesn't exist, redirect to 404
+         next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+         return
+       }
+
+       if (doc.layout === 'tutorial') {
          const path = Array.isArray(to.params.path) ? to.params.path.join('/') : to.params.path
          next(`/docs/${to.params.section}/${path}`)
        } else {
          next()
        }
+    }
+  },
+
+  // 404 Catch-all route - must be last
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: NotFoundView,
+    meta: {
+      layout: MainLayout
     }
   }
 ]

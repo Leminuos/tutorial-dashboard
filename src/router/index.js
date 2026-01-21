@@ -220,8 +220,9 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const docs = useDocsStore()
 
-  // Only wait if navigating to a /docs route
-  if (to.path.startsWith('/docs')) {
+  // Wait for docs to load for all content routes
+  // This prevents 404s or empty states when reloading on deep links
+  if (to.path.startsWith('/docs') || to.path.startsWith('/posts') || to.name === 'folder-root' || to.name === 'folder-path') {
     if (!docs.tree && !docs.loading) {
       await docs.load()
     } else if (docs.loading) {

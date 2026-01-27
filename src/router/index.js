@@ -28,12 +28,12 @@ const MainLayout = defineAsyncComponent(() =>
 )
 
 /**
- * Check if section uses tutorial layout
+ * Check if section uses a specific layout
  */
-function isTutorialDoc(sectionId) {
+function checkLayout(sectionId, expectedLayout) {
   const docs = useDocsStore()
   const doc = docs.getDocById(sectionId)
-  return doc?.layout === 'tutorial'
+  return doc?.layout === expectedLayout
 }
 
 /**
@@ -83,13 +83,76 @@ const routes = [
     {
       path: '/posts/:category(.*)',
       name: 'post-list',
-      component: () => import('../views/PostListView.vue')
+      component: () => import('../views/PostListView.vue'),
+      beforeEnter: async (to, from, next) => {
+        const docs = useDocsStore()
+        const categoryPath = to.params.category
+        const sectionId = categoryPath.split('/')[0]
+
+        // 1. Check layout
+        if (!checkLayout(sectionId, 'posts')) {
+          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+          return
+        }
+
+        // 2. Check if category exists
+        // categoryPath might be "embedded/multicore"
+        // sectionId is "embedded"
+        await docs.fetchCategoryMetadata(categoryPath)
+        const meta = docs.getPostMetadata(categoryPath)
+
+        // If meta.posts is empty and it's not the root section (which might just have subcats)
+        // or if it's invalid
+        if (!meta || (categoryPath.includes('/') && (!meta.posts || meta.posts.length === 0))) {
+          // Double check if it's a folder in the tree
+          const pathSegments = categoryPath.split('/').slice(1)
+          const node = docs.getFolderNode(sectionId, pathSegments)
+          if (!node) {
+            next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+            return
+          }
+        }
+        next()
+      }
     },
     // Detail View (e.g. /posts/view/vi-dieu-khien/esp32/overview)
     {
       path: '/posts/view/:section/:path+',
       name: 'post-detail',
-      component: () => import('../views/PostDetailView.vue')
+      component: () => import('../views/PostDetailView.vue'),
+      beforeEnter: async (to, from, next) => {
+        const docs = useDocsStore()
+        const { section, path } = to.params
+
+        // 1. Check layout
+        if (!checkLayout(section, 'posts')) {
+          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+          return
+        }
+
+        // 2. Check if post exists
+        const pathSegments = Array.isArray(path) ? path : path.split('/')
+        if (pathSegments.length === 0) {
+          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+          return
+        }
+
+        const categoryId = pathSegments.length > 1
+          ? `${section}/${pathSegments.slice(0, -1).join('/')}`
+          : section
+
+        const postSlug = pathSegments[pathSegments.length - 1]
+
+        await docs.fetchCategoryMetadata(categoryId)
+        const meta = docs.getPostMetadata(categoryId)
+        const post = meta?.posts?.find(p => p.id === postSlug)
+
+        if (!post) {
+          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+          return
+        }
+        next()
+      }
     },
 
   // Tutorial docs: /docs/:section/:chapter/:page
@@ -101,13 +164,22 @@ const routes = [
       layout: DocumentLayout
     },
     beforeEnter: (to, from, next) => {
-      // Ensure it is a tutorial doc
-      if (!isTutorialDoc(to.params.section)) {
-        // Redirect to folder view (root path) logic if accidentally hit
-        next(`/${to.params.section}`)
-      } else {
-        next()
+      const docs = useDocsStore()
+      const { section, chapter, page } = to.params
+
+      // 1. Check layout
+      if (!checkLayout(section, 'tutorial')) {
+        next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+        return
       }
+
+      // 2. Check path existence
+      const tutorialPage = docs.getTutorialPage(section, chapter, page)
+      if (!tutorialPage) {
+        next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+        return
+      }
+      next()
     }
   },
 
@@ -118,7 +190,7 @@ const routes = [
     beforeEnter: (to, from, next) => {
       const sectionId = to.params.section
 
-      if (isTutorialDoc(sectionId)) {
+      if (checkLayout(sectionId, 'tutorial')) {
         const defaultPage = getDefaultTutorialPage(sectionId)
         if (defaultPage) {
           next({
@@ -129,9 +201,8 @@ const routes = [
         }
       }
 
-      // If not tutorial, maybe it's a folder doc accessed via old link?
-      // Redirect to new root path
-      next(`/${sectionId}`)
+      // If not tutorial layout, show 404
+      next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
     }
   },
 
@@ -149,20 +220,13 @@ const routes = [
       const docs = useDocsStore()
       const doc = docs.getDocById(to.params.section)
 
-      if (!doc) {
-        // Section doesn't exist, redirect to 404
+      if (!doc || doc.layout !== 'folder') {
+        // Section doesn't exist OR layout is not folder, redirect to 404
         next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
         return
       }
 
-      if (doc.layout === 'tutorial') {
-        next({
-          name: 'docs-section',
-          params: { section: to.params.section }
-        })
-      } else {
-        next()
-      }
+      next()
     }
   },
 
@@ -178,18 +242,22 @@ const routes = [
        const docs = useDocsStore()
        const doc = docs.getDocById(to.params.section)
 
-       if (!doc) {
-         // Section doesn't exist, redirect to 404
+       if (!doc || doc.layout !== 'folder') {
+         // Section doesn't exist OR layout is not folder, redirect to 404
          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
          return
        }
 
-       if (doc.layout === 'tutorial') {
-         const path = Array.isArray(to.params.path) ? to.params.path.join('/') : to.params.path
-         next(`/docs/${to.params.section}/${path}`)
-       } else {
-         next()
+       // Check if path exists in tree
+       const pathSegments = Array.isArray(to.params.path) ? to.params.path : to.params.path.split('/')
+       const node = docs.getFolderNode(to.params.section, pathSegments)
+
+       if (!node) {
+         next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+         return
        }
+
+       next()
     }
   },
 

@@ -78,10 +78,18 @@ const nav = computed(() => {
   padding-top: 8px;
 }
 
+.nav-left {
+  display: flex;
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 16px;
+}
+
 .nav-right {
   display: flex;
   justify-content: flex-end;
   text-align: right;
+  padding-right: 16px;
 }
 
 .nav-link{

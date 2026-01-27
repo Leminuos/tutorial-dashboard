@@ -174,7 +174,9 @@ function openSearch() {
             class="mobile-item"
             @click="onToggleDropdown"
           >
-            <span>{{ doc.title }}</span>
+            <router-link :to="`/docs/${doc.id}`">
+              <span>{{ doc.title }}</span>
+            </router-link>
           </div>
 
           <!-- Posts Docs - expandable -->

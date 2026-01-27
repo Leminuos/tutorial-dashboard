@@ -90,6 +90,7 @@ onUnmounted(() => {
   color: var(--md-c-brand);
   font-size: 14px;
   font-weight: 500;
+  padding-left: 10px;
 }
 
 .menu-toggle svg {
@@ -117,6 +118,7 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 500;
   transition: color 0.25s;
+  padding-right: 10px;
 }
 
 .toc-toggle:hover,

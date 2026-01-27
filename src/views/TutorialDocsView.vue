@@ -299,6 +299,7 @@ watch(() => route.params, () => {
 
 .content-wrapper {
   display: flex;
+  padding: 0 16px;
   padding-top: 24px;
 }
 

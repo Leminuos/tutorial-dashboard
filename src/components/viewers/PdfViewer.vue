@@ -75,6 +75,10 @@ watch(() => props.path, () => {
   border-radius: 8px;
   overflow: hidden;
   background: var(--md-c-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 400px;
 }
 
 .pdf-header {
@@ -133,8 +137,8 @@ watch(() => props.path, () => {
 
 .pdf-frame {
   width: 100%;
-  height: 80vh;
-  min-height: 500px;
+  flex: 1;
+  min-height: 400px;
   border: none;
 }
 </style>

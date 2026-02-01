@@ -159,7 +159,8 @@ watch(() => props.path, loadExcel)
 .excel-viewer {
   display: flex;
   flex-direction: column;
-  height: 600px;
+  height: 100%;
+  min-height: 400px;
   border: 1px solid #d1d5db;
   border-radius: 4px;
   background: white;

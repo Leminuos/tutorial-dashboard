@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 
 import FileViewer from '@/components/viewers/FileViewer.vue'
@@ -81,8 +81,15 @@ const breadcrumb = computed(() => {
   return parts
 })
 
-// Selected file for viewing
+// Selected file for viewing (modal)
 const selectedFile = ref(null)
+const showModal = ref(false)
+
+// Check if file type needs large modal (80% screen)
+const isLargeFile = computed(() => {
+  const largeTypes = ['powerpoint', 'excel', 'pdf', 'word']
+  return largeTypes.includes(selectedFile.value?.fileType)
+})
 
 function getFileIcon(type) {
   const icons = {
@@ -126,25 +133,33 @@ function getFolderLink(folder) {
 
 function selectFile(file) {
   selectedFile.value = file
+  showModal.value = true
 }
 
-const router = useRouter()
+function closeModal() {
+  showModal.value = false
+  selectedFile.value = null
+}
 
-function closeViewer() {
-  if (selectedFile.value) {
-    // If we are at a file path (currentNode is file), go up
-    if (currentNode.value?.type === 'file') {
-      const currentPath = pathSegments.value
-      // Remove last segment (filename)
-      const parentPath = currentPath.slice(0, -1).join('/')
-      const separator = parentPath ? '/' : ''
-      router.push(`/${route.params.section}${separator}${parentPath}`)
-    } else {
-      // Just clear selection if we are in a folder view
-      selectedFile.value = null
-    }
+function handleBackdropClick(e) {
+  if (e.target === e.currentTarget) {
+    closeModal()
   }
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape' && showModal.value) {
+    closeModal()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 
 // Get child count for a folder
 function getChildCount(folder) {
@@ -155,23 +170,12 @@ function getChildCount(folder) {
   if (fileCount > 0) parts.push(`${fileCount} files`)
   return parts.join(', ') || 'Empty'
 }
-
-// Auto-select file if currentNode is a file
-watch(currentNode, (node) => {
-  if (node && node.type === 'file') {
-    selectedFile.value = node
-  } else {
-    // Only clear if we are not navigating to another file
-    // Wait, if node is folder, we should clear
-    selectedFile.value = null
-  }
-}, { immediate: true })
 </script>
 
 <template>
   <div class="folder-docs">
     <!-- Content wrapper with border -->
-    <div v-if="!selectedFile" class="content-border">
+    <div class="content-border">
       <!-- Breadcrumb -->
       <div class="breadcrumb" v-if="breadcrumb.length">
         <template v-for="(part, index) in breadcrumb" :key="index">
@@ -226,31 +230,45 @@ watch(currentNode, (node) => {
       </div>
     </div>
 
-    <!-- Selected file viewer -->
-    <div v-else class="file-viewer-container">
-      <div class="viewer-header">
-        <button class="back-btn" @click="closeViewer">
-          ← <span class="back-text">Back to files</span>
-        </button>
-        <span class="viewer-title">{{ selectedFile.name }}</span>
-      </div>
+    <!-- File Modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showModal && selectedFile"
+          class="modal-overlay"
+          @click="handleBackdropClick"
+        >
+          <div
+            class="modal-container"
+            :class="{ 'modal-large': isLargeFile }"
+          >
+            <div class="modal-header">
+              <span class="modal-title">{{ selectedFile.name }}</span>
+              <button class="modal-close" @click="closeModal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
 
-      <div class="viewer-content">
-        <!-- Markdown gets special treatment -->
-        <markdown-viewer
-          v-if="selectedFile.fileType === 'markdown'"
-          :src="buildRawUrl(selectedFile.path)"
-          max-width="100%"
-        />
-        <file-viewer
-          v-else
-          :path="selectedFile.path"
-          :file-name="selectedFile.name"
-          @close="closeViewer"
-        />
-      </div>
-    </div>
-
+            <div class="modal-content">
+              <!-- Markdown gets special treatment -->
+              <markdown-viewer
+                v-if="selectedFile.fileType === 'markdown'"
+                :src="buildRawUrl(selectedFile.path)"
+                max-width="100%"
+              />
+              <file-viewer
+                v-else
+                :path="selectedFile.path"
+                :file-name="selectedFile.name"
+                @close="closeModal"
+              />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -431,103 +449,120 @@ watch(currentNode, (node) => {
   color: var(--md-c-text-2);
 }
 
-/* File viewer */
-.file-viewer-container {
+/* Modal styles */
+.modal-overlay {
   position: fixed;
   inset: 0;
-  top: var(--md-nav-height);
-  padding: 0 15px;
-  z-index: 100;
-  background: var(--md-c-bg);
-  display: flex;
-  flex-direction: column;
-}
-
-@media (min-width: 1280px) {
-  .file-viewer-container {
-    padding: 0 32px;
-  }
-}
-
-@media (min-width: 1440px) {
-  .file-viewer-container {
-    padding: 0 100px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .file-viewer-container {
-    padding: 0 150px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .file-viewer-container {
-    padding: 0 200px;
-  }
-}
-
-.viewer-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  margin: 24px 0;
-  background: var(--md-c-bg-soft);
-  border-radius: 6px;
-  border: 1px solid var(--md-c-divider-light);
-}
-
-@media (min-width: 960px) {
-  .viewer-header {
-    padding: 16px 24px;
-    margin: 24px 0;
-    border-radius: 12px;
-  }
-}
-
-.back-btn {
-  padding: 8px 16px;
-  background: var(--md-c-bg);
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  z-index: 10000;
+  padding: 20px;
 }
 
-.back-btn:hover {
-  background: var(--md-c-brand);
-  color: white;
-  border-color: var(--md-c-brand);
+.modal-container {
+  background: var(--md-c-bg);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-@media (max-width: 768px) {
-  .back-text {
-    display: none;
-  }
+/* Large modal for powerpoint, excel, pdf */
+.modal-large {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 90vw;
+  height: 85vh;
 }
 
-.viewer-title {
-  flex: 1;
-  min-width: 0;
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  background: var(--md-c-bg-soft);
+}
+
+.modal-title {
   font-size: 16px;
   font-weight: 600;
   color: var(--md-c-text-1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  margin-right: 16px;
 }
 
-.viewer-content {
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--md-c-text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-close:hover {
+  background: var(--md-c-divider-light);
+  color: var(--md-c-text-1);
+}
+
+.modal-content {
   flex: 1;
   overflow: auto;
-  margin-bottom: 24px;
+  padding: 20px;
+}
+
+/* Modal transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .modal-container,
+.modal-leave-to .modal-container {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .modal-container {
+    max-width: 95%;
+    max-height: 85vh;
+    border-radius: 12px;
+    margin: auto;
+  }
+
+  .modal-large {
+    max-width: 95%;
+    width: 95%;
+    height: 90vh;
+    max-height: 90vh;
+    border-radius: 12px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+    align-items: center;
+  }
 }
 </style>

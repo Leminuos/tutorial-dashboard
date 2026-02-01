@@ -100,8 +100,8 @@ watch(() => props.path, loadWord)
   background: #f3f2f1;
   border: 1px solid #e1dfdd;
   border-radius: 4px;
-  height: 80vh;
-  min-height: 500px;
+  height: 100%;
+  min-height: 400px;
 }
 
 .header {

@@ -6,61 +6,79 @@ import { useSearchStore } from '@/stores/searchStore'
 const docs = useDocsStore()
 const searchStore = useSearchStore()
 
-// All docs combined
-const allDocs = computed(() => [...docs.tutorialDocs, ...docs.folderDocs])
+// All docs combined (tutorial docs + posts categories flattened)
+const allDocs = computed(() => {
+  const items = []
 
-// Get page count for a doc
-function getPageCount(doc) {
-  if (doc.layout === 'tutorial') {
+  // Add tutorial docs as-is
+  for (const doc of docs.tutorialDocs) {
+    items.push({
+      ...doc,
+      type: 'tutorial'
+    })
+  }
+
+  // Flatten posts docs into individual categories
+  for (const doc of docs.postDocs) {
+    const categories = doc.children?.filter(c => c.type === 'folder') || []
+    for (const category of categories) {
+      items.push({
+        id: `${doc.id}/${category.id}`,
+        title: category.title,
+        type: 'category',
+        sectionId: doc.id,
+        sectionTitle: doc.title,
+        children: category.children
+      })
+    }
+  }
+
+  return items
+})
+
+// Get page count for a doc item
+function getPageCount(item) {
+  if (item.type === 'tutorial') {
     let count = 0
-    for (const chapter of doc.chapters || []) {
+    for (const chapter of item.chapters || []) {
       count += chapter.pages?.length || 0
     }
     return count
-  } else {
-    // Folder layout - count files recursively
-    function countFiles(node) {
-      if (!node.children) return 0
-      let count = 0
-      for (const child of node.children) {
-        if (child.type === 'file') {
-          count++
-        } else if (child.type === 'folder') {
-          count += countFiles(child)
-        }
-      }
-      return count
-    }
-    return countFiles(doc)
+  } else if (item.type === 'category') {
+    // Count subcategories or files in this category
+    return item.children?.filter(c => c.type === 'folder').length || 0
   }
+  return 0
 }
 
-// Get icon for doc type
-function getDocIcon(doc) {
-  const icons = {
-    'embedded': '🔧',
-    'linux-kernel': '🐧',
-    'vi-dieu-khien': '💡',
-    'project': '🚀'
-  }
-  return icons[doc.id] || '📚'
-}
 
-// Get first page link for a doc
-function getDocLink(doc) {
-  if (doc.layout === 'tutorial') {
-    const chapter = doc.chapters?.[0]
+// Get link for a doc item
+function getDocLink(item) {
+  if (item.type === 'tutorial') {
+    const chapter = item.chapters?.[0]
     const page = chapter?.pages?.[0]
     if (chapter && page) {
-      return `/docs/${doc.id}/${chapter.id}/${page.id}`
+      return `/docs/${item.id}/${chapter.id}/${page.id}`
     }
+    return `/docs/${item.id}`
+  } else if (item.type === 'category') {
+    return `/posts/${item.id}`
   }
-  return `/docs/${doc.id}`
+  return '/'
+}
+
+// Get count label
+function getCountLabel(item) {
+  if (item.type === 'tutorial') {
+    return 'trang'
+  }
+  return 'chủ đề'
 }
 
 function openSearch() {
   searchStore.open()
 }
+
 </script>
 
 <template>
@@ -100,10 +118,9 @@ function openSearch() {
           :to="getDocLink(doc)"
           class="doc-card"
         >
-          <div class="doc-icon">{{ getDocIcon(doc) }}</div>
           <h3 class="doc-title">{{ doc.title }}</h3>
           <p class="doc-count">
-            {{ getPageCount(doc) }} {{ doc.layout === 'tutorial' ? 'trang' : 'mục' }}
+            {{ getPageCount(doc) }} {{ getCountLabel(doc) }}
           </p>
           <div class="doc-arrow">→</div>
         </router-link>

@@ -79,6 +79,7 @@
   --md-c-brand-light: var(--md-c-green-light);
   --md-c-brand-dark: var(--md-c-green-dark);
   --md-c-brand-highlight: var(--md-c-brand-dark);
+  --md-code-tab-bg: #292d3ef0;
 
   --md-doc-code-font-size: 14px;
   --md-doc-code-line-height: 1.5;
@@ -123,6 +124,7 @@ html.dark {
   --md-c-text-inverse-3: var(--md-c-text-light-3);
   --md-c-text-inverse-4: var(--md-c-text-light-4);
   --md-c-brand-highlight: var(--md-c-brand-light);
+  --md-code-tab-bg: var(--md-c-black-mute);
 
   color-scheme: dark;
 }

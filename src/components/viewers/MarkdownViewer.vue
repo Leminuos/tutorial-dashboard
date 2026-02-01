@@ -26,11 +26,12 @@ const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
 const { markMermaidBlocks, renderMermaidPlaceholders } = useMermaidRenderer()
 
-function wrapShikiBlock(shikiHtml, lang) {
+function wrapShikiBlock(shikiHtml, lang, dataTitle) {
   const safeLang = (lang || 'text').toLowerCase()
+  const titleAttr = dataTitle ? ` data-title="${dataTitle}"` : ''
 
   return `
-    <div class="code-block"">
+    <div class="code-block"${titleAttr}>
       <span class="code-lang">${safeLang}</span>
       <button class="code-copy" type="button" aria-label="Copy code">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
@@ -89,6 +90,61 @@ function closeLightbox() {
   lightboxImage.value = null;
 }
 
+
+// Setup code groups with tabs after render
+function setupCodeGroups() {
+  const groups = contentEl.value?.querySelectorAll('.code-group')
+  if (!groups) return
+
+  groups.forEach(group => {
+    const codeBlocks = group.querySelectorAll('.code-block')
+    if (codeBlocks.length === 0) return
+
+    // Create tabs container
+    const tabsContainer = document.createElement('div')
+    tabsContainer.className = 'code-group-tabs'
+
+    // Create panels container
+    const panelsContainer = document.createElement('div')
+    panelsContainer.className = 'code-group-panels'
+
+    codeBlocks.forEach((block, index) => {
+      // Extract file name from data-title attribute on code-block div
+      const filename = block.dataset?.title || 'code'
+
+      // Create tab button
+      const tab = document.createElement('button')
+      tab.className = `code-group-tab${index === 0 ? ' active' : ''}`
+      tab.innerHTML = filename
+      tab.dataset.index = index
+
+      // Create panel
+      const panel = document.createElement('div')
+      panel.className = `code-group-panel${index === 0 ? ' active' : ''}`
+      panel.appendChild(block.cloneNode(true))
+
+      // Tab click handler
+      tab.addEventListener('click', () => {
+        // Update tabs
+        tabsContainer.querySelectorAll('.code-group-tab').forEach(t => t.classList.remove('active'))
+        tab.classList.add('active')
+
+        // Update panels
+        panelsContainer.querySelectorAll('.code-group-panel').forEach(p => p.classList.remove('active'))
+        panelsContainer.children[index].classList.add('active')
+      })
+
+      tabsContainer.appendChild(tab)
+      panelsContainer.appendChild(panel)
+    })
+
+    // Clear original content and add new structure
+    group.innerHTML = ''
+    group.appendChild(tabsContainer)
+    group.appendChild(panelsContainer)
+  })
+}
+
 function handleKeydown(e) {
   if (e.key === 'Escape' && lightboxImage.value) {
     closeLightbox();
@@ -131,6 +187,9 @@ watchEffect(async () => {
 
   // Render mermaid diagrams after HTML is mounted
   await renderMermaidPlaceholders(contentEl.value)
+
+  // Setup code groups with tabs
+  setupCodeGroups()
 
   setupScrollSpy()
 })

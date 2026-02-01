@@ -44,8 +44,11 @@ export function useShikiHighlighter() {
       const pre = el.parentElement
 
       if (pre) {
+        // Preserve data-title attribute from original pre
+        const dataTitle = pre.getAttribute('data-title')
+
         const wrapper = doc.createElement('div')
-        wrapper.innerHTML = wrap ? wrap(shikiHtml, lang) : shikiHtml
+        wrapper.innerHTML = wrap ? wrap(shikiHtml, lang, dataTitle) : shikiHtml
         pre.replaceWith(wrapper.firstElementChild)
       }
     }

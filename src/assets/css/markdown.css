@@ -282,3 +282,89 @@
     top: 0.8rem;
   }
 }
+
+/* ================================
+   Code Group - Tabbed Code Blocks
+   ================================ */
+.md-content .code-group {
+  margin: 24px 0;
+  border-radius: 8px;
+  background: #282c34;
+  overflow: hidden;
+}
+
+.md-content .code-group-tabs {
+  display: flex;
+  background: var(--md-code-tab-bg, #21252b);
+  border-bottom: 1px solid #383c42;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.md-content .code-group-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.md-content .code-group-tabs::-webkit-scrollbar-thumb {
+  background: #4d5363;
+  border-radius: 2px;
+}
+
+.md-content .code-group-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  color: #8b949e;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.md-content .code-group-tab:hover {
+  color: #c9d1d9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.md-content .code-group-tab.active {
+  color: #42b883;
+  border-bottom-color: #42b883;
+  background: rgba(66, 184, 131, 0.1);
+}
+
+.md-content .code-group-tab .tab-icon {
+  font-size: 14px;
+}
+
+.md-content .code-group-panels {
+  position: relative;
+}
+
+.md-content .code-group-panel {
+  display: none;
+}
+
+.md-content .code-group-panel.active {
+  display: block;
+}
+
+/* Override code block styles inside code-group */
+.md-content .code-group .code-block {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+}
+
+.md-content .code-group .code-block .code-lang {
+  display: none;
+}
+
+.md-content .code-group .code-block pre {
+  margin: 0;
+  border-radius: 0;
+}

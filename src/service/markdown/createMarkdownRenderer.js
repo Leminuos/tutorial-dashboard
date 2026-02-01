@@ -28,6 +28,35 @@ export function createMarkdownRenderer() {
   })
 
   /**
+   * Custom fence renderer to preserve filename from info string
+   * Format: ```lang [filename]
+   * Example: ```js [main.js]
+   */
+  const defaultFence = md.renderer.rules.fence
+  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const info = token.info ? token.info.trim() : ''
+
+    // Parse info string: "lang [filename]" or just "lang"
+    const match = info.match(/^(\S+?)(?:\s+\[(.+?)\])?$/)
+    const lang = match ? match[1] : info
+    const filename = match && match[2] ? match[2] : lang
+
+    // Store original info for default renderer
+    token.info = lang
+
+    // Get default rendered HTML
+    let result = defaultFence ? defaultFence(tokens, idx, options, env, self) : ''
+
+    // Add data-title attribute with filename
+    if (filename) {
+      result = result.replace('<pre', `<pre data-title="${filename}"`)
+    }
+
+    return result
+  }
+
+  /**
    * Sử dụng custom container trong markdown bằng cú pháp dạng:
    * ::: <tên-container> [tiêu-đề-tuỳ-chọn]
    *  nội dung markdown bình thường
@@ -52,6 +81,28 @@ export function createMarkdownRenderer() {
       if (tokens[idx].nesting === 1) {
         const title = info || 'WARNING'
         return `<div class="md-warning md-custom-block"><p class="md-custom-block-title">${title}</p>\n`
+      }
+      return `</div>\n`
+    }
+  })
+
+  /**
+   * Code Group container - groups multiple code blocks with tabs
+   * Usage:
+   * ::: code-group
+   * ```js [main.js]
+   * console.log('hello')
+   * ```
+   * ```ts [main.ts]
+   * console.log('hello')
+   * ```
+   * :::
+   */
+  md.use(container, 'code-group', {
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        // Opening tag - we'll process the code blocks inside
+        return `<div class="code-group">\n`
       }
       return `</div>\n`
     }

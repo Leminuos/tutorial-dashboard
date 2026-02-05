@@ -155,11 +155,30 @@ watch(activeId, (id) => {
   emit('toc-active', id)
 }, { immediate: true })
 
+// Strip YAML Front Matter from markdown content
+function stripYamlFrontMatter(content) {
+  if (!content.startsWith('---')) {
+    return content
+  }
+
+  // Find the closing ---
+  const endIndex = content.indexOf('---', 3)
+  if (endIndex === -1) {
+    return content
+  }
+
+  // Return content after the front matter, trimming leading newlines
+  return content.substring(endIndex + 3).replace(/^\r?\n/, '')
+}
+
 watchEffect(async () => {
   try {
     const res = await fetch(props.src)
-    const md_text = await res.text()
+    let md_text = await res.text()
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`);
+
+    // Strip YAML Front Matter before rendering
+    md_text = stripYamlFrontMatter(md_text)
 
     const md_url = res.url
     const { html: rawHtml, toc } = render(md_text, md_url);

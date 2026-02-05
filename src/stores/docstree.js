@@ -3,16 +3,15 @@ import config from '@/config/github.config.js'
 import { getFileType, isExampleFolder } from '@/config/fileTypes.config.js'
 import { slugify } from '@/utils/slugify'
 
-const OWNER = config.github.owner || "YOUR_OWNER"
-const REPO = config.github.repo || "YOUR_REPO"
-const BRANCH = config.github.branch || "master"
-const TOKEN = config.github.token || ""
+const OWNER = config.github.owner || 'YOUR_OWNER'
+const REPO = config.github.repo || 'YOUR_REPO'
+const BRANCH = config.github.branch || 'master'
+const TOKEN = config.github.token || ''
 
 // Cache for raw paths (slug -> raw name mapping)
 const rawPathCache = new Map()
 
 export const useDocsStore = defineStore('docs', {
-
   state: () => ({
     tree: null,
     flatLists: null,
@@ -23,9 +22,9 @@ export const useDocsStore = defineStore('docs', {
   }),
 
   getters: {
-    tutorialDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'tutorial') || [],
-    folderDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'folder') || [],
-    postDocs: (state) => state.tree?.docs?.filter(d => d.layout === 'posts') || [],
+    tutorialDocs: (state) => state.tree?.docs?.filter((d) => d.layout === 'tutorial') || [],
+    folderDocs: (state) => state.tree?.docs?.filter((d) => d.layout === 'folder') || [],
+    postDocs: (state) => state.tree?.docs?.filter((d) => d.layout === 'posts') || [],
     getPostMetadata: (state) => (categoryId) => state.postsMetadata[categoryId] || null,
   },
 
@@ -38,18 +37,18 @@ export const useDocsStore = defineStore('docs', {
       try {
         // 1) Fetch branch ref -> sha
         const refJson = await fetchGithubToJson(
-          `https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}`
+          `https://api.github.com/repos/${OWNER}/${REPO}/git/refs/heads/${BRANCH}`,
         )
         const sha = refJson?.object?.sha
 
         // 2) Fetch tree recursive
         const treeJson = await fetchGithubToJson(
-          `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${sha}?recursive=1`
+          `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${sha}?recursive=1`,
         )
 
         const allPaths = (treeJson.tree || [])
-          .filter(x => x.type === "blob" && typeof x.path === "string")
-          .map(x => x.path)
+          .filter((x) => x.type === 'blob' && typeof x.path === 'string')
+          .map((x) => x.path)
 
         // 3) Fetch .docconfig.json
         this.docConfig = await fetchDocConfig()
@@ -59,7 +58,6 @@ export const useDocsStore = defineStore('docs', {
 
         // 5) Flat lists
         this.flatLists = flatPages(this.tree)
-
       } catch (err) {
         this.error = err.message
         console.error('Failed to load docs:', err)
@@ -69,7 +67,7 @@ export const useDocsStore = defineStore('docs', {
     },
 
     /**
-     * Fetch posts.json for a specific category folder
+     * Fetch metadata from YAML Front Matter in README.md files
      * Optimized with rawPath caching
      */
     async fetchCategoryMetadata(categoryId) {
@@ -89,35 +87,53 @@ export const useDocsStore = defineStore('docs', {
           return
         }
 
-        const url = buildRawUrl(`${rawPath}/posts.json`)
-        const res = await fetch(url)
+        // Get the category node to find all post folders
+        const node = this.getFolderNode(categoryId.split('/')[0], categoryId.split('/').slice(1))
 
-        if (!res.ok) {
-          this.postsMetadata[categoryId] = { posts: [] }
+        if (!node || !node.children) {
+          this.postsMetadata[categoryId] = { posts: [], rawPath }
           return
         }
 
-        const json = await res.json()
-        let posts = []
-        let meta = {}
+        // Find all post folders (folders containing README.md)
+        const postFolders = node.children.filter(
+          (c) => c.type === 'folder' && c.name.toLowerCase() !== 'img',
+        )
 
-        if (Array.isArray(json.posts)) {
-          posts = json.posts
-          meta = { ...json }
-          delete meta.posts
-        } else {
-          // Dictionary format
-          for (const [key, val] of Object.entries(json)) {
-            if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-              posts.push({ id: slugify(key), originalKey: key, ...val })
-            } else {
-              meta[key] = val
+        // Fetch README.md from each folder and parse YAML Front Matter
+        const posts = await Promise.all(
+          postFolders.map(async (folder) => {
+            try {
+              const readmePath = `${rawPath}/${folder.name}/README.md`
+              const url = buildRawUrl(readmePath)
+              const res = await fetch(url)
+
+              if (!res.ok) return null
+
+              const content = await res.text()
+              const frontMatter = parseYamlFrontMatter(content)
+
+              return {
+                id: folder.id,
+                originalKey: folder.name,
+                title: frontMatter.title || folder.title,
+                description: frontMatter.description || '',
+                author: frontMatter.author || '',
+                date: frontMatter.date || '',
+                image: frontMatter.image || '',
+                tags: frontMatter.tags || [],
+                order: extractOrder(folder.name),
+              }
+            } catch {
+              return null
             }
-          }
-        }
+          }),
+        )
 
-        this.postsMetadata[categoryId] = { ...meta, rawPath, posts }
+        // Filter out failed fetches and sort by order
+        const validPosts = posts.filter(Boolean).sort((a, b) => a.order - b.order)
 
+        this.postsMetadata[categoryId] = { rawPath, posts: validPosts }
       } catch (err) {
         console.warn(`Failed to fetch metadata for ${categoryId}:`, err)
         this.postsMetadata[categoryId] = { posts: [] }
@@ -132,7 +148,7 @@ export const useDocsStore = defineStore('docs', {
       const sectionId = parts[0]
       const folderPath = parts.slice(1)
 
-      const doc = this.tree?.docs?.find(d => d.id === sectionId)
+      const doc = this.tree?.docs?.find((d) => d.id === sectionId)
       if (!doc) return null
 
       const rawPathParts = [doc.rawName || doc.title]
@@ -140,7 +156,7 @@ export const useDocsStore = defineStore('docs', {
       let current = doc
       for (const segment of folderPath) {
         if (!current.children) break
-        const child = current.children.find(c => c.id === segment)
+        const child = current.children.find((c) => c.id === segment)
         if (child) {
           rawPathParts.push(child.name)
           current = child
@@ -153,14 +169,14 @@ export const useDocsStore = defineStore('docs', {
     },
 
     getDocById(sectionId) {
-      return this.tree?.docs?.find(d => d.id === sectionId) || null
+      return this.tree?.docs?.find((d) => d.id === sectionId) || null
     },
 
     getTutorialPage(sectionId, chapterId, pageId) {
       const doc = this.getDocById(sectionId)
       if (!doc || doc.layout !== 'tutorial') return null
-      const chapter = doc.chapters?.find(c => c.id === chapterId)
-      return chapter?.pages?.find(p => p.id === pageId) || null
+      const chapter = doc.chapters?.find((c) => c.id === chapterId)
+      return chapter?.pages?.find((p) => p.id === pageId) || null
     },
 
     getFolderNode(sectionId, pathSegments = []) {
@@ -170,30 +186,30 @@ export const useDocsStore = defineStore('docs', {
       let current = doc
       for (const segment of pathSegments) {
         if (!current.children) return null
-        const child = current.children.find(c => c.id === segment)
+        const child = current.children.find((c) => c.id === segment)
         if (!child) return null
         current = child
       }
       return current
-    }
-  }
+    },
+  },
 })
 
 // ============ Helper Functions ============
 
 function createGithubHeader() {
   const header = {
-    "Accept": "application/vnd.github+json",
-    "User-Agent": "docs-tree-generator"
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'docs-tree-generator',
   }
-  if (TOKEN) header["Authorization"] = `Bearer ${TOKEN}`
+  if (TOKEN) header['Authorization'] = `Bearer ${TOKEN}`
   return header
 }
 
 async function fetchGithubToJson(url) {
   const res = await fetch(url, { headers: createGithubHeader() })
   if (!res.ok) {
-    const text = await res.text().catch(() => "")
+    const text = await res.text().catch(() => '')
     throw new Error(`GitHub API error ${res.status} ${res.statusText}\n${url}\n${text}`)
   }
   return res.json()
@@ -211,9 +227,9 @@ async function fetchDocConfig() {
 }
 
 function titleFromFilename(filename, isFile = false) {
-  let base = isFile ? filename.replace(/\.[a-z0-9]{2,4}$/i, "") : filename
-  const withoutOrder = base.replace(/^\d+[.\s\-_]*/, "")
-  const text = withoutOrder.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim()
+  let base = isFile ? filename.replace(/\.[a-z0-9]{2,4}$/i, '') : filename
+  const withoutOrder = base.replace(/^\d+[.\s\-_]*/, '')
+  const text = withoutOrder.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim()
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : base
 }
 
@@ -222,8 +238,79 @@ function extractOrder(filename) {
   return match ? parseInt(match[1], 10) : 999
 }
 
+/**
+ * Parse YAML Front Matter from markdown content
+ * Supports: title, description, author, date, image, tags
+ */
+function parseYamlFrontMatter(content) {
+  const frontMatter = {}
+
+  // Check if content starts with ---
+  if (!content.startsWith('---')) {
+    return frontMatter
+  }
+
+  // Find the closing ---
+  const endIndex = content.indexOf('---', 3)
+  if (endIndex === -1) {
+    return frontMatter
+  }
+
+  const yamlContent = content.substring(3, endIndex).trim()
+  const lines = yamlContent.split('\n')
+
+  let currentKey = null
+  let isArrayMode = false
+
+  for (const line of lines) {
+    const trimmedLine = line.trim()
+
+    // Skip empty lines
+    if (!trimmedLine) continue
+
+    // Check if it's an array item (starts with -)
+    if (trimmedLine.startsWith('- ') && isArrayMode && currentKey) {
+      const value = trimmedLine.substring(2).trim()
+      if (!frontMatter[currentKey]) {
+        frontMatter[currentKey] = []
+      }
+      frontMatter[currentKey].push(value)
+      continue
+    }
+
+    // Check if it's a key-value pair
+    const colonIndex = trimmedLine.indexOf(':')
+    if (colonIndex > 0) {
+      const key = trimmedLine.substring(0, colonIndex).trim()
+      let value = trimmedLine.substring(colonIndex + 1).trim()
+
+      // Remove quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1)
+      }
+
+      if (value === '' || value === null) {
+        // This might be an array, wait for next lines
+        currentKey = key
+        isArrayMode = true
+        frontMatter[key] = []
+      } else {
+        currentKey = key
+        isArrayMode = false
+        frontMatter[key] = value
+      }
+    }
+  }
+
+  return frontMatter
+}
+
 export function buildRawUrl(path) {
-  const encodedPath = path.split('/').map(seg => encodeURIComponent(seg)).join('/')
+  const encodedPath = path
+    .split('/')
+    .map((seg) => encodeURIComponent(seg))
+    .join('/')
   return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${encodedPath}`
 }
 
@@ -243,7 +330,7 @@ function buildDocsTree(allPaths, docConfig) {
         title: titleFromFilename(docName),
         layout,
         rawName: docName,
-        files: []
+        files: [],
       })
     }
     docsMap.get(docName).files.push(path)
@@ -277,14 +364,15 @@ function buildTutorialDoc(docData) {
     const parts = filePath.split('/')
 
     // Skip img folders and short paths
-    if (parts.length < 3 || parts.some(p => p.toLowerCase() === 'img')) continue
+    if (parts.length < 3 || parts.some((p) => p.toLowerCase() === 'img')) continue
 
     const chapterName = parts[1]
     const pageName = parts[2]
     const fileName = parts[parts.length - 1]
-    const isMainMd = parts.length === 3
-      ? getFileType(pageName) === 'markdown'
-      : (fileName.toLowerCase() === 'readme.md' && parts.length === 4)
+    const isMainMd =
+      parts.length === 3
+        ? getFileType(pageName) === 'markdown'
+        : fileName.toLowerCase() === 'readme.md' && parts.length === 4
 
     // Get or create chapter
     let chapter = chaptersMap.get(chapterName)
@@ -293,7 +381,7 @@ function buildTutorialDoc(docData) {
         id: slugify(chapterName),
         title: titleFromFilename(chapterName),
         order: extractOrder(chapterName),
-        pagesMap: new Map()
+        pagesMap: new Map(),
       }
       chaptersMap.set(chapterName, chapter)
     }
@@ -307,7 +395,7 @@ function buildTutorialDoc(docData) {
         order: extractOrder(pageName),
         path: null,
         examples: [],
-        attachments: []
+        attachments: [],
       }
       chapter.pagesMap.set(pageName, page)
     }
@@ -318,7 +406,7 @@ function buildTutorialDoc(docData) {
       page.path = filePath
     } else if (isExampleFolder(filePath) && parts.length >= 6) {
       const exampleName = parts[4]
-      let example = page.examples.find(e => e.name === exampleName)
+      let example = page.examples.find((e) => e.name === exampleName)
       if (!example) {
         example = { name: exampleName, files: [] }
         page.examples.push(example)
@@ -331,22 +419,22 @@ function buildTutorialDoc(docData) {
 
   // Convert to sorted arrays
   const chapters = Array.from(chaptersMap.values())
-    .map(ch => ({
+    .map((ch) => ({
       id: ch.id,
       title: ch.title,
       order: ch.order,
       pages: Array.from(ch.pagesMap.values())
-        .filter(p => p.path)
-        .sort((a, b) => a.order - b.order)
+        .filter((p) => p.path)
+        .sort((a, b) => a.order - b.order),
     }))
-    .filter(ch => ch.pages.length > 0)
+    .filter((ch) => ch.pages.length > 0)
     .sort((a, b) => a.order - b.order)
 
   return {
     id: docData.id,
     title: docData.title,
     layout: 'tutorial',
-    chapters
+    chapters,
   }
 }
 
@@ -360,7 +448,7 @@ function buildTreeDoc(docData, layout) {
     title: docData.title,
     layout,
     rawName: docData.rawName,
-    children: []
+    children: [],
   }
 
   // Use Map for fast folder lookup: Map<parentPath, Map<folderName, folderNode>>
@@ -375,7 +463,7 @@ function buildTreeDoc(docData, layout) {
 
     // For posts: skip img folders and image files
     if (skipImg) {
-      if (parts.slice(1, -1).some(p => p.toLowerCase() === 'img')) continue
+      if (parts.slice(1, -1).some((p) => p.toLowerCase() === 'img')) continue
       const fileType = getFileType(parts[parts.length - 1])
       if (fileType === 'image') continue
     }
@@ -411,7 +499,7 @@ function buildTreeDoc(docData, layout) {
           title: titleFromFilename(folderName),
           type: 'folder',
           order: extractOrder(folderName),
-          children: []
+          children: [],
         }
         levelCache.set(folderName, folder)
         current.children.push(folder)
@@ -430,7 +518,7 @@ function buildTreeDoc(docData, layout) {
       type: 'file',
       fileType,
       path: filePath,
-      order: extractOrder(fileName)
+      order: extractOrder(fileName),
     })
   }
 

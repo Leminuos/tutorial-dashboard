@@ -133,8 +133,9 @@ export function useMermaidRenderer() {
    * @returns {string} - HTML with mermaid blocks marked
    */
   function markMermaidBlocks(html) {
-    // Match <pre><code class="language-mermaid">...</code></pre> pattern
-    const mermaidRegex = /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/gi
+    // Match <pre ...><code class="language-mermaid">...</code></pre> pattern
+    // The pre tag may have attributes like data-title from the custom fence renderer
+    const mermaidRegex = /<pre[^>]*><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/gi
 
     return html.replace(mermaidRegex, (match, code) => {
       // Decode HTML entities

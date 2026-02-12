@@ -1,6 +1,8 @@
 import MarkdownIt from "markdown-it"
 import anchor from "markdown-it-anchor"
 import container from 'markdown-it-container'
+import texmath from 'markdown-it-texmath'
+import katex from 'katex'
 
 /**
  * slugify: chuyển chuỗi văn bản thành chuối slug
@@ -17,6 +19,13 @@ export function createMarkdownRenderer() {
     html: true,
     linkify: true,
     breaks: true,
+  })
+
+  // Math/LaTeX support: $inline$ and $$block$$
+  md.use(texmath, {
+    engine: katex,
+    delimiters: 'dollars',
+    katexOptions: { throwOnError: false }
   })
 
   /**

@@ -16,7 +16,7 @@ const emit = defineEmits(['toc-update', 'toc-active'])
 const html = ref('Loading...')
 const tocItems = ref([])
 
-const contentEl = ref(null)     // gắn vào element chứa v-html
+const contentEl = ref(null) // gắn vào element chứa v-html
 
 // Image lightbox state
 const lightboxImage = ref(null)
@@ -45,58 +45,119 @@ function wrapShikiBlock(shikiHtml, lang, dataTitle) {
 
 async function copyToClipboard(text) {
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    await navigator.clipboard.writeText(text)
+    return true
   } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(ta);
-    return ok;
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
   }
 }
 
 function onContentClick(e) {
+  // Handle anchor links - scroll to heading instead of navigating
+  const anchor = e.target.closest('a[href^="#"]')
+  if (anchor) {
+    e.preventDefault()
+    const targetId = anchor.getAttribute('href').slice(1)
+
+    // Try exact ID match first
+    let targetEl = document.getElementById(targetId)
+
+    // Fallback: search headings by comparing slugified text
+    if (!targetEl && contentEl.value) {
+      const headings = contentEl.value.querySelectorAll('h1, h2, h3, h4, h5, h6')
+
+      // Normalize the anchor for comparison (remove diacritics, lowercase)
+      const normalizeText = (str) =>
+        str
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/đ/g, 'd')
+          .replace(/Đ/g, 'd')
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+
+      // Fuzzy: strip all non-alphanumeric for looser matching
+      const fuzzy = (str) => normalizeText(str).replace(/-/g, '')
+
+      const normalizedAnchor = normalizeText(decodeURIComponent(targetId))
+      const fuzzyAnchor = fuzzy(decodeURIComponent(targetId))
+
+      for (const heading of headings) {
+        const headingId = heading.getAttribute('id') || ''
+        const headingText = heading.textContent || ''
+        const normalizedText = normalizeText(headingText)
+        const fuzzyText = fuzzy(headingText)
+
+        // Check: exact ID, normalized match, fuzzy match, or contains
+        if (
+          headingId === targetId ||
+          normalizedText === normalizedAnchor ||
+          fuzzyText === fuzzyAnchor ||
+          fuzzyText.includes(fuzzyAnchor) ||
+          fuzzyAnchor.includes(fuzzyText)
+        ) {
+          targetEl = heading
+          break
+        }
+      }
+    }
+
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // Preserve hash-based route and append anchor
+      // Strip any existing /#anchor from the hash first
+      const routeHash = window.location.hash.replace(/\/#[^/]*$/, '')
+      const anchorHash = '#' + (targetEl.id || targetId)
+      history.replaceState(null, '', routeHash + '/' + anchorHash)
+    }
+    return
+  }
+
   // Handle code copy button
-  const btn = e.target.closest('.code-copy');
+  const btn = e.target.closest('.code-copy')
   if (btn) {
-    const block = btn.closest('.code-block');
-    const pre = block?.querySelector('pre');
-    const code = pre?.textContent || '';
+    const block = btn.closest('.code-block')
+    const pre = block?.querySelector('pre')
+    const code = pre?.textContent || ''
 
     copyToClipboard(code).then((ok) => {
-      if (!ok) return;
+      if (!ok) return
 
-      btn.classList.add('copied');
+      btn.classList.add('copied')
       setTimeout(() => {
-        btn.classList.remove('copied');
-      }, 1200);
-    });
-    return;
+        btn.classList.remove('copied')
+      }, 1200)
+    })
+    return
   }
 
   // Handle image click for lightbox
-  const img = e.target.closest('img');
+  const img = e.target.closest('img')
   if (img && !img.closest('.mermaid-diagram')) {
-    lightboxImage.value = img.src;
+    lightboxImage.value = img.src
   }
 }
 
 function closeLightbox() {
-  lightboxImage.value = null;
+  lightboxImage.value = null
 }
-
 
 // Setup code groups with tabs after render
 function setupCodeGroups() {
   const groups = contentEl.value?.querySelectorAll('.code-group')
   if (!groups) return
 
-  groups.forEach(group => {
+  groups.forEach((group) => {
     const codeBlocks = group.querySelectorAll('.code-block')
     if (codeBlocks.length === 0) return
 
@@ -126,11 +187,15 @@ function setupCodeGroups() {
       // Tab click handler
       tab.addEventListener('click', () => {
         // Update tabs
-        tabsContainer.querySelectorAll('.code-group-tab').forEach(t => t.classList.remove('active'))
+        tabsContainer
+          .querySelectorAll('.code-group-tab')
+          .forEach((t) => t.classList.remove('active'))
         tab.classList.add('active')
 
         // Update panels
-        panelsContainer.querySelectorAll('.code-group-panel').forEach(p => p.classList.remove('active'))
+        panelsContainer
+          .querySelectorAll('.code-group-panel')
+          .forEach((p) => p.classList.remove('active'))
         panelsContainer.children[index].classList.add('active')
       })
 
@@ -145,24 +210,82 @@ function setupCodeGroups() {
   })
 }
 
-function handleKeydown(e) {
-  if (e.key === 'Escape' && lightboxImage.value) {
-    closeLightbox();
+// Scroll to anchor from URL on page load (e.g. #/route/path/#heading-id)
+function scrollToAnchorFromUrl() {
+  const hash = window.location.hash // e.g. "#/posts/view/.../i2c/#i2c-master"
+  const anchorMatch = hash.match(/#([^/]+)$/) // match last #anchor
+  if (!anchorMatch || anchorMatch[1].startsWith('/')) return
+
+  const targetId = decodeURIComponent(anchorMatch[1])
+  let targetEl = document.getElementById(targetId)
+
+  // Fallback: search headings by normalized text
+  if (!targetEl && contentEl.value) {
+    const headings = contentEl.value.querySelectorAll('h1, h2, h3, h4, h5, h6')
+    const normalizeText = (str) =>
+      str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'd')
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+    const fuzzy = (str) => normalizeText(str).replace(/-/g, '')
+    const normalizedAnchor = normalizeText(targetId)
+    const fuzzyAnchor = fuzzy(targetId)
+
+    for (const heading of headings) {
+      const headingId = heading.getAttribute('id') || ''
+      const headingText = heading.textContent || ''
+      const normalizedText = normalizeText(headingText)
+      const fuzzyText = fuzzy(headingText)
+
+      if (
+        headingId === targetId ||
+        normalizedText === normalizedAnchor ||
+        fuzzyText === fuzzyAnchor ||
+        fuzzyText.includes(fuzzyAnchor) ||
+        fuzzyAnchor.includes(fuzzyText)
+      ) {
+        targetEl = heading
+        break
+      }
+    }
+  }
+
+  if (targetEl) {
+    // Small delay to ensure layout is complete
+    setTimeout(() => {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 }
 
-watch(activeId, (id) => {
-  emit('toc-active', id)
-}, { immediate: true })
+function handleKeydown(e) {
+  if (e.key === 'Escape' && lightboxImage.value) {
+    closeLightbox()
+  }
+}
+
+watch(
+  activeId,
+  (id) => {
+    emit('toc-active', id)
+  },
+  { immediate: true },
+)
 
 watchEffect(async () => {
   try {
     const res = await fetch(props.src)
     const md_text = await res.text()
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`)
 
     const md_url = res.url
-    const { html: rawHtml, toc } = render(md_text, md_url);
+    const { html: rawHtml, toc } = render(md_text, md_url)
 
     // Mark mermaid blocks before Shiki highlighting
     const markedHtml = markMermaidBlocks(rawHtml)
@@ -170,16 +293,15 @@ watchEffect(async () => {
     // Highlight code with Shiki
     html.value = await highlightMarkdownHtml(markedHtml, {
       theme: 'one-dark-pro',
-      wrap: wrapShikiBlock
+      wrap: wrapShikiBlock,
     })
 
     tocItems.value = toc
     emit('toc-update', toc)
-  }
-  catch (err) {
-    console.error("Fetch failed:", err)
+  } catch (err) {
+    console.error('Fetch failed:', err)
 
-    html.value = "Loading..."
+    html.value = 'Loading...'
     tocItems.value = []
   }
 
@@ -192,34 +314,48 @@ watchEffect(async () => {
   setupCodeGroups()
 
   setupScrollSpy()
+
+  // Scroll to anchor if URL contains one (e.g. #/route/path/#heading-id)
+  scrollToAnchorFromUrl()
 })
 
 onMounted(async () => {
-  contentEl.value?.addEventListener('click', onContentClick);
-  document.addEventListener('keydown', handleKeydown);
-});
-
-onBeforeUnmount(() => {
-  contentEl.value?.removeEventListener('click', onContentClick);
-  document.removeEventListener('keydown', handleKeydown);
+  contentEl.value?.addEventListener('click', onContentClick)
+  document.addEventListener('keydown', handleKeydown)
 })
 
+onBeforeUnmount(() => {
+  contentEl.value?.removeEventListener('click', onContentClick)
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
-  <article ref="contentEl" class="md-content" :style="{ '--md-content-max-width': props.maxWidth }" v-html="html"></article>
+  <article
+    ref="contentEl"
+    class="md-content"
+    :style="{ '--md-content-max-width': props.maxWidth }"
+    v-html="html"
+  ></article>
 
   <!-- Image Lightbox -->
   <Teleport to="body">
     <Transition name="lightbox">
       <div v-if="lightboxImage" class="lightbox-overlay" @click="closeLightbox">
         <button class="lightbox-close" @click="closeLightbox" aria-label="Close">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
-        <img :src="lightboxImage" class="lightbox-image" @click.stop alt="Zoomed image">
+        <img :src="lightboxImage" class="lightbox-image" @click.stop alt="Zoomed image" />
       </div>
     </Transition>
   </Teleport>

@@ -25,6 +25,12 @@ export function createMarkdownRenderer() {
   md.use(anchor, {
     level: [2, 3, 4, 5], // chỉ gắn anchor cho các level này.
     slugify,             // chuyển text thàng slug
+    permalink: anchor.permalink.linkInsideHeader({
+      symbol: '#',
+      placement: 'after',
+      class: 'header-anchor',
+      ariaHidden: true
+    })
   })
 
   /**

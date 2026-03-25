@@ -21,6 +21,19 @@ const contentEl = ref(null) // gắn vào element chứa v-html
 // Image lightbox state
 const lightboxImage = ref(null)
 
+// Mermaid lightbox state
+const lightboxMermaid = ref(null)
+const mermaidScale = ref(1)
+const mermaidTranslate = ref({ x: 0, y: 0 })
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const translateStart = ref({ x: 0, y: 0 })
+
+// Pinch-to-zoom state
+const activePointers = ref(new Map()) // pointerId -> {x,y}
+const lastPinchDist = ref(0)
+const lastPinchScale = ref(1)
+
 const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
@@ -141,6 +154,18 @@ function onContentClick(e) {
     return
   }
 
+  // Handle mermaid diagram click for lightbox
+  const mermaidDiagram = e.target.closest('.mermaid-diagram')
+  if (mermaidDiagram && !mermaidDiagram.classList.contains('mermaid-diagram-error')) {
+    const svg = mermaidDiagram.querySelector('svg')
+    if (svg) {
+      lightboxMermaid.value = svg.outerHTML
+      mermaidScale.value = 1
+      mermaidTranslate.value = { x: 0, y: 0 }
+    }
+    return
+  }
+
   // Handle image click for lightbox
   const img = e.target.closest('img')
   if (img && !img.closest('.mermaid-diagram')) {
@@ -150,6 +175,90 @@ function onContentClick(e) {
 
 function closeLightbox() {
   lightboxImage.value = null
+}
+
+function closeMermaidLightbox() {
+  lightboxMermaid.value = null
+  isDragging.value = false
+  activePointers.value.clear()
+}
+
+function clampScale(s) {
+  return Math.min(Math.max(0.3, s), 5)
+}
+
+function onMermaidWheel(e) {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  mermaidScale.value = clampScale(mermaidScale.value + delta)
+}
+
+function zoomIn() {
+  mermaidScale.value = clampScale(mermaidScale.value + 0.3)
+}
+
+function zoomOut() {
+  mermaidScale.value = clampScale(mermaidScale.value - 0.3)
+}
+
+function resetZoom() {
+  mermaidScale.value = 1
+  mermaidTranslate.value = { x: 0, y: 0 }
+}
+
+function getPinchDist(pointers) {
+  const pts = Array.from(pointers.values())
+  if (pts.length < 2) return 0
+  const dx = pts[0].x - pts[1].x
+  const dy = pts[0].y - pts[1].y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+
+function onMermaidPointerDown(e) {
+  activePointers.value.set(e.pointerId, { x: e.clientX, y: e.clientY })
+  e.currentTarget.setPointerCapture(e.pointerId)
+
+  if (activePointers.value.size === 1) {
+    // Single finger / mouse → start drag
+    isDragging.value = true
+    dragStart.value = { x: e.clientX, y: e.clientY }
+    translateStart.value = { ...mermaidTranslate.value }
+  } else if (activePointers.value.size === 2) {
+    // Two fingers → start pinch
+    isDragging.value = false
+    lastPinchDist.value = getPinchDist(activePointers.value)
+    lastPinchScale.value = mermaidScale.value
+  }
+}
+
+function onMermaidPointerMove(e) {
+  activePointers.value.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+  if (activePointers.value.size === 2) {
+    // Pinch zoom
+    const dist = getPinchDist(activePointers.value)
+    if (lastPinchDist.value > 0) {
+      const ratio = dist / lastPinchDist.value
+      mermaidScale.value = clampScale(lastPinchScale.value * ratio)
+    }
+    return
+  }
+
+  if (!isDragging.value || activePointers.value.size !== 1) return
+  mermaidTranslate.value = {
+    x: translateStart.value.x + (e.clientX - dragStart.value.x),
+    y: translateStart.value.y + (e.clientY - dragStart.value.y),
+  }
+}
+
+function onMermaidPointerUp(e) {
+  activePointers.value.delete(e.pointerId)
+  if (activePointers.value.size < 2) {
+    lastPinchDist.value = 0
+  }
+  if (activePointers.value.size === 0) {
+    isDragging.value = false
+  }
 }
 
 // Setup code groups with tabs after render
@@ -265,8 +374,9 @@ function scrollToAnchorFromUrl() {
 }
 
 function handleKeydown(e) {
-  if (e.key === 'Escape' && lightboxImage.value) {
-    closeLightbox()
+  if (e.key === 'Escape') {
+    if (lightboxMermaid.value) closeMermaidLightbox()
+    else if (lightboxImage.value) closeLightbox()
   }
 }
 
@@ -359,6 +469,49 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
   </Teleport>
+
+  <!-- Mermaid Lightbox -->
+  <Teleport to="body">
+    <Transition name="lightbox">
+      <div
+        v-if="lightboxMermaid"
+        class="lightbox-overlay mermaid-lightbox-overlay"
+        @click.self="closeMermaidLightbox"
+      >
+        <button class="lightbox-close" @click="closeMermaidLightbox" aria-label="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <div class="mermaid-lightbox-controls" @click.stop>
+          <button class="mermaid-zoom-btn" @click="zoomOut" aria-label="Zoom out">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button class="mermaid-zoom-btn mermaid-zoom-reset" @click="resetZoom" aria-label="Reset zoom">
+            {{ Math.round(mermaidScale * 100) }}%
+          </button>
+          <button class="mermaid-zoom-btn" @click="zoomIn" aria-label="Zoom in">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+        <div
+          class="mermaid-lightbox-content"
+          :class="{ 'is-dragging': isDragging }"
+          :style="{
+            transform: `translate(${mermaidTranslate.x}px, ${mermaidTranslate.y}px) scale(${mermaidScale})`,
+          }"
+          @wheel.prevent="onMermaidWheel"
+          @pointerdown.stop="onMermaidPointerDown"
+          @pointermove="onMermaidPointerMove"
+          @pointerup="onMermaidPointerUp"
+          @pointercancel="onMermaidPointerUp"
+          @click.stop
+          v-html="lightboxMermaid"
+        ></div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -389,11 +542,18 @@ onBeforeUnmount(() => {
   padding: 16px;
   background: var(--md-c-bg-soft);
   border-radius: 8px;
+  cursor: zoom-in;
+  transition: box-shadow 0.2s;
+}
+
+:deep(.mermaid-diagram:hover) {
+  box-shadow: 0 0 0 2px var(--md-c-brand, #42b883);
 }
 
 :deep(.mermaid-diagram svg) {
   max-width: 100%;
   height: auto;
+  pointer-events: none;
 }
 
 :deep(.mermaid-diagram-error) {
@@ -471,5 +631,75 @@ onBeforeUnmount(() => {
 
 .lightbox-leave-to .lightbox-image {
   transform: scale(0.9);
+}
+
+/* Mermaid Lightbox */
+.mermaid-lightbox-overlay {
+  cursor: default;
+}
+
+.mermaid-lightbox-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  padding: 4px 6px;
+  border-radius: 24px;
+  z-index: 1;
+}
+
+.mermaid-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mermaid-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mermaid-zoom-btn:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.mermaid-zoom-reset {
+  width: auto;
+  padding: 0 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.mermaid-lightbox-content {
+  cursor: grab;
+  transform-origin: center center;
+  transition: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.mermaid-lightbox-content.is-dragging {
+  cursor: grabbing;
+}
+
+.mermaid-lightbox-content :deep(svg) {
+  max-width: 90vw;
+  max-height: 85vh;
+  filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
 }
 </style>

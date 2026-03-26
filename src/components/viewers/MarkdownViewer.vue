@@ -599,7 +599,7 @@ onBeforeUnmount(() => {
   margin: 24px 0;
   overflow-x: auto;
   padding: 16px;
-  background: var(--md-c-bg-soft);
+  background: #ffffff;
   border-radius: 8px;
   cursor: zoom-in;
   transition: box-shadow 0.2s;
@@ -758,7 +758,10 @@ onBeforeUnmount(() => {
 .mermaid-lightbox-content :deep(svg) {
   max-width: 90vw;
   max-height: 85vh;
-  filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.4));
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   pointer-events: none;
 }
 </style>

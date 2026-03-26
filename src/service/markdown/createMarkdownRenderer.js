@@ -124,6 +124,41 @@ export function createMarkdownRenderer() {
   })
 
   /**
+   * Content Group container - groups multiple content sections with tabs
+   * Usage:
+   * :::: content-group
+   * ::: tab [Tab 1]
+   * Markdown content here...
+   * :::
+   * ::: tab [Tab 2]
+   * Other content...
+   * :::
+   * ::::
+   */
+  md.use(container, 'content-group', {
+    render(tokens, idx) {
+      if (tokens[idx].nesting === 1) {
+        return `<div class="content-group">\n`
+      }
+      return `</div>\n`
+    }
+  })
+
+  md.use(container, 'tab', {
+    render(tokens, idx) {
+      const info = tokens[idx].info.trim().slice(3).trim() // Remove 'tab' prefix
+
+      if (tokens[idx].nesting === 1) {
+        // Extract title from [Title] or use raw text
+        const match = info.match(/^\[(.+?)\]$/)
+        const title = match ? match[1] : info || 'Tab'
+        return `<div class="content-tab" data-tab-title="${title}">\n`
+      }
+      return `</div>\n`
+    }
+  })
+
+  /**
    * Thêm đoạn hook khi render heading để thu thập Table of Content.
    */
   md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {

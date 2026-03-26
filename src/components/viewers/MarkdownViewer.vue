@@ -319,6 +319,62 @@ function setupCodeGroups() {
   })
 }
 
+// Setup content groups with tabs after render
+function setupContentGroups() {
+  const groups = contentEl.value?.querySelectorAll('.content-group')
+  if (!groups) return
+
+  groups.forEach((group) => {
+    const tabs = group.querySelectorAll(':scope > .content-tab')
+    if (tabs.length === 0) return
+
+    // Create tabs container
+    const tabsContainer = document.createElement('div')
+    tabsContainer.className = 'content-group-tabs'
+
+    // Create panels container
+    const panelsContainer = document.createElement('div')
+    panelsContainer.className = 'content-group-panels'
+
+    tabs.forEach((tab, index) => {
+      const title = tab.dataset.tabTitle || `Tab ${index + 1}`
+
+      // Create tab button
+      const tabBtn = document.createElement('button')
+      tabBtn.className = `content-group-tab${index === 0 ? ' active' : ''}`
+      tabBtn.textContent = title
+      tabBtn.dataset.index = index
+
+      // Create panel
+      const panel = document.createElement('div')
+      panel.className = `content-group-panel${index === 0 ? ' active' : ''}`
+      // Move original content into panel
+      panel.appendChild(tab.cloneNode(true))
+
+      // Tab click handler
+      tabBtn.addEventListener('click', () => {
+        tabsContainer
+          .querySelectorAll('.content-group-tab')
+          .forEach((t) => t.classList.remove('active'))
+        tabBtn.classList.add('active')
+
+        panelsContainer
+          .querySelectorAll('.content-group-panel')
+          .forEach((p) => p.classList.remove('active'))
+        panelsContainer.children[index].classList.add('active')
+      })
+
+      tabsContainer.appendChild(tabBtn)
+      panelsContainer.appendChild(panel)
+    })
+
+    // Clear original content and add new structure
+    group.innerHTML = ''
+    group.appendChild(tabsContainer)
+    group.appendChild(panelsContainer)
+  })
+}
+
 // Scroll to anchor from URL on page load (e.g. #/route/path/#heading-id)
 function scrollToAnchorFromUrl() {
   const hash = window.location.hash // e.g. "#/posts/view/.../i2c/#i2c-master"
@@ -422,6 +478,9 @@ watchEffect(async () => {
 
   // Setup code groups with tabs
   setupCodeGroups()
+
+  // Setup content groups with tabs
+  setupContentGroups()
 
   setupScrollSpy()
 

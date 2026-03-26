@@ -481,3 +481,88 @@
   margin: 0;
   border-radius: 0;
 }
+
+/* ================================
+   Content Group - Tabbed Content
+   ================================ */
+.md-content .content-group {
+  margin: 24px 0;
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.md-content .content-group-tabs {
+  display: flex;
+  background: var(--md-c-bg-soft);
+  border-bottom: 1px solid var(--md-c-divider-light);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.md-content .content-group-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.md-content .content-group-tabs::-webkit-scrollbar-thumb {
+  background: var(--md-c-divider-light);
+  border-radius: 2px;
+}
+
+.md-content .content-group-tab {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--md-c-text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.md-content .content-group-tab:hover {
+  color: var(--md-c-text-1);
+  background: var(--md-c-bg-mute);
+}
+
+.md-content .content-group-tab.active {
+  color: var(--md-c-brand);
+  border-bottom-color: var(--md-c-brand);
+}
+
+.md-content .content-group-panels {
+  position: relative;
+}
+
+.md-content .content-group-panel {
+  display: none;
+}
+
+.md-content .content-group-panel.active {
+  display: block;
+}
+
+.md-content .content-group-panel > .content-tab {
+  padding: 16px 20px;
+}
+
+/* Remove top margin from first element inside tab */
+.md-content .content-group-panel > .content-tab > *:first-child {
+  margin-top: 0;
+}
+
+/* Remove bottom margin from last element inside tab */
+.md-content .content-group-panel > .content-tab > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks inside content-group: full-width, no border-radius */
+.md-content .content-group .code-block {
+  margin-left: -20px;
+  margin-right: -20px;
+  border-radius: 0;
+}
+

@@ -181,7 +181,8 @@ watch(() => route.params, () => {
       :key="item.id"
       :href="`#${item.id}`"
       class="mobile-toc-link"
-      :class="{ active: tocActive === item.id }"
+      :class="[`level-${item.level}`, { active: tocActive === item.id }]"
+      :style="{ '--toc-indent': `${Math.max(item.level - 2, 0) * 16}px` }"
       @click="closeTocOnMobile"
     >
       {{ item.text }}
@@ -412,14 +413,31 @@ watch(() => route.params, () => {
 
 .mobile-toc-link {
   display: block;
+  margin-left: var(--toc-indent, 0);
   padding: 8px 12px;
   font-size: 14px;
   color: var(--md-c-text-2);
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
   transition: color 0.2s;
   border-left: 2px solid transparent;
+}
+
+.mobile-toc-link.level-2 {
+  color: var(--md-c-text-1);
+  font-weight: 600;
+}
+
+.mobile-toc-link.level-3 {
+  font-size: 14px;
+}
+
+.mobile-toc-link.level-4,
+.mobile-toc-link.level-5 {
+  font-size: 13px;
+  color: var(--md-c-text-3);
 }
 
 .mobile-toc-link:hover,

@@ -125,7 +125,6 @@ const currentDoc = computed(() => {
   font-size: 14px;
   font-weight: 600;
   color: var(--md-c-text-1);
-  transition: color .5s;
 }
 
 .link {
@@ -143,7 +142,6 @@ const currentDoc = computed(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--md-c-text-2);
-  transition: color .5s;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

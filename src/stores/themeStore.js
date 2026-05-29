@@ -20,11 +20,17 @@ export const useThemeStore = defineStore('theme', () => {
   // Apply theme to document
   function applyTheme(newTheme) {
     const root = document.documentElement
+    root.classList.add('theme-switching')
+
     if (newTheme === 'dark') {
       root.classList.add('dark')
     } else {
       root.classList.remove('dark')
     }
+
+    requestAnimationFrame(() => {
+      root.classList.remove('theme-switching')
+    })
   }
 
   // Toggle theme

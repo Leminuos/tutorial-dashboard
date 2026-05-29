@@ -458,7 +458,10 @@ watchEffect(async () => {
 
     // Highlight code with Shiki
     html.value = await highlightMarkdownHtml(markedHtml, {
-      theme: 'one-dark-pro',
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
       wrap: wrapShikiBlock,
     })
 

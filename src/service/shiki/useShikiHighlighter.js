@@ -1,15 +1,15 @@
 import { createHighlighter } from 'shiki'
-import shikiConfig from '@/config/shiki.config';
+import shikiConfig from '@/config/shiki.config'
 
 const _htmlCache = new Map()
 
 export function useShikiHighlighter() {
-  let highlighterPromise = null;
+  let highlighterPromise = null
 
   function getHighlighter () {
     if (!highlighterPromise) {
       highlighterPromise = createHighlighter({
-        themes: ['one-dark-pro'],
+        themes: ['github-light', 'github-dark'],
         langs: shikiConfig.supportedLangs
       })
     }
@@ -17,18 +17,27 @@ export function useShikiHighlighter() {
     return highlighterPromise
   }
 
-  async function highlightCodeToHtml(code, lang, theme) {
+  async function highlightCodeToHtml(code, lang, themeOptions) {
     const highlighter = await getHighlighter()
     const finalLang = shikiConfig.supportedLangs.includes(lang) ? lang : 'text'
 
+    const colorOptions = themeOptions?.themes
+      ? { themes: themeOptions.themes, defaultColor: false }
+      : { theme: themeOptions?.theme || 'github-dark' }
+
     return highlighter.codeToHtml(code, {
       lang: finalLang,
-      theme: theme || "one-dark-pro",
-    });
+      ...colorOptions,
+    })
   }
 
-  async function highlightMarkdownHtml(rawHtml, { theme = "one-dark-pro", wrap } = {}) {
-    const cacheKey = `${theme}::${rawHtml.length}::${rawHtml.slice(0, 200)}`; // lightweight key
+  async function highlightMarkdownHtml(rawHtml, {
+    theme = 'github-dark',
+    themes,
+    wrap
+  } = {}) {
+    const themeKey = themes ? JSON.stringify(themes) : theme
+    const cacheKey = `${themeKey}::${rawHtml.length}::${rawHtml.slice(0, 200)}` // lightweight key
     if (_htmlCache.has(cacheKey)) return _htmlCache.get(cacheKey)
 
     const parser = new DOMParser()
@@ -40,7 +49,7 @@ export function useShikiHighlighter() {
       const match = className.match(/language-(\w+)/)
       const lang = match ? match[1] : 'text'
       const code = el.textContent || ''
-      const shikiHtml = await highlightCodeToHtml(code, lang, theme)
+      const shikiHtml = await highlightCodeToHtml(code, lang, { theme, themes })
       const pre = el.parentElement
 
       if (pre) {
@@ -54,7 +63,7 @@ export function useShikiHighlighter() {
     }
 
     const out = doc.body.innerHTML
-    _htmlCache.set(cacheKey, out);
+    _htmlCache.set(cacheKey, out)
     return out
   }
 

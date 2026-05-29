@@ -96,13 +96,19 @@ html {
               "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   background-color: var(--md-c-bg);
   overflow-x: hidden;
-  transition: background-color 0.3s, color 0.3s;
 }
 
 body {
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--md-c-text-1);
+}
+
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
 }
 
 /* Dark mode overrides */

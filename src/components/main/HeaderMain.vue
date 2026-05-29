@@ -256,7 +256,6 @@ function openSearch() {
   height: var(--md-nav-height);
   background-color: var(--md-c-bg-soft);
   border-bottom: 1px solid var(--md-c-divider-light);
-  transition: 0.5s ease-out;
 }
 
 /* When mobile dropdown is active, header becomes fixed */
@@ -531,7 +530,9 @@ function openSearch() {
   width: 16px;
   height: 2px;
   background-color: var(--md-c-text-1);
-  transition: top .25s, background-color .5s, transform .25s;
+  transition:
+    top .25s,
+    transform .25s;
 }
 
 .hamburger-top {

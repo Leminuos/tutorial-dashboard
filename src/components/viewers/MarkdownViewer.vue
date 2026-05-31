@@ -5,6 +5,7 @@ import { createMarkdownRenderer } from '@/service/markdown/createMarkdownRendere
 import { useShikiHighlighter } from '@/service/shiki/useShikiHighlighter'
 import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
 import { useMermaidRenderer } from '@/composables/markdown/useMermaidRenderer'
+import { useThemeStore } from '@/stores/themeStore'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -37,7 +38,8 @@ const lastPinchScale = ref(1)
 const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
 const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
-const { markMermaidBlocks, renderMermaidPlaceholders } = useMermaidRenderer()
+const { markMermaidBlocks, renderMermaidPlaceholders, rerenderMermaidDiagrams } = useMermaidRenderer()
+const themeStore = useThemeStore()
 
 function wrapShikiBlock(shikiHtml, lang, dataTitle) {
   const safeLang = (lang || 'text').toLowerCase()
@@ -444,6 +446,14 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => themeStore.isDark,
+  async () => {
+    await nextTick()
+    await rerenderMermaidDiagrams(contentEl.value)
+  },
+)
+
 watchEffect(async () => {
   try {
     const res = await fetch(props.src)
@@ -597,25 +607,53 @@ onBeforeUnmount(() => {
 
 /* Mermaid diagram styles */
 :deep(.mermaid-diagram) {
+  --mermaid-diagram-bg: var(--md-c-bg-soft);
+  --mermaid-diagram-border: var(--md-c-divider-light);
+  --mermaid-diagram-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --mermaid-diagram-hover: var(--md-c-divider);
+
   display: flex;
   justify-content: center;
   margin: 24px 0;
   overflow-x: auto;
-  padding: 16px;
-  background: #ffffff;
+  padding: 18px;
+  background: var(--mermaid-diagram-bg);
+  border: 1px solid var(--mermaid-diagram-border);
   border-radius: 8px;
+  box-shadow: var(--mermaid-diagram-shadow);
   cursor: zoom-in;
-  transition: box-shadow 0.2s;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:global(html.dark) :deep(.mermaid-diagram) {
+  --mermaid-diagram-bg: var(--md-c-bg-soft);
+  --mermaid-diagram-border: var(--md-c-divider-light);
+  --mermaid-diagram-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --mermaid-diagram-hover: var(--md-c-divider);
 }
 
 :deep(.mermaid-diagram:hover) {
-  box-shadow: 0 0 0 2px var(--md-c-brand, #42b883);
+  border-color: var(--mermaid-diagram-hover);
+  box-shadow:
+    var(--mermaid-diagram-shadow),
+    0 0 0 3px color-mix(in srgb, var(--mermaid-diagram-hover) 26%, transparent);
 }
 
 :deep(.mermaid-diagram svg) {
   max-width: 100%;
   height: auto;
   pointer-events: none;
+}
+
+:deep(.mermaid-diagram svg [id*='flowchart-'] rect),
+:deep(.mermaid-diagram svg [id*='flowchart-'] polygon),
+:deep(.mermaid-diagram svg [id*='flowchart-'] circle),
+:deep(.mermaid-diagram svg [id*='flowchart-'] ellipse) {
+  rx: 8px;
+  ry: 8px;
 }
 
 :deep(.mermaid-diagram-error) {
@@ -697,7 +735,12 @@ onBeforeUnmount(() => {
 
 /* Mermaid Lightbox */
 .mermaid-lightbox-overlay {
+  background: rgba(18, 18, 18, 0.86);
   cursor: default;
+}
+
+:global(html.dark) .mermaid-lightbox-overlay {
+  background: rgba(0, 0, 0, 0.78);
 }
 
 .mermaid-lightbox-controls {
@@ -759,12 +802,28 @@ onBeforeUnmount(() => {
 }
 
 .mermaid-lightbox-content :deep(svg) {
+  --mermaid-lightbox-bg: var(--md-c-bg-soft);
+  --mermaid-lightbox-border: var(--md-c-divider-light);
+  --mermaid-lightbox-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.42),
+    0 0 0 1px var(--mermaid-lightbox-border);
+
   max-width: 90vw;
   max-height: 85vh;
-  background: #ffffff;
+  background: var(--mermaid-lightbox-bg);
+  border: 1px solid var(--mermaid-lightbox-border);
   border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 18px;
+  box-shadow: var(--mermaid-lightbox-shadow);
   pointer-events: none;
+}
+
+:global(html.dark) .mermaid-lightbox-content :deep(svg) {
+  --mermaid-lightbox-bg: var(--md-c-bg-soft);
+  --mermaid-lightbox-border: rgba(255, 255, 255, 0.16);
+  --mermaid-lightbox-shadow:
+    0 22px 72px rgba(0, 0, 0, 0.72),
+    0 0 0 1px var(--mermaid-lightbox-border),
+    0 0 0 6px rgba(255, 255, 255, 0.04);
 }
 </style>

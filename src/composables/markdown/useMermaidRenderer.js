@@ -1,71 +1,116 @@
 import mermaid from 'mermaid'
 
-// Initialize mermaid with default config
-let initialized = false
+let currentThemeMode = null
+
+function getCssVar(name, fallback) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value || fallback
+}
 
 function initMermaid() {
-  if (initialized) return
+  const isDark = document.documentElement.classList.contains('dark')
+  const themeMode = isDark ? 'dark' : 'light'
+
+  if (currentThemeMode === themeMode) return
+
+  const canvasBg = getCssVar('--md-c-bg-soft', isDark ? '#242424' : '#f9f9f9')
+  const mutedBg = getCssVar('--md-c-bg-mute', isDark ? '#2f2f2f' : '#f1f1f1')
+  const textColor = getCssVar('--md-c-text-1', isDark ? 'rgba(255, 255, 255, .87)' : '#213547')
+  const subtleTextColor = getCssVar('--md-c-text-2', isDark ? 'rgba(235, 235, 235, .6)' : 'rgba(60, 60, 60, .7)')
+  const dividerColor = getCssVar('--md-c-divider-light', isDark ? 'rgba(84, 84, 84, .48)' : 'rgba(60, 60, 60, .12)')
+
+  const themeVariables = isDark
+    ? {
+        background: canvasBg,
+        mainBkg: mutedBg,
+        primaryColor: mutedBg,
+        primaryTextColor: textColor,
+        primaryBorderColor: dividerColor,
+        secondaryColor: '#2b3138',
+        secondaryTextColor: textColor,
+        secondaryBorderColor: '#4a5968',
+        tertiaryColor: '#28332f',
+        tertiaryTextColor: textColor,
+        tertiaryBorderColor: '#49665c',
+        textColor,
+        nodeTextColor: textColor,
+        lineColor: subtleTextColor,
+        clusterBkg: canvasBg,
+        clusterBorder: dividerColor,
+        edgeLabelBackground: canvasBg,
+        noteBkgColor: '#332f25',
+        noteTextColor: textColor,
+        noteBorderColor: '#6c603f',
+        actorBkg: mutedBg,
+        actorBorder: dividerColor,
+        actorTextColor: textColor,
+        signalColor: subtleTextColor,
+        signalTextColor: textColor,
+        labelTextColor: textColor,
+        loopTextColor: textColor,
+      }
+    : {
+        background: canvasBg,
+        mainBkg: '#ffffff',
+        primaryColor: '#ffffff',
+        primaryTextColor: textColor,
+        primaryBorderColor: dividerColor,
+        secondaryColor: '#f2f6fb',
+        secondaryTextColor: textColor,
+        secondaryBorderColor: '#d6e0ec',
+        tertiaryColor: '#f1f8f5',
+        tertiaryTextColor: textColor,
+        tertiaryBorderColor: '#d4e5dd',
+        textColor,
+        nodeTextColor: textColor,
+        lineColor: subtleTextColor,
+        clusterBkg: canvasBg,
+        clusterBorder: dividerColor,
+        edgeLabelBackground: canvasBg,
+        noteBkgColor: '#fff8df',
+        noteTextColor: textColor,
+        noteBorderColor: '#ecd786',
+        actorBkg: '#ffffff',
+        actorBorder: dividerColor,
+        actorTextColor: textColor,
+        signalColor: subtleTextColor,
+        signalTextColor: textColor,
+        labelTextColor: textColor,
+        loopTextColor: textColor,
+      }
 
   mermaid.initialize({
     startOnLoad: false,
     theme: 'base',
     securityLevel: 'loose',
     fontFamily: 'inherit',
-    themeVariables: {
-      // Node styling - lavender/purple theme
-      primaryColor: '#E8E0F0',
-      primaryTextColor: '#333333',
-      primaryBorderColor: '#9B8BB8',
+    themeVariables,
+    themeCSS: `
+      .node rect,
+      .node polygon,
+      .node circle,
+      .node ellipse,
+      .actor,
+      .labelBox {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, ${isDark ? '0.28' : '0.08'}));
+      }
 
-      // Secondary colors
-      secondaryColor: '#E8E0F0',
-      secondaryTextColor: '#333333',
-      secondaryBorderColor: '#9B8BB8',
-
-      // Tertiary colors
-      tertiaryColor: '#E8E0F0',
-      tertiaryTextColor: '#333333',
-      tertiaryBorderColor: '#9B8BB8',
-
-      // Lines and arrows - purple for good visibility on both modes
-      lineColor: '#9B8BB8',
-
-      // Background
-      background: '#ffffff',
-      mainBkg: '#E8E0F0',
-
-      // Text - purple for good contrast on both light and dark
-      textColor: '#9B8BB8',
-
-      // Nodes
-      nodeBorder: '#9B8BB8',
-      nodeTextColor: '#333333',
-
-      // Flowchart specific
-      clusterBkg: '#F5F0FA',
-      clusterBorder: '#9B8BB8',
-
-      // Sequence diagram specific - purple for visibility on both modes
-      signalColor: '#9B8BB8',
-      signalTextColor: '#9B8BB8',
-      labelTextColor: '#9B8BB8',
-      loopTextColor: '#9B8BB8',
-      noteBkgColor: '#E8E0F0',
-      noteTextColor: '#333333',
-      noteBorderColor: '#9B8BB8',
-      actorTextColor: '#333333',
-      actorBkg: '#E8E0F0',
-      actorBorder: '#9B8BB8',
-
-      // Edge labels
-      edgeLabelBackground: 'transparent',
-    },
+      .nodeLabel,
+      .edgeLabel,
+      .label,
+      .messageText,
+      .actor > text,
+      .noteText {
+        font-family: inherit;
+        font-weight: 500;
+      }
+    `,
     flowchart: {
       htmlLabels: true,
-      curve: 'basis',
+      curve: 'monotoneX',
       padding: 15,
-      nodeSpacing: 50,
-      rankSpacing: 50
+      nodeSpacing: 42,
+      rankSpacing: 52
     },
     sequence: {
       diagramMarginX: 50,
@@ -73,7 +118,19 @@ function initMermaid() {
     }
   })
 
-  initialized = true
+  currentThemeMode = themeMode
+}
+
+async function renderDiagram(code, index) {
+  const id = `mermaid-${Date.now()}-${index}`
+  const { svg } = await mermaid.render(id, code)
+
+  const diagramWrapper = document.createElement('div')
+  diagramWrapper.className = 'mermaid-diagram'
+  diagramWrapper.dataset.mermaidCode = code
+  diagramWrapper.innerHTML = svg
+
+  return diagramWrapper
 }
 
 /**
@@ -105,16 +162,7 @@ export function useMermaidRenderer() {
       if (!code.trim()) continue
 
       try {
-        // Generate unique ID for this diagram
-        const id = `mermaid-${Date.now()}-${i}`
-
-        // Render the mermaid diagram
-        const { svg } = await mermaid.render(id, code)
-
-        // Create wrapper div for the diagram
-        const diagramWrapper = document.createElement('div')
-        diagramWrapper.className = 'mermaid-diagram'
-        diagramWrapper.innerHTML = svg
+        const diagramWrapper = await renderDiagram(code, i)
 
         // Replace the code block with the rendered diagram
         wrapperEl.replaceWith(diagramWrapper)
@@ -167,12 +215,7 @@ export function useMermaidRenderer() {
       if (!code.trim()) continue
 
       try {
-        const id = `mermaid-${Date.now()}-${i}`
-        const { svg } = await mermaid.render(id, code)
-
-        const diagramWrapper = document.createElement('div')
-        diagramWrapper.className = 'mermaid-diagram'
-        diagramWrapper.innerHTML = svg
+        const diagramWrapper = await renderDiagram(code, i)
 
         placeholder.replaceWith(diagramWrapper)
 
@@ -185,9 +228,33 @@ export function useMermaidRenderer() {
     }
   }
 
+  async function rerenderMermaidDiagrams(container) {
+    if (!container) return
+
+    currentThemeMode = null
+    initMermaid()
+
+    const diagrams = container.querySelectorAll('.mermaid-diagram[data-mermaid-code]')
+
+    for (let i = 0; i < diagrams.length; i++) {
+      const diagram = diagrams[i]
+      const code = diagram.dataset.mermaidCode || ''
+
+      if (!code.trim()) continue
+
+      try {
+        const nextDiagram = await renderDiagram(code, i)
+        diagram.replaceWith(nextDiagram)
+      } catch (err) {
+        console.warn('Mermaid render error:', err)
+      }
+    }
+  }
+
   return {
     renderMermaidBlocks,
     markMermaidBlocks,
-    renderMermaidPlaceholders
+    renderMermaidPlaceholders,
+    rerenderMermaidDiagrams
   }
 }

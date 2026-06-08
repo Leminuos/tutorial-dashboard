@@ -100,11 +100,16 @@
 }
 
 .md-content .header-anchor {
+  display: inline-block;
+  width: 0;
+  overflow: visible;
   opacity: 0;
-  margin-left: 8px;
+  margin-left: 0;
+  transform: translateX(8px);
   color: var(--md-c-text-3);
   text-decoration: none;
   font-weight: 500;
+  white-space: nowrap;
   transition:
     opacity 0.2s,
     color 0.2s;
@@ -114,7 +119,22 @@
 .md-content h3:hover .header-anchor,
 .md-content h4:hover .header-anchor,
 .md-content h5:hover .header-anchor,
-.md-content h6:hover .header-anchor {
+.md-content h6:hover .header-anchor,
+.md-content h2:active .header-anchor,
+.md-content h3:active .header-anchor,
+.md-content h4:active .header-anchor,
+.md-content h5:active .header-anchor,
+.md-content h6:active .header-anchor,
+.md-content h2:focus-within .header-anchor,
+.md-content h3:focus-within .header-anchor,
+.md-content h4:focus-within .header-anchor,
+.md-content h5:focus-within .header-anchor,
+.md-content h6:focus-within .header-anchor,
+.md-content h2.is-anchor-visible .header-anchor,
+.md-content h3.is-anchor-visible .header-anchor,
+.md-content h4.is-anchor-visible .header-anchor,
+.md-content h5.is-anchor-visible .header-anchor,
+.md-content h6.is-anchor-visible .header-anchor {
   opacity: 1;
 }
 
@@ -313,6 +333,52 @@
 
 .md-content .code-copy.copied::before {
   opacity: 1;
+}
+
+.md-content .code-block.is-code-collapsible pre {
+  padding-bottom: 52px;
+  transition: max-height 0.2s ease;
+}
+
+.md-content .code-block.is-code-collapsed pre {
+  max-height: var(--code-collapsed-max-height, 532px);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.md-content .code-block.is-code-expanded pre {
+  max-height: none;
+}
+
+.md-content .code-toggle {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  z-index: 4;
+  display: block;
+  width: calc(100% - 2px);
+  padding: 9px 12px;
+  border: 0;
+  border-top: 1px solid var(--md-c-divider-light);
+  border-radius: 0 0 8px 8px;
+  background-color: color-mix(in srgb, var(--md-c-bg-soft) 92%, transparent);
+  color: var(--md-c-text-2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.md-content .code-toggle:hover {
+  background-color: var(--md-c-bg-mute);
+  color: var(--md-c-text-1);
 }
 
 .md-content .md-custom-block {

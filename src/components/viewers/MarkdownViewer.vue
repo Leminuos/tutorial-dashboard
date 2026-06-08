@@ -41,6 +41,8 @@ const { activeId, setup: setupScrollSpy } = useScrollSpy(contentEl)
 const { markMermaidBlocks, renderMermaidPlaceholders, rerenderMermaidDiagrams } = useMermaidRenderer()
 const themeStore = useThemeStore()
 
+const CODE_COLLAPSE_LINE_LIMIT = 24
+
 function wrapShikiBlock(shikiHtml, lang, dataTitle) {
   const safeLang = (lang || 'text').toLowerCase()
   const titleAttr = dataTitle ? ` data-title="${dataTitle}"` : ''
@@ -73,6 +75,16 @@ async function copyToClipboard(text) {
     document.body.removeChild(ta)
     return ok
   }
+}
+
+function showHeadingAnchor(heading) {
+  if (window.matchMedia('(max-width: 960px)').matches) return
+
+  contentEl.value
+    ?.querySelectorAll('.is-anchor-visible')
+    .forEach((el) => el.classList.remove('is-anchor-visible'))
+
+  heading?.classList.add('is-anchor-visible')
 }
 
 function onContentClick(e) {
@@ -135,6 +147,23 @@ function onContentClick(e) {
       const anchorHash = '#' + (targetEl.id || targetId)
       history.replaceState(null, '', routeHash + '/' + anchorHash)
     }
+    return
+  }
+
+  const heading = e.target.closest('h2, h3, h4, h5, h6')
+  if (heading && contentEl.value?.contains(heading)) {
+    showHeadingAnchor(heading)
+    return
+  }
+
+  const toggle = e.target.closest('.code-toggle')
+  if (toggle && contentEl.value?.contains(toggle)) {
+    const block = toggle.closest('.code-block')
+    const isExpanded = block?.classList.toggle('is-code-expanded')
+
+    block?.classList.toggle('is-code-collapsed', !isExpanded)
+    toggle.textContent = isExpanded ? 'Collapse code' : 'Show full code'
+    toggle.setAttribute('aria-expanded', String(Boolean(isExpanded)))
     return
   }
 
@@ -261,6 +290,53 @@ function onMermaidPointerUp(e) {
   if (activePointers.value.size === 0) {
     isDragging.value = false
   }
+}
+
+function getCodeLineCount(pre) {
+  const lines = (pre?.textContent || '').split('\n')
+
+  while (lines.length && lines[lines.length - 1].trim() === '') {
+    lines.pop()
+  }
+
+  return lines.length
+}
+
+function getCollapsedCodeMaxHeight(block) {
+  const code = block.querySelector('code')
+  const style = window.getComputedStyle(code || block)
+  const fontSize = parseFloat(style.fontSize) || 14
+  const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.5
+
+  return Math.ceil(lineHeight * CODE_COLLAPSE_LINE_LIMIT + 28)
+}
+
+function setupCollapsibleCodeBlocks() {
+  const blocks = contentEl.value?.querySelectorAll('.code-block')
+  if (!blocks) return
+
+  blocks.forEach((block) => {
+    if (block.classList.contains('is-code-collapsible')) return
+    if (block.closest('.mermaid-diagram')) return
+    if (block.querySelector('.language-mermaid')) return
+
+    const pre = block.querySelector('pre')
+    if (!pre) return
+
+    const lineCount = getCodeLineCount(pre)
+    if (lineCount <= CODE_COLLAPSE_LINE_LIMIT) return
+
+    const toggle = document.createElement('button')
+    toggle.type = 'button'
+    toggle.className = 'code-toggle'
+    toggle.textContent = 'Show full code'
+    toggle.setAttribute('aria-expanded', 'false')
+
+    block.classList.add('is-code-collapsible', 'is-code-collapsed')
+    block.dataset.lineCount = String(lineCount)
+    block.style.setProperty('--code-collapsed-max-height', `${getCollapsedCodeMaxHeight(block)}px`)
+    pre.insertAdjacentElement('afterend', toggle)
+  })
 }
 
 // Setup code groups with tabs after render
@@ -494,6 +570,9 @@ watchEffect(async () => {
 
   // Setup content groups with tabs
   setupContentGroups()
+
+  // Collapse long code blocks after code/content groups are in their final DOM shape
+  setupCollapsibleCodeBlocks()
 
   setupScrollSpy()
 

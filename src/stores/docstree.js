@@ -213,8 +213,10 @@ async function fetchDocConfig() {
 function titleFromFilename(filename, isFile = false) {
   let base = isFile ? filename.replace(/\.[a-z0-9]{2,4}$/i, "") : filename
   const withoutOrder = base.replace(/^\d+[.\s\-_]*/, "")
-  const text = withoutOrder.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim()
-  return text ? text.charAt(0).toUpperCase() + text.slice(1) : base
+  const text = withoutOrder.replace(/_+/g, " ").replace(/\s+/g, " ").trim()
+  return text
+    ? text.replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1))
+    : base
 }
 
 function extractOrder(filename) {

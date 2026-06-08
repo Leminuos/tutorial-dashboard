@@ -250,6 +250,8 @@ watch(() => route.params, () => {
 /* Mobile: Add padding for fixed navbar */
 .docs-content {
   padding-top: 48px;
+  min-height: 100vh;
+  background: var(--md-c-bg);
 }
 
 @media (max-width: 960px) {
@@ -302,6 +304,7 @@ watch(() => route.params, () => {
   display: flex;
   padding: 0 16px;
   padding-top: 24px;
+  background: var(--md-c-bg);
 }
 
 @media (min-width: 960px) {

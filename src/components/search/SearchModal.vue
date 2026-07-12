@@ -147,7 +147,21 @@ function highlightMatch(text, query) {
                 @click="onResultClick(result)"
                 @mouseenter="searchStore.selectedIndex = index"
               >
-                <span class="result-icon">{{ getTypeIcon(result.type) }}</span>
+                <span class="result-icon" :aria-label="getTypeIcon(result.type)">
+                  <svg v-if="result.type === 'tutorial'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 19.5V5a2 2 0 0 1 2-2h12"></path>
+                    <path d="M8 7h8"></path>
+                    <path d="M8 11h8"></path>
+                    <path d="M6 21h12a2 2 0 0 0 2-2V5"></path>
+                  </svg>
+                  <svg v-else-if="result.type === 'folder'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <path d="M14 2v6h6"></path>
+                  </svg>
+                </span>
                 <div class="result-content">
                   <span
                     class="result-title"
@@ -204,8 +218,9 @@ function highlightMatch(text, query) {
   max-width: 600px;
   margin: 0 16px;
   background: var(--md-c-bg);
-  border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
   overflow: hidden;
 }
 
@@ -264,7 +279,7 @@ function highlightMatch(text, query) {
   gap: 12px;
   padding: 12px 20px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .result-item:hover,
@@ -286,8 +301,25 @@ function highlightMatch(text, query) {
 }
 
 .result-icon {
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
+  color: var(--md-c-brand);
+  background: var(--md-c-brand-soft);
+  border-radius: 8px;
+}
+
+.result-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.result-item.selected .result-icon {
+  color: white;
+  background: rgba(255, 255, 255, .18);
 }
 
 .result-content {

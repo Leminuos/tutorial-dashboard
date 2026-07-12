@@ -59,10 +59,11 @@ onUnmounted(() => {
   top: var(--md-nav-height);
   right: 0;
   left: 0;
-  z-index: 800;
+  z-index: 900;
   height: 48px;
-  background-color: var(--md-c-bg);
+  background-color: color-mix(in srgb, var(--md-c-bg) 94%, transparent);
   border-bottom: 1px solid var(--md-c-divider-light);
+  backdrop-filter: blur(12px);
 }
 
 /* When main header is scrolled out of view */
@@ -137,6 +138,12 @@ onUnmounted(() => {
 @media (min-width: 960px) {
   .docs-navbar {
     display: none;
+  }
+}
+
+@media (max-width: 959px) {
+  .docs-navbar.header-hidden {
+    top: var(--md-nav-height);
   }
 }
 

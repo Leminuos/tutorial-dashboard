@@ -64,8 +64,8 @@ function openSearch() {
 
       <div class="content">
         <!-- Search -->
-        <button class="search" @click="openSearch">
-          <div class="icon-search">
+        <button class="search" type="button" aria-label="Open search" @click="openSearch">
+          <span class="icon-search">
             <svg xmlns="http://www.w3.org/2000/svg"
               width="20"
               height="20"
@@ -80,7 +80,8 @@ function openSearch() {
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-          </div>
+          </span>
+          <span class="search-mobile-label">Open search</span>
           <span class="search-title">Search</span>
           <kbd class="search-shortcut">Ctrl K</kbd>
         </button>
@@ -150,13 +151,19 @@ function openSearch() {
         </nav>
 
         <!-- Mobile hamburger -->
-        <div class="hamburger-btn" @click="onToggleDropdown">
+        <button
+          class="hamburger-btn"
+          type="button"
+          :aria-expanded="isDropdownMobile"
+          aria-label="Toggle navigation menu"
+          @click="onToggleDropdown"
+        >
           <span class="hamburger-container">
             <span class="hamburger-top"></span>
             <span class="hamburger-middle"></span>
             <span class="hamburger-bottom"></span>
           </span>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -168,16 +175,15 @@ function openSearch() {
           <div class="mobile-section-title">Documentation</div>
 
           <!-- Tutorial docs - direct links -->
-          <div
+          <router-link
             v-for="doc in tutorialDocs"
             :key="doc.id"
             class="mobile-item"
+            :to="`/docs/${doc.id}`"
             @click="onToggleDropdown"
           >
-            <router-link :to="`/docs/${doc.id}`">
-              <span>{{ doc.title }}</span>
-            </router-link>
-          </div>
+            <span>{{ doc.title }}</span>
+          </router-link>
 
           <!-- Posts Docs - expandable -->
           <div v-for="post in postDocs" :key="post.id" class="mobile-expandable">
@@ -248,14 +254,16 @@ function openSearch() {
 
 <style scoped>
 .main-header {
-  position: relative;
+  position: sticky;
   top: 0;
   right: 0;
   left: 0;
   z-index: 1000;
   height: var(--md-nav-height);
-  background-color: var(--md-c-bg-soft);
+  background-color: color-mix(in srgb, var(--md-c-bg) 88%, transparent);
   border-bottom: 1px solid var(--md-c-divider-light);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .03);
 }
 
 /* When mobile dropdown is active, header becomes fixed */
@@ -267,8 +275,10 @@ function openSearch() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 15px;
-  gap: 20px;
+  height: var(--md-nav-height);
+  padding: 0 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 @media (min-width: 1280px) {
@@ -298,26 +308,41 @@ function openSearch() {
 .icon-link {
   display: flex;
   align-items: center;
-  transition: opacity .25s;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 8px;
+  transition: opacity .2s, color .2s;
+}
+
+.icon-link img {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
 }
 
 .icon-link:hover {
-  opacity: 0.6;
+  opacity: .78;
 }
 
 .text {
   padding-left: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--md-c-text-1);
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .content {
   display: flex;
   justify-content: end;
   align-items: center;
+  min-width: 0;
   flex-grow: 1;
-  gap: 10px;
+  gap: 8px;
 }
 
 .navbar {
@@ -328,14 +353,28 @@ function openSearch() {
   position: relative;
   color: var(--md-c-text-1);
   font-size: 11px;
-  font-weight: 500;
-  transition: color .25s;
+  font-weight: 700;
+  transition: color .2s, background-color .2s;
   white-space: nowrap;
-  line-height: var(--md-nav-height);
+  line-height: 1;
+}
+
+.navbar-item > a,
+.dropdown-label {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
 }
 
 .navbar-item:hover {
-  color: var(--md-c-text-3);
+  color: var(--md-c-brand);
+}
+
+.navbar-item > a:hover,
+.dropdown-trigger:hover .dropdown-label {
+  background: var(--md-c-brand-soft);
 }
 
 /* Dropdown trigger */
@@ -344,8 +383,6 @@ function openSearch() {
 }
 
 .dropdown-label {
-  display: flex;
-  align-items: center;
   gap: 4px;
 }
 
@@ -371,7 +408,7 @@ function openSearch() {
   background: var(--md-c-bg);
   border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
   padding: 6px;
   z-index: 1001;
   display: none;
@@ -387,12 +424,12 @@ function openSearch() {
   color: var(--md-c-text-1);
   text-decoration: none;
   border-radius: 6px;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, transform 0.2s;
 }
 
 .dropdown-category-link:hover {
-  background: var(--md-c-brand);
-  color: white;
+  background: var(--md-c-brand-soft);
+  color: var(--md-c-brand);
 }
 
 .dropdown-category-link .category-title {
@@ -422,43 +459,101 @@ function openSearch() {
 
 /* Search */
 .search {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
-  height: var(--md-nav-height);
-  padding: 0 12px;
-  color: var(--md-c-text-2);
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--md-c-text-1);
   font-size: 14px;
-  background: none;
-  border: none;
+  background: var(--md-c-bg-soft);
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  touch-action: manipulation;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.icon-search {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--md-c-text-2);
   transition: color 0.2s;
 }
 
 .search:hover {
-  color: var(--md-c-text-1);
+  color: var(--md-c-brand);
+  border-color: color-mix(in srgb, var(--md-c-brand) 35%, var(--md-c-divider-light));
+  background: var(--md-c-brand-soft);
+}
+
+.search:hover .icon-search {
+  color: var(--md-c-brand);
+}
+
+.search:active {
+  transform: scale(.98);
+}
+
+.search:focus-visible {
+  outline: 3px solid var(--md-c-focus);
+  outline-offset: 2px;
+  border-color: var(--md-c-brand);
 }
 
 .search-title {
   display: none;
+  min-width: 0;
+  color: var(--md-c-text-2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.search-mobile-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .search-shortcut {
   display: none;
+  margin-left: auto;
   padding: 3px 6px;
   font-size: 11px;
+  line-height: 1;
   font-family: inherit;
-  background: var(--md-c-bg-soft);
+  background: var(--md-c-bg);
   border: 1px solid var(--md-c-divider-light);
   border-radius: 4px;
   color: var(--md-c-text-2);
-  transition: all 0.2s;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.search:hover .search-title,
+.search:hover .search-shortcut {
+  color: var(--md-c-brand);
 }
 
 .search:hover .search-shortcut {
-  border: 1px solid var(--md-c-brand);
-  color: var(--md-c-brand);
+  border-color: color-mix(in srgb, var(--md-c-brand) 45%, var(--md-c-divider-light));
+  background: var(--md-c-bg);
 }
 
 /* Theme switch */
@@ -466,6 +561,13 @@ function openSearch() {
   display: none;
   align-items: center;
   cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .switch-track {
@@ -509,60 +611,66 @@ function openSearch() {
 
 /* Hamburger button */
 .hamburger-btn {
-  width: 40px;
-  height: var(--md-nav-height);
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   background-color: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 8px;
+  color: var(--md-c-text-1);
+  touch-action: manipulation;
+}
+
+.hamburger-btn:hover {
+  background: var(--md-c-brand-soft);
 }
 
 .hamburger-container {
   position: relative;
-  width: 16px;
-  height: 14px;
-  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .hamburger-top, .hamburger-middle, .hamburger-bottom {
   position: absolute;
+  left: 2px;
   width: 16px;
   height: 2px;
+  border-radius: 2px;
   background-color: var(--md-c-text-1);
-  transition:
-    top .25s,
-    transform .25s;
+  transition: opacity .2s, transform .2s, top .2s;
 }
 
 .hamburger-top {
-  top: 0;
-  left: 0;
-  transform: translate(0);
+  top: 5px;
 }
 
 .hamburger-middle {
-  top: 6px;
-  left: 0;
-  transform: translate(8px);
+  top: 9px;
 }
 
 .hamburger-bottom {
-  top: 12px;
-  left: 0;
-  transform: translate(4px);
+  top: 13px;
 }
 
-.hamburger-btn:hover .hamburger-top {
-  transform: translate(4px);
+.hamburger-btn[aria-expanded="true"] .hamburger-top {
+  top: 9px;
+  transform: rotate(45deg);
 }
 
-.hamburger-btn:hover .hamburger-middle {
-  transform: translate(0px);
+.hamburger-btn[aria-expanded="true"] .hamburger-middle {
+  opacity: 0;
 }
 
-.hamburger-btn:hover .hamburger-bottom {
-  transform: translate(8px);
+.hamburger-btn[aria-expanded="true"] .hamburger-bottom {
+  top: 9px;
+  transform: rotate(-45deg);
 }
 
 /* Mobile dropdown */
@@ -575,6 +683,7 @@ function openSearch() {
   width: 100%;
   z-index: 998;
   display: none;
+  height: calc(100dvh - var(--md-nav-height));
 }
 
 .mobile-dropdown.active {
@@ -596,17 +705,21 @@ function openSearch() {
 .mobile-dropdown-container {
   position: relative;
   width: 100%;
+  min-height: 100%;
   height: 100%;
-  padding: 24px;
+  padding: 16px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
   background: var(--md-c-bg);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .mobile-section {
   background: var(--md-c-bg);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   margin-bottom: 16px;
 }
 
@@ -614,7 +727,7 @@ function openSearch() {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--md-c-brand);
   margin-bottom: 16px;
 }
@@ -632,14 +745,15 @@ function openSearch() {
   background: transparent;
   border: none;
   width: calc(100% + 32px);
+  min-height: 48px;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .mobile-item:hover,
 .mobile-item:active {
-  background: var(--md-c-bg-soft);
+  background: var(--md-c-brand-soft);
   color: var(--md-c-brand);
 }
 
@@ -690,19 +804,20 @@ function openSearch() {
   justify-content: space-between;
   gap: 8px;
   padding: 10px 14px;
+  min-height: 44px;
   margin: 4px 0;
   font-size: 14px;
   font-weight: 500;
   color: var(--md-c-text-2);
   text-decoration: none;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .mobile-sub-item:hover,
 .mobile-sub-item:active {
-  background: var(--md-c-brand);
-  color: white;
+  background: var(--md-c-brand-soft);
+  color: var(--md-c-brand);
 }
 
 .mobile-sub-item .category-title {
@@ -743,7 +858,8 @@ function openSearch() {
 
   .navbar {
     display: flex;
-    gap: 20px;
+    gap: 4px;
+    align-items: center;
   }
 
   .hamburger-btn {
@@ -752,6 +868,16 @@ function openSearch() {
 
   .mobile-dropdown {
     display: none !important;
+  }
+
+  .search {
+    width: auto;
+    min-width: 178px;
+    height: 40px;
+    min-height: 40px;
+    justify-content: flex-start;
+    padding: 0 10px 0 12px;
+    background: var(--md-c-bg-soft);
   }
 
   .search-title {
@@ -776,7 +902,10 @@ function openSearch() {
   padding: 16px 20px;
   margin-top: 16px;
   background: var(--md-c-bg-soft);
-  border-radius: 12px;
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+  min-height: 56px;
+  text-decoration: none;
 }
 
 .mobile-theme-label,
@@ -796,6 +925,15 @@ function openSearch() {
 
 .mobile-theme-switch {
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
 }
 
 .mobile-switch-track {

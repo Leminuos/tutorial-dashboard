@@ -2,15 +2,15 @@
 
 :root {
   --md-c-white: #ffffff;
-  --md-c-white-soft: #f9f9f9;
-  --md-c-white-mute: #f1f1f1;
-  --md-c-black: #1a1a1a;
+  --md-c-white-soft: #f8fafc;
+  --md-c-white-mute: #eef2f7;
+  --md-c-black: #0f172a;
   --md-c-black-pure: #000000;
-  --md-c-black-soft: #242424;
-  --md-c-black-mute: #2f2f2f;
-  --md-c-indigo: #213547;
-  --md-c-indigo-soft: #476582;
-  --md-c-indigo-light: #aac8e4;
+  --md-c-black-soft: #111827;
+  --md-c-black-mute: #1f2937;
+  --md-c-indigo: #1e293b;
+  --md-c-indigo-soft: #475569;
+  --md-c-indigo-light: #93c5fd;
   --md-c-gray: #8e8e8e;
   --md-c-gray-light-1: #aeaeae;
   --md-c-gray-light-2: #c7c7c7;
@@ -37,11 +37,11 @@
   --md-c-text-dark-4: rgba(235, 235, 235, .18);
   --md-c-text-dark-code: var(--md-c-indigo-light);
   --md-c-transparent: rgba(0, 0, 0, 0.35);
-  --md-c-green: #42b883;
-  --md-c-green-light: #42d392;
-  --md-c-green-lighter: #35eb9a;
-  --md-c-green-dark: #33a06f;
-  --md-c-green-darker: #155f3e;
+  --md-c-green: #2563eb;
+  --md-c-green-light: #3b82f6;
+  --md-c-green-lighter: #60a5fa;
+  --md-c-green-dark: #1d4ed8;
+  --md-c-green-darker: #1e40af;
   --md-c-blue: #3b8eed;
   --md-c-blue-light: #549ced;
   --md-c-blue-lighter: #50a2ff;
@@ -79,6 +79,8 @@
   --md-c-brand-light: var(--md-c-green-light);
   --md-c-brand-dark: var(--md-c-green-dark);
   --md-c-brand-highlight: var(--md-c-brand-dark);
+  --md-c-brand-soft: rgba(37, 99, 235, .1);
+  --md-c-focus: rgba(37, 99, 235, .3);
   --md-code-tab-bg: #292d3ef0;
 
   --md-doc-code-font-size: 14px;
@@ -102,6 +104,23 @@ body {
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--md-c-text-1);
+  background:
+    linear-gradient(180deg, var(--md-c-bg-soft) 0, var(--md-c-bg) 280px);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--md-c-focus);
+  outline-offset: 2px;
 }
 
 html.theme-switching,
@@ -130,7 +149,20 @@ html.dark {
   --md-c-text-inverse-3: var(--md-c-text-light-3);
   --md-c-text-inverse-4: var(--md-c-text-light-4);
   --md-c-brand-highlight: var(--md-c-brand-light);
+  --md-c-brand-soft: rgba(96, 165, 250, .16);
+  --md-c-focus: rgba(96, 165, 250, .34);
   --md-code-tab-bg: var(--md-c-black-mute);
 
   color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
 }

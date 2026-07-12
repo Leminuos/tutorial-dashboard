@@ -398,6 +398,12 @@ watch(() => route.params, () => {
   top: 48px;
 }
 
+@media (max-width: 959px) {
+  .mobile-toc-dropdown.header-hidden {
+    top: calc(var(--md-nav-height) + 48px);
+  }
+}
+
 .mobile-toc-top {
   display: block;
   padding: 8px 12px;

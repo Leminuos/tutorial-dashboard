@@ -6,13 +6,9 @@ import { useDocsStore } from '@/stores/docstree'
 const docs = useDocsStore()
 const router = useRouter()
 
-// Get all folder-layout docs (e.g., Project, etc.)
-const folderDocs = computed(() => {
-  return docs.folderDocs
-})
+const folderDocs = computed(() => docs.folderDocs)
 
 function navigateToFolder(docId) {
-  // Navigate to root-level folder path: /:section
   router.push(`/${docId}`)
 }
 </script>
@@ -25,104 +21,139 @@ function navigateToFolder(docId) {
     </div>
 
     <div class="drives-grid">
-      <div
+      <button
         v-for="doc in folderDocs"
         :key="doc.id"
         class="drive-card"
+        type="button"
         @click="navigateToFolder(doc.id)"
       >
-        <div class="drive-icon">📁</div>
-        <div class="drive-info">
-          <h2 class="drive-title">{{ doc.title }}</h2>
+        <span class="drive-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"></path>
+          </svg>
+        </span>
+        <span class="drive-info">
+          <span class="drive-title">{{ doc.title }}</span>
           <span class="drive-meta">{{ doc.children?.length || 0 }} items</span>
-        </div>
-        <div class="drive-arrow">→</div>
-      </div>
+        </span>
+        <svg class="drive-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 12h14"></path>
+          <path d="m12 5 7 7-7 7"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .explorer-landing {
+  max-width: 1120px;
   margin: 0 auto;
   margin-top: calc(var(--md-nav-height) + 32px);
-  padding: 0 40px;
-  max-width: 1200px;
+  padding: 0 32px 48px;
 }
 
 .explorer-header {
-  margin-bottom: 40px;
-  text-align: center;
+  margin-bottom: 32px;
+  text-align: left;
 }
 
 .page-title {
+  margin-bottom: 8px;
+  color: var(--md-c-text-1);
   font-size: 32px;
   font-weight: 700;
-  color: var(--md-c-text-1);
-  margin-bottom: 8px;
 }
 
 .page-subtitle {
-  font-size: 16px;
   color: var(--md-c-text-2);
+  font-size: 16px;
 }
 
 .drives-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 
 .drive-card {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 24px;
+  min-height: 104px;
+  padding: 20px;
+  color: inherit;
+  text-align: left;
   background: var(--md-c-bg-soft);
   border: 1px solid var(--md-c-divider-light);
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .drive-card:hover {
   transform: translateY(-2px);
   border-color: var(--md-c-brand);
-  background: var(--md-c-bg-mute);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: var(--md-c-bg);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
 }
 
 .drive-icon {
-  font-size: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  color: var(--md-c-brand);
+  background: var(--md-c-brand-soft);
+  border-radius: 8px;
+}
+
+.drive-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .drive-info {
+  display: flex;
   flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .drive-title {
+  color: var(--md-c-text-1);
   font-size: 18px;
   font-weight: 600;
-  color: var(--md-c-text-1);
-  margin-bottom: 4px;
 }
 
 .drive-meta {
-  font-size: 14px;
   color: var(--md-c-text-2);
+  font-size: 14px;
 }
 
 .drive-arrow {
+  width: 20px;
+  height: 20px;
   color: var(--md-c-text-3);
-  font-size: 20px;
   opacity: 0;
   transform: translateX(-10px);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
 .drive-card:hover .drive-arrow {
   opacity: 1;
   transform: translateX(0);
   color: var(--md-c-brand);
+}
+
+@media (max-width: 768px) {
+  .explorer-landing {
+    margin-top: calc(var(--md-nav-height) + 24px);
+    padding: 0 18px 36px;
+  }
 }
 </style>

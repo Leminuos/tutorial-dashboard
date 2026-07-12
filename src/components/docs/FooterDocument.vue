@@ -57,7 +57,7 @@ const nav = computed(() => {
 }
 
 .navbar {
-  max-width: 688px;
+  max-width: 760px;
   display:flex;
   justify-content:space-between;
   gap: 16px;

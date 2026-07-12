@@ -443,7 +443,7 @@ function getReadingTime(post) {
 
 .post-tags {
   display: flex;
-  gap: 8px;
+  gap: 5px;
   flex-wrap: wrap;
 }
 
@@ -451,7 +451,7 @@ function getReadingTime(post) {
   font-size: 12px;
   color: var(--md-c-brand);
   background: rgba(var(--md-c-brand-rgb, 0, 150, 136), 0.1);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 100px;
 }
 

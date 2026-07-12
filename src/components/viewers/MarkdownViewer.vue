@@ -9,7 +9,7 @@ import { useThemeStore } from '@/stores/themeStore'
 
 const props = defineProps({
   src: { type: String, required: true },
-  maxWidth: { type: String, default: '688px' },
+  maxWidth: { type: String, default: '760px' },
 })
 
 const emit = defineEmits(['toc-update', 'toc-active'])
@@ -668,9 +668,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .md-content {
   display: block;
-  max-width: var(--md-content-max-width, 688px);
+  max-width: var(--md-content-max-width, 760px);
   margin: 0 auto;
-  padding: 0 10px;
+  padding: 0 16px;
   overflow-x: hidden;
 }
 

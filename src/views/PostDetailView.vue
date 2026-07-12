@@ -336,13 +336,13 @@ function formatDate(dateStr) {
 .post-tags {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .tag {
   background: var(--md-c-bg-soft);
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 100px;
   font-size: 13px;
   color: var(--md-c-brand);

@@ -302,14 +302,13 @@ watch(() => route.params, () => {
 
 .content-wrapper {
   display: flex;
-  padding: 0 16px;
-  padding-top: 24px;
+  padding: 28px 0 0;
   background: var(--md-c-bg);
 }
 
 @media (min-width: 960px) {
   .content-wrapper {
-    padding-top: 48px;
+    padding-top: 56px;
   }
 }
 

@@ -256,7 +256,7 @@ function formatDate(dateStr) {
 .post-detail-view {
   min-height: calc(100vh - var(--md-nav-height));
   background-color: var(--md-c-bg);
-  padding: 40px 20px;
+  padding: 48px 24px 64px;
   margin-top: var(--md-nav-height);
 }
 
@@ -266,7 +266,7 @@ function formatDate(dateStr) {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 280px;
-  gap: 40px;
+  gap: clamp(40px, 5vw, 72px);
 }
 
 .main-content {
@@ -274,7 +274,8 @@ function formatDate(dateStr) {
 }
 
 .container {
-  max-width: 800px;
+  width: 100%;
+  max-width: 828px;
 }
 
 /* Back Button */
@@ -289,7 +290,7 @@ function formatDate(dateStr) {
   font-weight: 500;
   cursor: pointer;
   padding: 8px 0;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   transition: color 0.2s;
 }
 
@@ -307,17 +308,20 @@ function formatDate(dateStr) {
 
 /* Post Header */
 .post-header {
-  margin-bottom: 48px;
-  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 48px;
+  padding: 0 24px 32px;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  text-align: left;
 }
 
 .post-meta {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   color: var(--md-c-text-2);
   font-size: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .post-date {
@@ -326,16 +330,18 @@ function formatDate(dateStr) {
 }
 
 .post-title {
-  font-size: 36px;
-  font-weight: 800;
-  line-height: 1.3;
+  max-width: 20ch;
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 760;
+  line-height: 1.16;
+  letter-spacing: -0.038em;
   color: var(--md-c-text-1);
   margin: 0 0 20px 0;
 }
 
 .post-tags {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   flex-wrap: wrap;
 }
@@ -350,8 +356,6 @@ function formatDate(dateStr) {
 
 /* Post Content */
 .post-content {
-  font-size: 16px;
-  line-height: 1.8;
   color: var(--md-c-text-1);
 }
 
@@ -369,7 +373,9 @@ function formatDate(dateStr) {
 
 /* Navigation Footer - same style as FooterDocument */
 .post-navfooter {
-  margin-top: 48px;
+  max-width: 780px;
+  margin: 64px auto 0;
+  padding: 0 24px;
 }
 
 .navbar {
@@ -502,7 +508,7 @@ function formatDate(dateStr) {
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .post-detail-view {
-    padding: 24px 16px;
+    padding: 24px 0 48px;
   }
 
   .post-layout {
@@ -510,12 +516,19 @@ function formatDate(dateStr) {
     gap: 32px;
   }
 
-  .post-title {
-    font-size: 28px;
+  .back-btn {
+    margin-left: 16px;
+    margin-bottom: 24px;
   }
 
   .post-header {
     margin-bottom: 32px;
+    padding: 0 16px 24px;
+  }
+
+  .post-navfooter {
+    margin-top: 48px;
+    padding: 0 16px;
   }
 
   /* Sidebar moves to bottom on mobile */

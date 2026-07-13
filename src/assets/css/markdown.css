@@ -1,12 +1,18 @@
 .md-content {
+  --md-flow-space: 1.08em;
+  --md-block-space: 1.45em;
+  --md-heading-color: var(--md-c-text-1);
+  --md-body-color: color-mix(in srgb, var(--md-c-text-1) 82%, var(--md-c-text-2));
+
   color: var(--md-c-text-1);
-  font-size: 16.5px;
-  line-height: 1.78;
+  font-size: 17px;
+  line-height: 1.76;
+  letter-spacing: -0.01em;
   overflow: auto;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
-  hyphens: auto;
+  hyphens: none;
 }
 
 .md-content > *:first-child {
@@ -21,8 +27,24 @@
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 28px auto;
+  margin: var(--md-block-space) auto;
   border-radius: 8px;
+}
+
+.md-content figure {
+  margin: var(--md-block-space) 0;
+}
+
+.md-content figure img {
+  margin: 0 auto;
+}
+
+.md-content figcaption {
+  margin-top: 0.75em;
+  color: var(--md-c-text-2);
+  font-size: 0.82em;
+  line-height: 1.55;
+  text-align: center;
 }
 
 .md-content p,
@@ -30,18 +52,18 @@
 .md-content ol,
 .md-content summary {
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: var(--md-flow-space);
 }
 
 .md-content p,
 .md-content li,
 .md-content blockquote {
-  color: var(--md-c-text-2);
+  color: var(--md-body-color);
 }
 
 .md-content strong {
   color: var(--md-c-text-1);
-  font-weight: 700;
+  font-weight: 680;
 }
 
 .md-content em {
@@ -53,86 +75,132 @@
   color: var(--md-c-text-2);
 }
 
-.md-content hr {
-  height: 0.25em;
-  margin: 36px 0;
-  padding: 0;
-  background-color: var(--md-c-divider-light);
-  border: 0;
+.md-content mark {
+  padding: 0.08em 0.2em;
+  color: inherit;
+  background: color-mix(in srgb, var(--md-c-yellow) 30%, transparent);
   border-radius: 2px;
 }
 
+.md-content kbd {
+  display: inline-block;
+  padding: 0.12em 0.42em;
+  border: 1px solid var(--md-c-divider);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--md-c-text-1);
+  background: var(--md-c-bg-soft);
+  font-family: 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.78em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.md-content dl {
+  margin: var(--md-flow-space) 0;
+}
+
+.md-content dt {
+  margin-top: 1em;
+  color: var(--md-c-text-1);
+  font-weight: 680;
+}
+
+.md-content dd {
+  margin: 0.3em 0 0 1.25em;
+  color: var(--md-body-color);
+}
+
+.md-content hr {
+  height: 1px;
+  margin: 40px 0;
+  padding: 0;
+  background-color: var(--md-c-divider-light);
+  border: 0;
+}
+
 .md-content a {
-  font-weight: 500;
+  font-weight: 550;
   color: var(--md-c-brand);
-  transition: color 0.25s;
+  transition:
+    color 0.2s,
+    text-decoration-color 0.2s;
   text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--md-c-brand) 42%, transparent);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
 }
 
 .md-content a:hover {
   color: var(--md-c-brand-dark);
-  text-decoration-style: solid;
+  text-decoration-color: currentColor;
+}
+
+.md-content a:focus-visible {
+  border-radius: 2px;
 }
 
 .md-content h1 {
-  font-size: 40px;
-  font-weight: 800;
-  margin: 48px 0 20px;
-  padding-bottom: 0.35em;
-  line-height: 1.16;
-  letter-spacing: 0;
+  font-size: clamp(32px, 4vw, 43px);
+  font-weight: 760;
+  margin: 1.65em 0 0.55em;
+  padding-bottom: 0.42em;
+  line-height: 1.15;
+  letter-spacing: -0.038em;
+  color: var(--md-heading-color);
   border-bottom: 1px solid var(--md-c-divider-light);
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h2 {
-  font-size: 30px;
-  font-weight: 750;
-  margin: 44px 0 16px;
-  padding-bottom: 0.35em;
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 720;
+  margin: 1.5em 0 0.55em;
+  padding-bottom: 0.4em;
   line-height: 1.22;
-  letter-spacing: 0;
+  letter-spacing: -0.03em;
+  color: var(--md-heading-color);
   border-bottom: 1px solid var(--md-c-divider-light);
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h3 {
-  font-size: 23px;
+  font-size: clamp(21px, 2.2vw, 24px);
   font-weight: 700;
-  margin: 34px 0 12px;
+  margin: 1.35em 0 0.45em;
   line-height: 1.3;
-  letter-spacing: 0;
+  letter-spacing: -0.022em;
+  color: var(--md-heading-color);
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h4 {
   font-size: 19px;
-  font-weight: 700;
-  margin: 28px 0 10px;
+  font-weight: 680;
+  margin: 1.25em 0 0.42em;
   line-height: 1.35;
-  letter-spacing: 0;
+  letter-spacing: -0.015em;
+  color: var(--md-heading-color);
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h5 {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 24px 0 8px;
+  font-size: 17px;
+  font-weight: 680;
+  margin: 1.2em 0 0.4em;
   line-height: 1.35;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
 .md-content h6 {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14.5px;
+  font-weight: 680;
   color: var(--md-c-text-2);
-  margin: 24px 0 8px;
+  margin: 1.2em 0 0.4em;
   line-height: 1.35;
-  letter-spacing: 0;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
   scroll-margin-top: calc(var(--md-nav-height) + 12px);
 }
 
@@ -146,11 +214,15 @@
 }
 
 .md-content blockquote {
-  margin: 24px 0;
-  padding: 14px 18px;
-  border-left: 4px solid var(--md-c-brand);
-  border-radius: 0 8px 8px 0;
-  background: var(--md-c-brand-soft);
+  margin: var(--md-block-space) 0;
+  padding: 0.2em 0 0.2em 1.25em;
+  border-left: 3px solid color-mix(in srgb, var(--md-c-brand) 70%, var(--md-c-divider));
+  background: transparent;
+}
+
+.md-content blockquote p {
+  font-size: 1.04em;
+  line-height: 1.68;
 }
 
 .md-content blockquote > *:first-child {
@@ -162,8 +234,8 @@
 }
 
 .md-content details {
-  margin: 22px 0;
-  padding: 14px 18px;
+  margin: var(--md-block-space) 0;
+  padding: 15px 18px;
   border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   background: var(--md-c-bg-soft);
@@ -172,7 +244,8 @@
 .md-content summary {
   cursor: pointer;
   color: var(--md-c-text-1);
-  font-weight: 650;
+  font-weight: 620;
+  line-height: 1.45;
 }
 
 .md-content details[open] summary {
@@ -235,9 +308,9 @@
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  margin: 28px 0;
-  font-size: 14px;
-  line-height: 1.5;
+  margin: var(--md-block-space) 0;
+  font-size: 0.88em;
+  line-height: 1.55;
 
   display: block;
   max-width: 100%;
@@ -246,23 +319,34 @@
 
 .md-content th,
 .md-content td {
-  border: 1px solid var(--md-c-divider-light);
-  padding: 11px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  padding: 12px 16px;
   vertical-align: top;
 }
 
 .md-content thead th {
-  font-weight: 700;
+  font-weight: 650;
   text-align: left;
-  background-color: var(--md-c-divider-light);
+  color: var(--md-c-text-1);
+  background-color: var(--md-c-bg-soft);
+  border-bottom-color: var(--md-c-divider);
+}
+
+.md-content tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.md-content tbody tr:hover td {
+  background: color-mix(in srgb, var(--md-c-bg-soft) 72%, transparent);
 }
 
 .md-content ul {
-  padding-left: 2rem;
+  padding-left: 1.65rem;
 }
 
 .md-content ol {
-  padding-left: 2.2rem;
+  padding-left: 2.05rem;
   list-style: none;
   counter-reset: ol-counter;
 }
@@ -298,14 +382,30 @@
 
 .md-content li {
   position: relative;
-  margin: 7px 0;
-  line-height: 1.72;
+  margin: 0.38em 0;
+  line-height: 1.68;
 }
 
 /* Remove extra margin for nested lists */
 .md-content li > ul,
 .md-content li > ol {
   margin: 4px 0 0 0;
+}
+
+.md-content li > p {
+  margin-bottom: 0.55em;
+}
+
+.md-content input[type='checkbox'] {
+  width: 1em;
+  height: 1em;
+  margin: 0 0.5em 0.1em -1.45em;
+  vertical-align: middle;
+  accent-color: var(--md-c-brand);
+}
+
+.md-content li:has(> input[type='checkbox'])::before {
+  display: none;
 }
 
 /* Remove bottom margin from li that has nested list */
@@ -317,21 +417,22 @@
 .md-content ul > li:before {
   content: '';
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background-color: var(--md-c-brand);
-  left: -1.35rem;
-  top: 0.7em;
+  left: -1.1rem;
+  top: 0.78em;
 }
 
 .md-content :not(pre) > code {
-  padding: 0.1em 0.32em;
-  border-radius: 3px;
+  padding: 0.14em 0.38em;
+  border: 1px solid color-mix(in srgb, var(--md-c-divider-light) 72%, transparent);
+  border-radius: 4px;
   background-color: rgba(15, 23, 42, 0.055);
   color: color-mix(in srgb, var(--md-c-text-1) 86%, var(--md-c-text-2));
   font-family: 'Fira Code', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.9em;
+  font-size: 0.86em;
   font-weight: 400;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -346,12 +447,12 @@ html.dark .md-content :not(pre) > code {
   position: relative;
   border-radius: 8px;
   overflow-x: auto;
-  margin: 28px 0;
+  margin: var(--md-block-space) 0;
 }
 
 .md-content .code-block pre {
   margin: 0;
-  padding: 16px 0;
+  padding: 18px 0;
   background-color: #ffffff !important;
   border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
@@ -366,7 +467,7 @@ html.dark .md-content :not(pre) > code {
 
 .md-content .code-block code {
   display: block;
-  padding: 0 22px;
+  padding: 0 20px;
   width: fit-content;
   line-height: var(--md-doc-code-line-height);
   font-size: var(--md-doc-code-font-size);
@@ -378,8 +479,10 @@ html.dark .md-content :not(pre) > code {
   top: 4px;
   right: 10px;
   z-index: 2;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--md-c-text-3);
 }
 
@@ -487,14 +590,14 @@ html.dark .md-content :not(pre) > code {
   --custom-block-surface: var(--md-c-brand-soft);
 
   position: relative;
-  margin: 28px 0;
-  padding: 17px 20px 17px 22px;
+  margin: var(--md-block-space) 0;
+  padding: 18px 20px 18px 22px;
   border: 1px solid color-mix(in srgb, var(--custom-block-accent) 18%, var(--md-c-divider-light));
   border-radius: 8px;
-  font-size: 15px;
-  line-height: 1.68;
+  font-size: 0.92em;
+  line-height: 1.65;
   font-weight: 400;
-  color: var(--md-c-text-2);
+  color: var(--md-body-color);
   background: color-mix(in srgb, var(--custom-block-surface) 32%, var(--md-c-bg));
   box-shadow:
     inset 3px 0 0 var(--custom-block-accent),
@@ -515,9 +618,9 @@ html.dark .md-content :not(pre) > code {
   display: flex;
   align-items: center;
   gap: 11px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--md-c-text-1);
-  font-size: 14.5px;
+  font-size: 0.95em;
   font-weight: 680;
   line-height: 1.4;
 }
@@ -589,7 +692,10 @@ html.dark .md-content .md-custom-block {
 
 @media (max-width: 960px) {
   .md-content {
-    font-size: 15px;
+    --md-flow-space: 1em;
+    --md-block-space: 1.3em;
+
+    font-size: 16px;
     line-height: 1.72;
   }
 
@@ -597,22 +703,19 @@ html.dark .md-content .md-custom-block {
   .md-content ul,
   .md-content ol,
   .md-content summary {
-    margin-bottom: 17px;
+    margin-bottom: var(--md-flow-space);
   }
 
   .md-content h1 {
-    font-size: 30px;
-    margin-top: 36px;
+    margin-top: 1.4em;
   }
 
   .md-content h2 {
-    font-size: 24px;
-    margin-top: 34px;
+    margin-top: 1.35em;
   }
 
   .md-content h3 {
-    font-size: 20px;
-    margin-top: 28px;
+    margin-top: 1.3em;
   }
 
   .md-content table {
@@ -620,12 +723,12 @@ html.dark .md-content .md-custom-block {
   }
 
   .md-content .md-custom-block {
-    font-size: 14px;
-    padding: 14px 16px 12px;
+    font-size: 0.92em;
+    padding: 15px 16px;
   }
 
   .md-content .md-custom-block-title {
-    font-size: 14px;
+    font-size: 0.95em;
   }
 
   .md-content .code-block code {
@@ -633,7 +736,7 @@ html.dark .md-content .md-custom-block {
   }
 
   .md-content ul {
-    padding-left: 1.6rem;
+    padding-left: 1.4rem;
   }
 
   .md-content ol {
@@ -641,8 +744,8 @@ html.dark .md-content .md-custom-block {
   }
 
   .md-content ul > li:before {
-    left: -1.1rem;
-    top: 0.7em;
+    left: -0.95rem;
+    top: 0.76em;
   }
 
   .md-content ol > li::before {
@@ -654,11 +757,26 @@ html.dark .md-content .md-custom-block {
   }
 }
 
+@media (max-width: 640px) {
+  .md-content th,
+  .md-content td {
+    min-width: 144px;
+    padding: 10px 12px;
+  }
+
+  .md-content .code-block,
+  .md-content .code-group,
+  .md-content .content-group,
+  .md-content .mermaid-diagram {
+    border-radius: 6px;
+  }
+}
+
 /* ================================
    Code Group - Tabbed Code Blocks
    ================================ */
 .md-content .code-group {
-  margin: 28px 0;
+  margin: var(--md-block-space) 0;
   border-radius: 8px;
   background: #ffffff;
   border: 1px solid var(--md-c-divider-light);
@@ -704,9 +822,9 @@ html.dark .md-content .md-custom-block {
 }
 
 .md-content .code-group-tab.active {
-  color: #42b883;
-  border-bottom-color: #42b883;
-  background: rgba(66, 184, 131, 0.1);
+  color: var(--md-c-brand);
+  border-bottom-color: var(--md-c-brand);
+  background: var(--md-c-brand-soft);
 }
 
 .md-content .code-group-tab .tab-icon {
@@ -792,7 +910,7 @@ html.dark .md-content .code-group-tab:hover {
    Content Group - Tabbed Content
    ================================ */
 .md-content .content-group {
-  margin: 28px 0;
+  margin: var(--md-block-space) 0;
   border: 1px solid var(--md-c-divider-light);
   border-radius: 8px;
   overflow: hidden;

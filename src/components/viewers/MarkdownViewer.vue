@@ -9,7 +9,7 @@ import { useThemeStore } from '@/stores/themeStore'
 
 const props = defineProps({
   src: { type: String, required: true },
-  maxWidth: { type: String, default: '760px' },
+  maxWidth: { type: String, default: '780px' },
 })
 
 const emit = defineEmits(['toc-update', 'toc-active'])
@@ -668,9 +668,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .md-content {
   display: block;
-  max-width: var(--md-content-max-width, 760px);
+  width: 100%;
+  max-width: var(--md-content-max-width, 780px);
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 clamp(16px, 2.5vw, 24px);
   overflow-x: hidden;
 }
 
@@ -693,7 +694,7 @@ onBeforeUnmount(() => {
 
   display: flex;
   justify-content: center;
-  margin: 24px 0;
+  margin: var(--md-block-space) 0;
   overflow-x: auto;
   padding: 18px;
   background: var(--mermaid-diagram-bg);

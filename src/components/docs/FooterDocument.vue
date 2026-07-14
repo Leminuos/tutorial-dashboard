@@ -57,6 +57,8 @@ const nav = computed(() => {
 }
 
 .navbar {
+  width: 100%;
+  min-width: 0;
   max-width: 760px;
   display:flex;
   justify-content:space-between;
@@ -68,7 +70,10 @@ const nav = computed(() => {
   margin-top:24px;
 }
 
-.nav-left, .nav-right { flex: 1; }
+.nav-left, .nav-right {
+  flex: 1;
+  min-width: 0;
+}
 .nav-link:hover{ background: var(--md-c-bg-mute); }
 
 .title {
@@ -96,8 +101,10 @@ const nav = computed(() => {
   text-decoration: none;
   color: inherit;
   display: inline-block;
+  max-width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
+  overflow-wrap: anywhere;
 }
 
 .hint{

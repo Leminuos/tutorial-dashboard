@@ -59,7 +59,8 @@ const currentDoc = computed(() => {
   width: calc(var(--md-sidebar-expand) + 8px);
   background-color: var(--md-c-bg);
   border-right: 1px solid var(--md-c-divider-light);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   transform: translateX(-100%);
   transition: transform 0.5s ease;
 }

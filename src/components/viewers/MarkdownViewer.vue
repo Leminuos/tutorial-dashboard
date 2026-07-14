@@ -669,10 +669,12 @@ onBeforeUnmount(() => {
 .md-content {
   display: block;
   width: 100%;
+  min-width: 0;
   max-width: var(--md-content-max-width, 780px);
   margin: 0 auto;
   padding: 0 clamp(16px, 2.5vw, 24px);
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Make images clickable */

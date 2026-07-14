@@ -3,7 +3,7 @@ import { RouterLink } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 import { useSearchStore } from '@/stores/searchStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import SearchModal from '@/components/search/SearchModal.vue'
 
 const docs = useDocsStore()
@@ -11,6 +11,8 @@ const searchStore = useSearchStore()
 const themeStore = useThemeStore()
 const isDropdownMobile = ref(false)
 const expandedMobileSection = ref(null)
+let lockedScrollY = 0
+let scrollLockStyles = null
 
 // Tutorial docs
 const tutorialDocs = computed(() => docs.tutorialDocs)
@@ -18,22 +20,57 @@ const tutorialDocs = computed(() => docs.tutorialDocs)
 // Post docs
 const postDocs = computed(() => docs.postDocs)
 
-// Disable body scroll when mobile dropdown is open
+function lockBodyScroll() {
+  lockedScrollY = window.scrollY
+  scrollLockStyles = {
+    htmlOverflow: document.documentElement.style.overflow,
+    bodyOverflow: document.body.style.overflow,
+    bodyTouchAction: document.body.style.touchAction,
+    bodyPosition: document.body.style.position,
+    bodyTop: document.body.style.top,
+    bodyLeft: document.body.style.left,
+    bodyRight: document.body.style.right,
+    bodyWidth: document.body.style.width
+  }
+
+  document.documentElement.style.overflow = 'hidden'
+  document.body.style.overflow = 'hidden'
+  document.body.style.touchAction = 'none'
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${lockedScrollY}px`
+  document.body.style.left = '0'
+  document.body.style.right = '0'
+  document.body.style.width = '100%'
+}
+
+function unlockBodyScroll() {
+  if (!scrollLockStyles) return
+
+  const scrollY = lockedScrollY
+
+  document.documentElement.style.overflow = scrollLockStyles.htmlOverflow
+  document.body.style.overflow = scrollLockStyles.bodyOverflow
+  document.body.style.touchAction = scrollLockStyles.bodyTouchAction
+  document.body.style.position = scrollLockStyles.bodyPosition
+  document.body.style.top = scrollLockStyles.bodyTop
+  document.body.style.left = scrollLockStyles.bodyLeft
+  document.body.style.right = scrollLockStyles.bodyRight
+  document.body.style.width = scrollLockStyles.bodyWidth
+  scrollLockStyles = null
+
+  window.scrollTo(0, scrollY)
+}
+
+// Keep the current reading position while the mobile navigation is open.
 watch(isDropdownMobile, (isOpen) => {
   if (isOpen) {
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'none'
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
+    lockBodyScroll()
   } else {
-    document.documentElement.style.overflow = ''
-    document.body.style.overflow = ''
-    document.body.style.touchAction = ''
-    document.body.style.position = ''
-    document.body.style.width = ''
+    unlockBodyScroll()
   }
 })
+
+onBeforeUnmount(unlockBodyScroll)
 
 function onToggleDropdown() {
   isDropdownMobile.value = !isDropdownMobile.value
@@ -711,6 +748,7 @@ function openSearch() {
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
   background: var(--md-c-bg);
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 

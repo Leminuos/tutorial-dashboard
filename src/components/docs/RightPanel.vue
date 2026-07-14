@@ -3,7 +3,7 @@ import { computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 
-const props = defineProps({
+defineProps({
   toc: { type: Array, default: () => [] },
   tocActive: { type: String, default: '' },
 })
@@ -164,12 +164,22 @@ function onTocClick(e) {
   max-height: calc(100vh - var(--md-nav-height) - 72px);
   display: none;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 12px;
+}
+
+@media (min-width: 960px) {
+  .right-panel {
+    display: block;
+    width: 200px;
+    padding-right: 8px;
+  }
 }
 
 @media (min-width: 1280px) {
   .right-panel {
-    display: block;
+    width: 224px;
+    padding-right: 12px;
   }
 }
 

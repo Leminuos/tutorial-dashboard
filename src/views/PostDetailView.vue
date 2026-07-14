@@ -254,14 +254,20 @@ function formatDate(dateStr) {
 
 <style scoped>
 .post-detail-view {
+  width: 100%;
+  max-width: 100%;
   min-height: calc(100vh - var(--md-nav-height));
   background-color: var(--md-c-bg);
   padding: 48px 24px 64px;
   margin-top: var(--md-nav-height);
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Two-column layout */
 .post-layout {
+  width: 100%;
+  min-width: 0;
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
@@ -275,6 +281,7 @@ function formatDate(dateStr) {
 
 .container {
   width: 100%;
+  min-width: 0;
   max-width: 828px;
 }
 
@@ -356,6 +363,8 @@ function formatDate(dateStr) {
 
 /* Post Content */
 .post-content {
+  min-width: 0;
+  max-width: 100%;
   color: var(--md-c-text-1);
 }
 
@@ -369,6 +378,8 @@ function formatDate(dateStr) {
 
 .viewer-wrapper {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Navigation Footer - same style as FooterDocument */
@@ -390,12 +401,15 @@ function formatDate(dateStr) {
 
 .nav-left, .nav-right {
   flex: 1;
+  min-width: 0;
 }
 
 .nav-link {
   text-decoration: none;
   color: inherit;
   display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 10px 12px;
   border-radius: 8px;
   transition: background 0.2s;
@@ -449,6 +463,7 @@ function formatDate(dateStr) {
   gap: 12px;
   max-height: 350px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
 }
 
@@ -537,6 +552,10 @@ function formatDate(dateStr) {
     order: 1;
     border-top: 1px solid var(--md-c-divider-light);
     padding-top: 32px;
+  }
+
+  .related-item:hover {
+    transform: none;
   }
 }
 </style>

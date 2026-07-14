@@ -98,9 +98,13 @@ html {
               "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   background-color: var(--md-c-bg);
   overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
   font-size: 1.6rem;
   font-weight: 400;
   color: var(--md-c-text-1);
@@ -109,6 +113,19 @@ body {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 button,

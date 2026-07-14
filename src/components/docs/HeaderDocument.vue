@@ -43,7 +43,13 @@ onUnmounted(() => {
       </button>
 
       <!-- Right: On this page toggle -->
-      <button class="toc-toggle" :class="{ active: tocOpen }" @click="emit('toggle-toc')">
+      <button
+        class="toc-toggle"
+        :class="{ active: tocOpen }"
+        :aria-expanded="tocOpen"
+        aria-controls="mobile-page-toc"
+        @click="emit('toggle-toc')"
+      >
         <span class="toc-text">On this page</span>
         <svg class="toc-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="6 9 12 15 18 9"></polyline>
@@ -111,20 +117,24 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0;
+  min-height: 36px;
+  padding: 8px 10px;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--md-c-text-2);
   font-size: 14px;
   font-weight: 500;
-  transition: color 0.25s;
-  padding-right: 10px;
+  border-radius: 7px;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
 }
 
 .toc-toggle:hover,
 .toc-toggle.active {
-  color: var(--md-c-text-1);
+  color: var(--md-c-brand);
+  background: var(--md-c-brand-soft);
 }
 
 .toc-chevron {

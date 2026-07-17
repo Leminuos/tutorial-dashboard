@@ -1,95 +1,148 @@
 <script setup>
-const emit = defineEmits(['toggle-sidebar', 'this-page'])
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const emit = defineEmits(['toggle-sidebar', 'toggle-toc'])
+
+defineProps({
+  tocOpen: { type: Boolean, default: false }
+})
+
+// Track if header is scrolled out of view
+const isHeaderHidden = ref(false)
+
+function handleScroll() {
+  // Get the nav height from CSS variable
+  const navHeight = parseInt(
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--md-nav-height') || '50'
+  )
+  isHeaderHidden.value = window.scrollY > navHeight
+}
+
+onMounted(() => {
+  handleScroll()
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
-  <nav class="docs-navbar">
+  <nav class="docs-navbar" :class="{ 'header-hidden': isHeaderHidden }">
     <div class="container">
-      <div class="toggle-sidebar" @click="emit('toggle-sidebar')"><span></span></div>
-      <div class="this-page" @click="emit('this-page')">On this page</div>
+      <!-- Left: Menu toggle -->
+      <button class="menu-toggle" @click="emit('toggle-sidebar')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+        <span class="menu-text">Menu</span>
+      </button>
+
+      <!-- Right: On this page toggle -->
+      <button
+        class="toc-toggle"
+        :class="{ active: tocOpen }"
+        :aria-expanded="tocOpen"
+        aria-controls="mobile-page-toc"
+        @click="emit('toggle-toc')"
+      >
+        <span class="toc-text">On this page</span>
+        <svg class="toc-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
     </div>
   </nav>
 </template>
 
 <style scoped>
 .docs-navbar {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: var(--md-nav-height);
   right: 0;
   left: 0;
-  z-index: 800;
-  height: 40px;
-  background-color: var(--md-c-white);
-  border-bottom: 1px solid var(--md-c-divider-light-2);
-  transition: 0.5s ease-out;
+  z-index: 900;
+  height: 48px;
+  background-color: color-mix(in srgb, var(--md-c-bg) 94%, transparent);
+  border-bottom: 1px solid var(--md-c-divider-light);
+  backdrop-filter: blur(12px);
+}
+
+/* When main header is scrolled out of view */
+.docs-navbar.header-hidden {
+  top: 0;
 }
 
 .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 688px;
   height: 100%;
-  margin: 0 auto;
+  padding: 0 24px;
 }
 
-.toggle-sidebar {
-  position: relative;
-  width: 20px;
-  height: 14px;
-  margin-left: 15px;
+/* Menu toggle (left) */
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
   cursor: pointer;
-}
-
-.toggle-sidebar::before,
-.toggle-sidebar::after,
-.toggle-sidebar span {
-  content: '';
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--md-c-text-light-3);
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-
-/* Top line */
-.toggle-sidebar::before {
-  top: 0;
-}
-
-/* Middle line */
-.toggle-sidebar span {
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Bottom line */
-.toggle-sidebar::after {
-  bottom: 0;
-}
-
-.toggle-sidebar:hover span,
-.toggle-sidebar:hover::before,
-.toggle-sidebar:hover::after {
-  background-color: var(--md-c-text-light-1);
-}
-
-.this-page {
-  font-size: 12px;
+  color: var(--md-c-brand);
+  font-size: 14px;
   font-weight: 500;
-  line-height: 24px;
-  color: var(--md-c-text-light-2);
-  margin-right: 15px;
-  cursor: pointer;
-  transition: color .5s;
-  user-select: none;
-  -ms-user-select: none;
-  -webkit-user-select: none;
+  padding-left: 10px;
 }
 
-.this-page:hover {
-  color: var(--md-c-text-light-1);
+.menu-toggle svg {
+  color: var(--md-c-text-2);
+}
+
+.menu-toggle:hover svg {
+  color: var(--md-c-text-1);
+}
+
+.menu-text {
+  color: var(--md-c-brand);
+}
+
+/* TOC toggle (right) */
+.toc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--md-c-text-2);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 7px;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+
+.toc-toggle:hover,
+.toc-toggle.active {
+  color: var(--md-c-brand);
+  background: var(--md-c-brand-soft);
+}
+
+.toc-chevron {
+  transition: transform 0.25s;
+}
+
+.toc-toggle.active .toc-chevron {
+  transform: rotate(180deg);
 }
 
 @media (min-width: 960px) {
@@ -98,13 +151,20 @@ const emit = defineEmits(['toggle-sidebar', 'this-page'])
   }
 }
 
-@media (min-width: 768px) {
-  .toggle-sidebar {
-    margin-left: 0;
+@media (max-width: 959px) {
+  .docs-navbar.header-hidden {
+    top: var(--md-nav-height);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
   }
 
-  .this-page {
-    margin-right: 0;
+  .menu-text,
+  .toc-text {
+    font-size: 13px;
   }
 }
 </style>

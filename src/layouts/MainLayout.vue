@@ -1,5 +1,4 @@
 <script setup>
-import FooterDocument from '@/components/docs/FooterDocument.vue';
 import HeaderMain from '@/components/main/HeaderMain.vue'
 </script>
 
@@ -9,8 +8,6 @@ import HeaderMain from '@/components/main/HeaderMain.vue'
   <div id="content">
     <slot />
   </div>
-
-  <footer-document />
 
 </template>
 

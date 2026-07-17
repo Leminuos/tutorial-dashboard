@@ -8,7 +8,13 @@ const route = useRoute()
 const docs = useDocsStore()
 
 const nav = computed(() => {
-  const list = docs.flatLists
+  const allList = docs.flatLists
+  const currentSection = route.params.section
+
+  if (!allList?.length || !currentSection) return { prev: null, next: null }
+
+  // Filter to only pages within the same section
+  const list = allList.filter((x) => x.sectionId === currentSection)
 
   if (!list?.length) return { prev: null, next: null }
 
@@ -51,44 +57,59 @@ const nav = computed(() => {
 }
 
 .navbar {
-  max-width: 688px;
+  width: 100%;
+  min-width: 0;
+  max-width: 760px;
   display:flex;
   justify-content:space-between;
   gap: 16px;
   padding-top: 12px;
   padding-bottom: 48px;
   margin: 0 auto;
-  border-top:1px solid var(--md-c-divider-light-2);
+  border-top:1px solid var(--md-c-divider-light);
   margin-top:24px;
 }
 
-.nav-left, .nav-right { flex: 1; }
-.nav-link:hover{ background: var(--md-c-white-mute); }
+.nav-left, .nav-right {
+  flex: 1;
+  min-width: 0;
+}
+.nav-link:hover{ background: var(--md-c-bg-mute); }
 
 .title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--md-c-green);
+  color: var(--md-c-brand);
   padding-top: 8px;
+}
+
+.nav-left {
+  display: flex;
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 16px;
 }
 
 .nav-right {
   display: flex;
   justify-content: flex-end;
   text-align: right;
+  padding-right: 16px;
 }
 
 .nav-link{
   text-decoration: none;
   color: inherit;
   display: inline-block;
+  max-width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
+  overflow-wrap: anywhere;
 }
 
 .hint{
   font-size: 12px;
-  color: var(--md-c-text-light-2);
+  color: var(--md-c-text-2);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }

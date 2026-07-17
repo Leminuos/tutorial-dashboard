@@ -82,7 +82,8 @@ export function createMarkdownRenderer() {
       const info = tokens[idx].info.trim().slice(3).trim() // Lấy title của container
 
       if (tokens[idx].nesting === 1) {
-        const title = info || 'TIP'
+        // renderInline để title hỗ trợ inline markdown như `code`
+        const title = md.renderInline(info || 'TIP')
         return `<div class="md-tip md-custom-block"><p class="md-custom-block-title">${title}</p>\n`
       }
       return `</div>\n`
@@ -94,7 +95,8 @@ export function createMarkdownRenderer() {
       const info = tokens[idx].info.trim().slice(7).trim() // Lấy title của container
 
       if (tokens[idx].nesting === 1) {
-        const title = info || 'WARNING'
+        // renderInline để title hỗ trợ inline markdown như `code`
+        const title = md.renderInline(info || 'WARNING')
         return `<div class="md-warning md-custom-block"><p class="md-custom-block-title">${title}</p>\n`
       }
       return `</div>\n`

@@ -64,6 +64,8 @@ Top-level folders in the remote content repo become sections. The remote `.docco
 
 If no layout is configured, the section defaults to `tutorial`.
 
+`tutorial` sections build their sidebar from `index.json` toctree files in the content repo (one at the section root, one per chapter), not from repository paths. A tutorial section without `index.json` renders empty on purpose.
+
 See [docs/CONTENT_MODEL.md](D:/Tutorial/Web/6.Project/tutorial-dashboard/docs/CONTENT_MODEL.md) before changing docs tree behavior.
 
 ## Coding Conventions

@@ -24,6 +24,10 @@ const currentDoc = computed(() => {
       <h1 class="header">{{ currentDoc?.title || "Unknown" }}</h1>
     </div>
 
+    <p v-if="currentDoc?.error" class="sidebar-error">
+      Không đọc được mục lục của phần này. Hãy kiểm tra file <code>index.json</code>.
+    </p>
+
     <section
       class="sidebar-group"
       v-for="(chapter, index) in currentDoc?.chapters" :key="index"
@@ -37,7 +41,7 @@ const currentDoc = computed(() => {
         :class="{ active: page.id === route.params.page }"
         :to="`/docs/${currentDoc?.id}/${chapter.id}/${page.id}`"
         @click="emit('select')"
-        v-for="page in chapter?.pages"
+        v-for="page in chapter?.pages" :key="page.id"
       >
         <p class="link-text">
           {{ page.title }}
@@ -111,6 +115,13 @@ const currentDoc = computed(() => {
   padding-bottom: 24px;
   margin-bottom: 24px;
   border-bottom: 1px solid var(--md-c-divider);
+}
+
+.sidebar-error {
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--md-c-text-2);
 }
 
 .sidebar-group {

@@ -39,32 +39,70 @@ If a section has no config, it defaults to `tutorial`.
 
 ## Tutorial Layout
 
-Tutorial sections are intended for ordered learning paths.
+Tutorial sections are ordered learning paths. **Navigation is declared, not inferred**: the sidebar comes from `index.json` files in the content repository, the same way Sphinx projects use `index.rst` toctrees. Repository paths only supply page assets.
 
 Expected shape:
 
 ```text
 Section Name/
+  index.json                  <- section toctree (lists chapters)
   01. Chapter Name/
-    01. First Page.md
-    02. Second Page/
+    index.json                <- chapter toctree (lists pages)
+    01. First Page/
       README.md
-      Example/
+      img/
+        diagram.png
+      example/
         Example Name/
           main.c
-          CMakeLists.txt
       attachment.pdf
+    02. Extra Page.md
+```
+
+Section `index.json`:
+
+```json
+{
+  "title": "Linux Kernel",
+  "description": "Optional section summary",
+  "toctree": ["1. Get started", "2. OS"]
+}
+```
+
+Chapter `index.json`:
+
+```json
+{
+  "title": "Driver",
+  "toctree": [
+    { "path": "1. kernel_module", "title": "Kernel Module" },
+    {
+      "path": "2. device_driver",
+      "title": "Device Driver",
+      "examples": ["example/char_device"]
+    },
+    { "path": "2. device_driver/notes.md", "title": "Extra Notes" }
+  ]
+}
 ```
 
 Rules implemented by [src/stores/docstree.js](D:/Tutorial/Web/6.Project/tutorial-dashboard/src/stores/docstree.js):
 
-- First-level folder under the section is a chapter.
-- A markdown file directly under a chapter is a page.
-- A page folder with `README.md` is also a page.
-- `img` folders are ignored when building tutorial navigation.
-- Files under an `Example/` path are grouped as page examples.
-- Non-markdown, non-image files are page attachments.
-- Numeric prefixes like `01.`, `02-`, or `03_` define ordering and are removed from generated titles.
+- A tutorial section **must** have `index.json` at its root. Without it the section renders empty and `doc.error` is set.
+- Every `toctree` entry is either a path string or an object with `path` plus optional `title` and `id`.
+- Section entries point at chapter folders; each chapter folder needs its own `index.json`.
+- A page entry pointing at a folder resolves to `<folder>/README.md`; a page entry ending in `.md` resolves to that file.
+- Entries whose target file does not exist are skipped with a console warning; chapters with no resolvable page are dropped.
+- Order is the declaration order in the toctree. Numeric prefixes no longer control ordering, but they are still stripped from generated titles and slugs.
+- Titles come from the entry `title`, then the target `index.json` `title`, then the folder name.
+- Page slugs come from the entry `id`, otherwise from the last path segment. Keeping folder names stable keeps existing URLs stable.
+
+Page assets:
+
+- `examples`: list of folders relative to the page folder, as `"example/char_device"` or `{ "name": "I2C", "path": "example/i2c_driver" }`. All files below the folder become the example files.
+- `attachments`: list of files relative to the page folder.
+- If neither is declared and the entry is a folder page, assets are auto-collected: `example/*` subfolders become examples, and remaining non-markdown, non-image files outside `img/` become attachments.
+- Markdown-file entries share a folder with sibling pages, so they never auto-collect; declare their assets explicitly.
 
 Tutorial URLs:
 

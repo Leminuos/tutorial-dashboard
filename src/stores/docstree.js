@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import config from '@/config/github.config.js'
-import { getFileType, isExampleFolder } from '@/config/fileTypes.config.js'
+import { getFileType } from '@/config/fileTypes.config.js'
 import { slugify } from '@/utils/slugify'
 
 const OWNER = config.github.owner || "YOUR_OWNER"
@@ -55,7 +55,7 @@ export const useDocsStore = defineStore('docs', {
         this.docConfig = await fetchDocConfig()
 
         // 4) Build docs tree
-        this.tree = buildDocsTree(allPaths, this.docConfig)
+        this.tree = await buildDocsTree(allPaths, this.docConfig)
 
         // 5) Flat lists
         this.flatLists = flatPages(this.tree)
@@ -229,7 +229,7 @@ export function buildRawUrl(path) {
   return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${encodedPath}`
 }
 
-function buildDocsTree(allPaths, docConfig) {
+async function buildDocsTree(allPaths, docConfig) {
   const docsMap = new Map()
 
   for (const path of allPaths) {
@@ -251,105 +251,220 @@ function buildDocsTree(allPaths, docConfig) {
     docsMap.get(docName).files.push(path)
   }
 
-  const docs = []
-  for (const docData of docsMap.values()) {
-    switch (docData.layout) {
-      case 'tutorial':
-        docs.push(buildTutorialDoc(docData))
-        break
-      case 'folder':
-        docs.push(buildTreeDoc(docData, 'folder'))
-        break
-      case 'posts':
-        docs.push(buildTreeDoc(docData, 'posts'))
-        break
-    }
-  }
+  // Tutorial sections read their navigation from index.json files, so they are
+  // resolved asynchronously; folder/posts sections are still derived from paths.
+  const docs = await Promise.all(
+    Array.from(docsMap.values()).map(docData => {
+      switch (docData.layout) {
+        case 'folder':
+          return buildTreeDoc(docData, 'folder')
+        case 'posts':
+          return buildTreeDoc(docData, 'posts')
+        default:
+          return buildTutorialDoc(docData)
+      }
+    })
+  )
 
   return { docs }
 }
 
+// ============ Tutorial layout (index.json driven) ============
+
+const INDEX_FILE = 'index.json'
+
+function baseName(path) {
+  const segments = path.split('/').filter(Boolean)
+  return segments[segments.length - 1] || path
+}
+
+function dirName(path) {
+  const segments = path.split('/').filter(Boolean)
+  segments.pop()
+  return segments.join('/')
+}
+
+async function fetchIndexFile(path) {
+  const res = await fetch(buildRawUrl(path), { headers: createGithubHeader() })
+  if (!res.ok) throw new Error(`Cannot read "${path}" (HTTP ${res.status})`)
+  try {
+    return await res.json()
+  } catch {
+    throw new Error(`"${path}" is not valid JSON`)
+  }
+}
+
 /**
- * Build tutorial doc structure (optimized)
+ * Normalize a toctree into entry objects.
+ * An entry is either a path string or an object with at least a `path`.
  */
-function buildTutorialDoc(docData) {
-  const chaptersMap = new Map()
-
-  for (const filePath of docData.files) {
-    const parts = filePath.split('/')
-
-    // Skip img folders and short paths
-    if (parts.length < 3 || parts.some(p => p.toLowerCase() === 'img')) continue
-
-    const chapterName = parts[1]
-    const pageName = parts[2]
-    const fileName = parts[parts.length - 1]
-    const isMainMd = parts.length === 3
-      ? getFileType(pageName) === 'markdown'
-      : (fileName.toLowerCase() === 'readme.md' && parts.length === 4)
-
-    // Get or create chapter
-    let chapter = chaptersMap.get(chapterName)
-    if (!chapter) {
-      chapter = {
-        id: slugify(chapterName),
-        title: titleFromFilename(chapterName),
-        order: extractOrder(chapterName),
-        pagesMap: new Map()
-      }
-      chaptersMap.set(chapterName, chapter)
-    }
-
-    // Get or create page
-    let page = chapter.pagesMap.get(pageName)
-    if (!page) {
-      page = {
-        id: slugify(pageName),
-        title: titleFromFilename(pageName, parts.length === 3),
-        order: extractOrder(pageName),
-        path: null,
-        examples: [],
-        attachments: []
-      }
-      chapter.pagesMap.set(pageName, page)
-    }
-
-    // Categorize file
-    const fileType = getFileType(fileName)
-    if (isMainMd) {
-      page.path = filePath
-    } else if (isExampleFolder(filePath) && parts.length >= 6) {
-      const exampleName = parts[4]
-      let example = page.examples.find(e => e.name === exampleName)
-      if (!example) {
-        example = { name: exampleName, files: [] }
-        page.examples.push(example)
-      }
-      example.files.push({ name: fileName, path: filePath, type: fileType })
-    } else if (fileType !== 'markdown' && fileType !== 'image') {
-      page.attachments.push({ name: fileName, path: filePath, type: fileType })
-    }
+function normalizeToctree(index, indexPath) {
+  const toctree = index?.toctree
+  if (!Array.isArray(toctree)) {
+    console.warn(`"${indexPath}" has no "toctree" array`)
+    return []
   }
 
-  // Convert to sorted arrays
-  const chapters = Array.from(chaptersMap.values())
-    .map(ch => ({
-      id: ch.id,
-      title: ch.title,
-      order: ch.order,
-      pages: Array.from(ch.pagesMap.values())
-        .filter(p => p.path)
-        .sort((a, b) => a.order - b.order)
-    }))
-    .filter(ch => ch.pages.length > 0)
-    .sort((a, b) => a.order - b.order)
+  return toctree
+    .map(entry => (typeof entry === 'string' ? { path: entry } : entry))
+    .filter(entry => {
+      const valid = entry && typeof entry.path === 'string' && entry.path.trim()
+      if (!valid) console.warn(`Skipping invalid toctree entry in "${indexPath}"`)
+      return valid
+    })
+}
 
-  return {
+/**
+ * Build tutorial doc structure from the section index.json and one index.json
+ * per chapter. Navigation is declared, never inferred from repository paths.
+ */
+async function buildTutorialDoc(docData) {
+  const section = {
     id: docData.id,
     title: docData.title,
     layout: 'tutorial',
-    chapters
+    rawName: docData.rawName,
+    chapters: [],
+    error: null
   }
+
+  const indexPath = `${docData.rawName}/${INDEX_FILE}`
+  let index
+  try {
+    index = await fetchIndexFile(indexPath)
+  } catch (err) {
+    section.error = err.message
+    console.error(`Tutorial section "${docData.rawName}" has no usable index:`, err.message)
+    return section
+  }
+
+  if (index.title) section.title = index.title
+  if (index.description) section.description = index.description
+
+  const chapters = await Promise.all(
+    normalizeToctree(index, indexPath).map(entry => buildTutorialChapter(docData, entry))
+  )
+  section.chapters = chapters.filter(Boolean)
+
+  return section
+}
+
+async function buildTutorialChapter(docData, entry) {
+  const chapterDir = `${docData.rawName}/${entry.path}`
+  const indexPath = `${chapterDir}/${INDEX_FILE}`
+
+  let index
+  try {
+    index = await fetchIndexFile(indexPath)
+  } catch (err) {
+    console.error(`Skipping chapter "${chapterDir}":`, err.message)
+    return null
+  }
+
+  const name = baseName(entry.path)
+  const pages = normalizeToctree(index, indexPath)
+    .map(pageEntry => buildTutorialPage(docData, chapterDir, pageEntry))
+    .filter(Boolean)
+
+  if (!pages.length) {
+    console.warn(`Chapter "${chapterDir}" declares no page, skipping`)
+    return null
+  }
+
+  return {
+    id: entry.id || slugify(name),
+    title: entry.title || index.title || titleFromFilename(name),
+    pages
+  }
+}
+
+function buildTutorialPage(docData, chapterDir, entry) {
+  const isMarkdownEntry = getFileType(baseName(entry.path)) === 'markdown'
+  const pagePath = isMarkdownEntry
+    ? `${chapterDir}/${entry.path}`
+    : `${chapterDir}/${entry.path}/README.md`
+
+  if (!docData.files.includes(pagePath)) {
+    console.warn(`Page "${pagePath}" declared in the toctree does not exist`)
+    return null
+  }
+
+  const name = baseName(entry.path)
+  const pageDir = dirName(pagePath)
+
+  return {
+    id: entry.id || slugify(isMarkdownEntry ? name.replace(/\.md$/i, '') : name),
+    title: entry.title || titleFromFilename(name, isMarkdownEntry),
+    path: pagePath,
+    // A markdown entry shares its folder with sibling pages, so its assets must
+    // be declared explicitly instead of being collected from that folder.
+    ...collectPageAssets(docData.files, pageDir, pagePath, entry, !isMarkdownEntry)
+  }
+}
+
+function toFileEntry(path) {
+  const name = baseName(path)
+  return { name, path, type: getFileType(name) }
+}
+
+/**
+ * Resolve the examples and attachments of a page.
+ * Declared `examples`/`attachments` win; otherwise they are collected from the
+ * page folder (`example/*` folders become examples, leftover files attachments).
+ */
+function collectPageAssets(sectionFiles, pageDir, pagePath, entry, autoCollect) {
+  const claimed = new Set([pagePath])
+  const examples = []
+
+  const collectExample = (name, dir) => {
+    const files = sectionFiles.filter(p => p.startsWith(`${dir}/`))
+    files.forEach(p => claimed.add(p))
+    if (files.length) examples.push({ name, files: files.map(toFileEntry) })
+  }
+
+  if (Array.isArray(entry.examples)) {
+    for (const raw of entry.examples) {
+      const example = typeof raw === 'string' ? { path: raw } : raw
+      if (!example?.path) continue
+      collectExample(example.name || baseName(example.path), `${pageDir}/${example.path}`)
+    }
+  } else if (autoCollect) {
+    const exampleRoot = `${pageDir}/example/`
+    const grouped = new Map()
+
+    for (const path of sectionFiles) {
+      if (!path.startsWith(exampleRoot)) continue
+      const rest = path.slice(exampleRoot.length).split('/')
+      // Files sitting directly in example/ form a single unnamed group
+      const groupName = rest.length > 1 ? rest[0] : 'example'
+      if (!grouped.has(groupName)) grouped.set(groupName, [])
+      grouped.get(groupName).push(path)
+      claimed.add(path)
+    }
+
+    for (const [name, files] of grouped) {
+      examples.push({ name, files: files.map(toFileEntry) })
+    }
+  }
+
+  let attachments
+  if (Array.isArray(entry.attachments)) {
+    attachments = entry.attachments.map(rel => toFileEntry(`${pageDir}/${rel}`))
+  } else if (autoCollect) {
+    attachments = sectionFiles
+      .filter(path => {
+        if (!path.startsWith(`${pageDir}/`)) return false
+        if (claimed.has(path)) return false
+        if (path.slice(pageDir.length + 1).split('/').some(p => p.toLowerCase() === 'img')) return false
+        const type = getFileType(baseName(path))
+        return type !== 'markdown' && type !== 'image'
+      })
+      .map(toFileEntry)
+  } else {
+    attachments = []
+  }
+
+  return { examples, attachments }
 }
 
 /**

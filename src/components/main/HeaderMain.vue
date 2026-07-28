@@ -313,33 +313,9 @@ function openSearch() {
   justify-content: space-between;
   align-items: center;
   height: var(--md-nav-height);
-  padding: 0 12px;
+  padding: 0 var(--md-page-gutter);
   gap: 10px;
   min-width: 0;
-}
-
-@media (min-width: 1280px) {
-  .navbar-container {
-    padding: 0 32px;
-  }
-}
-
-@media (min-width: 1440px) {
-  .navbar-container {
-    padding: 0 100px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .navbar-container {
-    padding: 0 150px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .navbar-container {
-    padding: 0 200px;
-  }
 }
 
 .icon-link {

@@ -89,6 +89,38 @@
 
   --md-sidebar-expand: 250px;
   --md-nav-height: 50px;
+
+  /* Shared page gutter: navbar, docs sidebar and right panel all align to it */
+  --md-page-gutter: 12px;
+
+  /* Inner text column of the left sidebar; the example panel matches it so both
+     sidebars read as the same width. */
+  --md-sidebar-pad-end: 16px;
+  --md-sidebar-inner: calc(var(--md-sidebar-expand) - var(--md-sidebar-pad-end));
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --md-page-gutter: 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --md-page-gutter: 100px;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --md-page-gutter: 150px;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --md-page-gutter: 200px;
+  }
 }
 
 html {

@@ -161,6 +161,49 @@ export function createMarkdownRenderer() {
   })
 
   /**
+   * Lấy phần chữ thuần của heading để hiển thị trong mục lục.
+   * Đi qua các inline token thay vì dùng markdown thô, nhờ vậy `code`,
+   * **đậm**, [link](url)... không còn lộ ký tự cú pháp trong mục lục.
+   * Link permalink (#) do markdown-it-anchor chèn thêm cũng được bỏ qua.
+   */
+  function headingText(inline) {
+    if (!inline?.children?.length) return inline?.content ?? ""
+
+    const parts = []
+    let inPermalink = 0
+
+    for (const token of inline.children) {
+      if (
+        token.type === "link_open" &&
+        (token.attrGet("class") || "").includes("header-anchor")
+      ) {
+        inPermalink++
+        continue
+      }
+
+      if (inPermalink) {
+        if (token.type === "link_close") inPermalink--
+        continue
+      }
+
+      switch (token.type) {
+        case "text":
+        case "code_inline":
+        case "math_inline":
+        case "image": // token.content là alt text
+          parts.push(token.content)
+          break
+        case "softbreak":
+        case "hardbreak":
+          parts.push(" ")
+          break
+      }
+    }
+
+    return parts.join("").replace(/\s+/g, " ").trim()
+  }
+
+  /**
    * Thêm đoạn hook khi render heading để thu thập Table of Content.
    */
   md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
@@ -174,7 +217,7 @@ export function createMarkdownRenderer() {
        * thường là token inline
        */
       const inline = tokens[idx + 1]
-      const text = inline && inline.type === "inline" ? inline.content : ""
+      const text = inline && inline.type === "inline" ? headingText(inline) : ""
 
       /**
        * Lấy id dùng để link tới heading tag

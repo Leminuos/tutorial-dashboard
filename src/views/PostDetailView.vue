@@ -1,10 +1,11 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 import HeaderMain from '@/components/main/HeaderMain.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 import FileViewer from '@/components/viewers/FileViewer.vue'
+import PostTocList from '@/components/posts/PostTocList.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,6 +141,92 @@ watch(categoryId, (id) => {
   }
 }, { immediate: true })
 
+// ===== Table of contents =====
+const TOC_MOBILE_BREAKPOINT = 768
+
+const toc = ref([])
+const tocActive = ref('')
+const isMobile = ref(false)
+// Desktop: the sidebar block can be folded away
+const tocOpen = ref(true)
+// Mobile: the outline lives in a sheet opened from a floating button, so it
+// stays reachable anywhere in the post instead of only at the top.
+const tocSheetOpen = ref(false)
+
+const onTocUpdate = (items) => {
+  toc.value = items
+}
+
+const onTocActive = (id) => {
+  tocActive.value = id
+}
+
+function openTocSheet() {
+  tocSheetOpen.value = true
+  document.body.style.overflow = 'hidden'
+}
+
+function closeTocSheet() {
+  tocSheetOpen.value = false
+  document.body.style.overflow = ''
+}
+
+function updateViewport() {
+  const mobile = window.innerWidth <= TOC_MOBILE_BREAKPOINT
+  if (mobile === isMobile.value) return
+  isMobile.value = mobile
+  if (!mobile) closeTocSheet()
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape' && tocSheetOpen.value) closeTocSheet()
+}
+
+function onSelectHeading(targetId) {
+  if (!targetId) return
+  closeTocSheet()
+
+  nextTick(() => {
+    const el = document.getElementById(targetId)
+    if (!el) return
+
+    const headerHeight = parseInt(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue('--md-nav-height') || '50'
+    )
+    const offset = headerHeight + 12
+
+    window.scrollTo({
+      top: el.getBoundingClientRect().top + window.pageYOffset - offset,
+      behavior: 'smooth',
+    })
+
+    // Hash routing: the anchor is appended to the route hash, same shape the
+    // in-content anchor links produce (#/posts/view/.../#heading-id)
+    const routeHash = window.location.hash.replace(/\/#[^/]*$/, '')
+    window.history.replaceState(null, '', `${routeHash}/#${targetId}`)
+  })
+}
+
+// A different post means a different outline
+watch(displayFile, () => {
+  toc.value = []
+  tocActive.value = ''
+  closeTocSheet()
+})
+
+onMounted(() => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
+  document.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateViewport)
+  document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
+
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const parts = dateStr.split('-')
@@ -199,6 +286,8 @@ function formatDate(dateStr) {
                   :src="buildRawUrl(displayFile.path)"
                   max-width="100%"
                   class="markdown-body"
+                  @toc-update="onTocUpdate"
+                  @toc-active="onTocActive"
                 />
                 <file-viewer
                   v-else
@@ -229,27 +318,116 @@ function formatDate(dateStr) {
         </div>
       </div>
 
-      <!-- Related Posts Sidebar -->
-      <aside class="related-sidebar" v-if="relatedPosts.length">
-        <h3 class="sidebar-title">Bài viết liên quan</h3>
-        <div class="related-list">
-          <router-link
-            v-for="post in relatedPosts"
-            :key="post.id"
-            :to="getPostLink(post)"
-            class="related-item"
+      <!-- Sidebar: table of contents + related posts. On mobile the outline
+           moves into a floating sheet and only related posts stay in the flow. -->
+      <div class="post-sidebar" v-if="toc.length || relatedPosts.length">
+        <!-- Table of Contents -->
+        <section class="post-toc" v-if="toc.length">
+          <button
+            class="toc-toggle"
+            type="button"
+            :aria-expanded="tocOpen"
+            aria-controls="post-toc-list"
+            @click="tocOpen = !tocOpen"
           >
-            <div class="related-thumbnail" v-if="getImageUrl(post)">
-              <img :src="getImageUrl(post)" :alt="post.title" loading="lazy">
-            </div>
-            <div class="related-info">
-              <div class="related-item-title">{{ post.title }}</div>
-            </div>
-          </router-link>
-        </div>
-      </aside>
+            <span class="sidebar-title">Mục lục</span>
+            <svg
+              class="toc-chevron"
+              :class="{ open: tocOpen }"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <post-toc-list
+            v-show="tocOpen"
+            id="post-toc-list"
+            :items="toc"
+            :active-id="tocActive"
+            @select="onSelectHeading"
+          />
+        </section>
+
+        <!-- Related Posts -->
+        <aside class="related-sidebar" v-if="relatedPosts.length">
+          <h3 class="sidebar-title">Bài viết liên quan</h3>
+          <div class="related-list">
+            <router-link
+              v-for="post in relatedPosts"
+              :key="post.id"
+              :to="getPostLink(post)"
+              class="related-item"
+            >
+              <div class="related-thumbnail" v-if="getImageUrl(post)">
+                <img :src="getImageUrl(post)" :alt="post.title" loading="lazy">
+              </div>
+              <div class="related-info">
+                <div class="related-item-title">{{ post.title }}</div>
+              </div>
+            </router-link>
+          </div>
+        </aside>
+      </div>
     </div>
   </div>
+
+  <!-- Mobile: outline stays one tap away while reading -->
+  <Teleport to="body">
+    <Transition name="toc-fab">
+      <button
+        v-if="isMobile && toc.length && !tocSheetOpen"
+        class="toc-fab"
+        type="button"
+        aria-label="Mở mục lục"
+        @click="openTocSheet"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="9" y1="6" x2="20" y2="6"></line>
+          <line x1="9" y1="12" x2="20" y2="12"></line>
+          <line x1="9" y1="18" x2="20" y2="18"></line>
+          <circle cx="4.5" cy="6" r="1.4" fill="currentColor" stroke="none"></circle>
+          <circle cx="4.5" cy="12" r="1.4" fill="currentColor" stroke="none"></circle>
+          <circle cx="4.5" cy="18" r="1.4" fill="currentColor" stroke="none"></circle>
+        </svg>
+      </button>
+    </Transition>
+
+    <Transition name="toc-sheet">
+      <div
+        v-if="isMobile && tocSheetOpen"
+        class="toc-sheet-overlay"
+        @click.self="closeTocSheet"
+      >
+        <section class="toc-sheet" role="dialog" aria-modal="true" aria-label="Mục lục">
+          <header class="toc-sheet-header">
+            <div class="toc-sheet-heading">
+              <strong>Mục lục</strong>
+              <span>{{ toc.length }} mục</span>
+            </div>
+            <button class="toc-sheet-close" type="button" aria-label="Đóng mục lục" @click="closeTocSheet">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </header>
+
+          <post-toc-list
+            class="toc-sheet-list"
+            :items="toc"
+            :active-id="tocActive"
+            @select="onSelectHeading"
+          />
+        </section>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -439,11 +617,81 @@ function formatDate(dateStr) {
   text-align: right;
 }
 
-/* Related Posts Sidebar */
-.related-sidebar {
+/* Sidebar column: table of contents + related posts */
+.post-sidebar {
   position: sticky;
   top: calc(var(--md-nav-height) + 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
   height: fit-content;
+  max-height: calc(100vh - var(--md-nav-height) - 72px);
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-c-divider) transparent;
+}
+
+/* Table of Contents */
+.post-toc {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.toc-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 0 0 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--md-c-divider-light);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.toc-toggle:hover .sidebar-title {
+  color: var(--md-c-brand);
+}
+
+.toc-toggle .sidebar-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  transition: color 0.2s;
+}
+
+.toc-chevron {
+  flex: 0 0 auto;
+  color: var(--md-c-text-3);
+  transition: transform 0.25s;
+}
+
+.toc-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Sizing of the list box inside the sidebar; the list itself styles its rows */
+.post-toc .toc-list {
+  flex: 1 1 auto;
+  min-height: 96px;
+  max-height: 46vh;
+}
+
+/* Related Posts Sidebar */
+.related-sidebar {
+  display: flex;
+  flex: 0 0 auto;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .sidebar-title {
@@ -469,6 +717,7 @@ function formatDate(dateStr) {
 
 .related-item {
   display: flex;
+  flex: 0 0 auto;
   gap: 12px;
   padding: 10px;
   background: var(--md-c-bg-soft);
@@ -546,16 +795,156 @@ function formatDate(dateStr) {
     padding: 0 16px;
   }
 
-  /* Sidebar moves to bottom on mobile */
+  /* Unwrap the column so related posts can take their own place in the grid */
+  .post-sidebar {
+    display: contents;
+  }
+
+  /* The outline moves into the floating sheet */
+  .post-toc {
+    display: none;
+  }
+
+  /* Related posts move to the bottom on mobile */
   .related-sidebar {
     position: static;
     order: 1;
+    padding: 32px 16px 0;
     border-top: 1px solid var(--md-c-divider-light);
-    padding-top: 32px;
   }
 
   .related-item:hover {
     transform: none;
   }
+}
+/* ===== Mobile floating outline ===== */
+.toc-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--md-c-brand);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+
+.toc-fab:active {
+  transform: scale(0.94);
+}
+
+.toc-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.toc-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 76dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--md-c-bg);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.28);
+}
+
+.toc-sheet-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 12px 12px 20px;
+  border-bottom: 1px solid var(--md-c-divider-light);
+}
+
+.toc-sheet-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toc-sheet-heading strong {
+  color: var(--md-c-text-1);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.toc-sheet-heading span {
+  color: var(--md-c-text-3);
+  font-size: 12px;
+}
+
+.toc-sheet-close {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--md-c-bg-soft);
+  color: var(--md-c-text-2);
+  cursor: pointer;
+}
+
+.toc-sheet-close:active {
+  background: var(--md-c-bg-mute);
+}
+
+.toc-sheet-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 10px 16px 16px;
+}
+
+.toc-fab-enter-active,
+.toc-fab-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.toc-fab-enter-from,
+.toc-fab-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.toc-sheet-enter-active,
+.toc-sheet-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.toc-sheet-enter-active .toc-sheet,
+.toc-sheet-leave-active .toc-sheet {
+  transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.toc-sheet-enter-from,
+.toc-sheet-leave-to {
+  opacity: 0;
+}
+
+.toc-sheet-enter-from .toc-sheet,
+.toc-sheet-leave-to .toc-sheet {
+  transform: translateY(100%);
 }
 </style>

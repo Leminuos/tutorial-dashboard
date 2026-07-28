@@ -1,11 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const emit = defineEmits(['toggle-sidebar', 'toggle-toc'])
-
-defineProps({
-  tocOpen: { type: Boolean, default: false }
-})
+const emit = defineEmits(['toggle-sidebar'])
 
 // Track if header is scrolled out of view
 const isHeaderHidden = ref(false)
@@ -41,20 +37,6 @@ onUnmounted(() => {
         </svg>
         <span class="menu-text">Menu</span>
       </button>
-
-      <!-- Right: On this page toggle -->
-      <button
-        class="toc-toggle"
-        :class="{ active: tocOpen }"
-        :aria-expanded="tocOpen"
-        aria-controls="mobile-page-toc"
-        @click="emit('toggle-toc')"
-      >
-        <span class="toc-text">On this page</span>
-        <svg class="toc-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
     </div>
   </nav>
 </template>
@@ -79,7 +61,7 @@ onUnmounted(() => {
 
 .container {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   height: 100%;
   padding: 0 24px;
@@ -112,39 +94,6 @@ onUnmounted(() => {
   color: var(--md-c-brand);
 }
 
-/* TOC toggle (right) */
-.toc-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  padding: 8px 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--md-c-text-2);
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 7px;
-  transition:
-    color 0.2s,
-    background-color 0.2s;
-}
-
-.toc-toggle:hover,
-.toc-toggle.active {
-  color: var(--md-c-brand);
-  background: var(--md-c-brand-soft);
-}
-
-.toc-chevron {
-  transition: transform 0.25s;
-}
-
-.toc-toggle.active .toc-chevron {
-  transform: rotate(180deg);
-}
-
 @media (min-width: 960px) {
   .docs-navbar {
     display: none;
@@ -162,8 +111,7 @@ onUnmounted(() => {
     padding: 0 16px;
   }
 
-  .menu-text,
-  .toc-text {
+  .menu-text {
     font-size: 13px;
   }
 }

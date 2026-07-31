@@ -126,6 +126,36 @@ export function createMarkdownRenderer() {
   })
 
   /**
+   * Explain container - an explanation card attached to the code block above it.
+   * Inside a code-group it is moved into the panel of that tab, so each tab
+   * carries its own explanation; used on its own it renders as a plain card.
+   *
+   * Because it nests inside code-group, the group must open with 4 colons:
+   * :::: code-group
+   * ```c [main.c]
+   * ...
+   * ```
+   * ::: explain [Giải thích main.c]
+   * - `probe()`: ...
+   * :::
+   * ::::
+   */
+  md.use(container, 'explain', {
+    render(tokens, idx) {
+      const info = tokens[idx].info.trim().slice(7).trim() // Remove 'explain' prefix
+
+      if (tokens[idx].nesting === 1) {
+        // Title accepts [Title] or raw text, and supports inline markdown
+        const match = info.match(/^\[(.+?)\]$/)
+        const raw = match ? match[1] : info
+        const title = md.renderInline(raw || 'Giải thích')
+        return `<div class="code-explain"><p class="code-explain-title">${title}</p>\n`
+      }
+      return `</div>\n`
+    }
+  })
+
+  /**
    * Content Group container - groups multiple content sections with tabs
    * Usage:
    * :::: content-group

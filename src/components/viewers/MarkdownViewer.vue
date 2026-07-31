@@ -345,8 +345,18 @@ function setupCodeGroups() {
   if (!groups) return
 
   groups.forEach((group) => {
-    const codeBlocks = group.querySelectorAll('.code-block')
-    if (codeBlocks.length === 0) return
+    // Walk the children in source order so every `::: explain` card can be
+    // attached to the code block it follows, i.e. to that tab only.
+    const entries = []
+    group.querySelectorAll(':scope > .code-block, :scope > .code-explain').forEach((el) => {
+      if (el.classList.contains('code-block')) {
+        entries.push({ block: el, explains: [] })
+      } else if (entries.length) {
+        entries[entries.length - 1].explains.push(el)
+      }
+    })
+
+    if (entries.length === 0) return
 
     // Create tabs container
     const tabsContainer = document.createElement('div')
@@ -356,7 +366,7 @@ function setupCodeGroups() {
     const panelsContainer = document.createElement('div')
     panelsContainer.className = 'code-group-panels'
 
-    codeBlocks.forEach((block, index) => {
+    entries.forEach(({ block, explains }, index) => {
       // Extract file name from data-title attribute on code-block div
       const filename = block.dataset?.title || 'code'
 
@@ -370,6 +380,7 @@ function setupCodeGroups() {
       const panel = document.createElement('div')
       panel.className = `code-group-panel${index === 0 ? ' active' : ''}`
       panel.appendChild(block.cloneNode(true))
+      explains.forEach((card) => panel.appendChild(card.cloneNode(true)))
 
       // Tab click handler
       tab.addEventListener('click', () => {

@@ -913,6 +913,122 @@ html.dark .md-content .code-group-tab:hover {
 }
 
 /* ================================
+   Explain Card - per-tab notes
+   ================================ */
+/* Horizontal padding matches the 20px inset of code text, so the explanation
+   lines up with the code it describes. Spacing stays in em, which keeps the
+   card on the same vertical rhythm as the article at a smaller type size. */
+.md-content .code-explain {
+  margin: var(--md-block-space) 0;
+  padding: 16px 20px;
+  border: 1px solid var(--md-c-divider-light);
+  border-left: 3px solid var(--md-c-brand);
+  border-radius: 8px;
+  background: var(--md-c-bg-soft);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.md-content .code-explain-title {
+  margin: 0 0 0.7em;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+  color: var(--md-c-text-1);
+}
+
+.md-content .code-explain > *:first-child {
+  margin-top: 0;
+}
+
+.md-content .code-explain > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists keep the article's indent (the ordered-list counters are positioned
+   against it), only the vertical gaps tighten inside the card. */
+.md-content .code-explain ul,
+.md-content .code-explain ol {
+  margin-bottom: 0.85em;
+}
+
+.md-content .code-explain li {
+  margin: 0.3em 0;
+  line-height: 1.65;
+}
+
+.md-content .code-explain li > ul,
+.md-content .code-explain li > ol {
+  margin-top: 0.3em;
+  margin-bottom: 0;
+}
+
+.md-content .code-explain p {
+  margin-bottom: 0.85em;
+}
+
+.md-content .code-explain :not(pre) > code {
+  font-size: 0.84em;
+}
+
+/* A fenced block inside the card is a standalone snippet again, so it takes
+   back the frame that `.code-group .code-block` strips off for tab panels. */
+.md-content .code-explain .code-block {
+  margin: 0.85em 0;
+  border-radius: 8px;
+}
+
+.md-content .code-explain .code-block pre {
+  border: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
+}
+
+/* The tab header already names the file for a group's own block, but a snippet
+   inside the card has no header, so its language badge comes back. */
+.md-content .code-explain .code-block .code-lang {
+  display: inline;
+}
+
+/* In light mode the code surface is white on the card's near-white background,
+   so a hairline border all but disappears; lift it with a stronger edge and a
+   shallow shadow instead of tinting the code itself. */
+html:not(.dark) .md-content .code-explain .code-block pre {
+  border-color: color-mix(in srgb, var(--md-c-divider) 55%, transparent);
+  box-shadow: var(--md-shadow-1);
+}
+
+html.dark .md-content .code-explain .code-block pre {
+  border-color: #383c42;
+}
+
+html:not(.dark) .md-content .code-explain :not(pre) > code {
+  background-color: rgba(15, 23, 42, 0.075);
+  border-color: var(--md-c-divider-light);
+}
+
+/* Inside a tab the card is part of the group frame: it drops its own corners
+   and sits flush under the code, separated by a single rule. */
+.md-content .code-group-panel > .code-explain,
+.md-content .content-group-panel .code-explain {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--md-c-divider-light);
+  border-radius: 0;
+}
+
+html.dark .md-content .code-explain {
+  background: var(--md-code-tab-bg, #21252b);
+  border-color: transparent;
+  border-left-color: var(--md-c-brand);
+}
+
+html.dark .md-content .code-group-panel > .code-explain,
+html.dark .md-content .content-group-panel .code-explain {
+  border-top: 1px solid #383c42;
+}
+
+/* ================================
    Content Group - Tabbed Content
    ================================ */
 .md-content .content-group {

@@ -99,6 +99,15 @@
   --md-sidebar-inner: calc(var(--md-sidebar-expand) - var(--md-sidebar-pad-end));
 }
 
+/* The desktop bar carries a search field and a nav row, so it gets more height
+   than the compact mobile bar. Everything that offsets against the header
+   reads this variable, including the scroll-to-anchor maths. */
+@media (min-width: 960px) {
+  :root {
+    --md-nav-height: 58px;
+  }
+}
+
 @media (min-width: 1280px) {
   :root {
     --md-page-gutter: 32px;

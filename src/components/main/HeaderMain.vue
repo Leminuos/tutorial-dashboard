@@ -1,11 +1,12 @@
 <script setup>
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useDocsStore } from '@/stores/docstree'
 import { useSearchStore } from '@/stores/searchStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import SearchModal from '@/components/search/SearchModal.vue'
 
+const route = useRoute()
 const docs = useDocsStore()
 const searchStore = useSearchStore()
 const themeStore = useThemeStore()
@@ -88,6 +89,53 @@ function toggleMobileExpand(docId) {
 function openSearch() {
   searchStore.open()
 }
+
+/* ---- Desktop navigation ---- */
+
+// Which post dropdown is open. Driven by click and focus as well as hover, so
+// the menu is reachable without a pointer.
+const openDropdown = ref(null)
+
+// A post section stays highlighted for every category page underneath it.
+function isPostActive(post) {
+  return route.path.startsWith(`/posts/${post.id}`)
+}
+
+function toggleDropdown(id) {
+  openDropdown.value = openDropdown.value === id ? null : id
+}
+
+function closeDropdown() {
+  openDropdown.value = null
+}
+
+// Tabbing past the last link of a menu should close it behind you.
+function onDropdownFocusOut(event, id) {
+  if (openDropdown.value !== id) return
+  if (event.currentTarget.contains(event.relatedTarget)) return
+  closeDropdown()
+}
+
+function onDocumentKeydown(event) {
+  if (event.key === 'Escape') closeDropdown()
+}
+
+function onDocumentPointerDown(event) {
+  if (!event.target.closest?.('.dropdown-trigger')) closeDropdown()
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onDocumentKeydown)
+  document.addEventListener('pointerdown', onDocumentPointerDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onDocumentKeydown)
+  document.removeEventListener('pointerdown', onDocumentPointerDown)
+})
+
+// Navigating away should never leave a menu hanging open.
+watch(() => route.fullPath, closeDropdown)
 </script>
 
 <template>
@@ -120,11 +168,14 @@ function openSearch() {
           </span>
           <span class="search-mobile-label">Open search</span>
           <span class="search-title">Search</span>
-          <kbd class="search-shortcut">Ctrl K</kbd>
+          <span class="search-shortcut">
+            <kbd>Ctrl</kbd>
+            <kbd>K</kbd>
+          </span>
         </button>
 
         <!-- Desktop Navbar -->
-        <nav class="navbar">
+        <nav class="navbar" aria-label="Điều hướng chính">
           <!-- Tutorial docs - direct links -->
           <div
             class="navbar-item"
@@ -132,18 +183,33 @@ function openSearch() {
             :key="doc.id"
           >
             <router-link :to="`/docs/${doc.id}`">
-              <span>{{ doc.title.toUpperCase() }}</span>
+              <span>{{ doc.title }}</span>
             </router-link>
           </div>
 
           <!-- Dropdown items (Posts only) -->
-          <div class="navbar-item dropdown-trigger" v-for="post in postDocs" :key="post.id">
-            <div class="dropdown-label">
-              <span>{{ post.title.toUpperCase() }}</span>
-              <svg class="dropdown-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div
+            class="navbar-item dropdown-trigger"
+            :class="{ open: openDropdown === post.id, active: isPostActive(post) }"
+            v-for="post in postDocs"
+            :key="post.id"
+            @mouseenter="openDropdown = post.id"
+            @mouseleave="closeDropdown"
+            @focusout="onDropdownFocusOut($event, post.id)"
+          >
+            <button
+              class="dropdown-label"
+              type="button"
+              aria-haspopup="true"
+              :aria-expanded="openDropdown === post.id"
+              @click="toggleDropdown(post.id)"
+              @focus="openDropdown = post.id"
+            >
+              <span>{{ post.title }}</span>
+              <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
-            </div>
+            </button>
 
             <!-- Dropdown Menu -->
             <div class="dropdown-menu" v-if="post.children && post.children.length">
@@ -152,9 +218,10 @@ function openSearch() {
                 :key="child.id"
                 :to="`/posts/${post.id}/${child.id}`"
                 class="dropdown-category-link"
+                @click="closeDropdown"
               >
                 <span class="category-title">{{ child.title || child.name }}</span>
-                <svg class="category-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="category-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </router-link>
@@ -164,14 +231,23 @@ function openSearch() {
           <!-- Explorer Link -->
           <div class="navbar-item">
             <router-link to="/explorer" class="explorer-link" title="File Explorer">
-              FILE EXPLORER
+              File explorer
             </router-link>
           </div>
 
+          <span class="navbar-divider" aria-hidden="true" />
+
           <!-- Theme switch -->
-          <div class="theme-switch" @click="themeStore.toggleTheme" :title="themeStore.isDark ? 'Chế độ sáng' : 'Chế độ tối'">
-            <div class="switch-track" :class="{ dark: themeStore.isDark }">
-              <div class="switch-thumb">
+          <button
+            class="theme-switch"
+            type="button"
+            :aria-pressed="themeStore.isDark"
+            :aria-label="themeStore.isDark ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'"
+            :title="themeStore.isDark ? 'Chế độ sáng' : 'Chế độ tối'"
+            @click="themeStore.toggleTheme"
+          >
+            <span class="switch-track" :class="{ dark: themeStore.isDark }">
+              <span class="switch-thumb">
                 <svg v-if="!themeStore.isDark" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="12" r="5"></circle>
                   <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"></line>
@@ -182,9 +258,9 @@ function openSearch() {
                 <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
-              </div>
-            </div>
-          </div>
+              </span>
+            </span>
+          </button>
         </nav>
 
         <!-- Mobile hamburger -->
@@ -364,10 +440,10 @@ function openSearch() {
 
 .navbar-item {
   position: relative;
-  color: var(--md-c-text-1);
+  color: var(--md-c-text-2);
   font-size: 11px;
-  font-weight: 700;
-  transition: color .2s, background-color .2s;
+  font-weight: 600;
+  transition: color .2s;
   white-space: nowrap;
   line-height: 1;
 }
@@ -376,17 +452,38 @@ function openSearch() {
 .dropdown-label {
   display: flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 10px;
+  min-height: 34px;
+  padding: 0 12px;
   border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color .2s, background-color .2s;
 }
 
-.navbar-item:hover {
-  color: var(--md-c-brand);
-}
-
+/* bg-soft (#f8fafc) is all but invisible against the white header, so hover
+   uses the next step of the surface scale. */
 .navbar-item > a:hover,
 .dropdown-trigger:hover .dropdown-label {
+  color: var(--md-c-text-1);
+  background: var(--md-c-bg-mute);
+}
+
+.navbar-item > a:focus-visible,
+.dropdown-label:focus-visible {
+  outline: 2px solid var(--md-c-brand);
+  outline-offset: -2px;
+  color: var(--md-c-text-1);
+}
+
+/* Current section: the pill is the only place brand colour appears in the bar,
+   so "where am I" reads at a glance. */
+.navbar-item > a.router-link-active,
+.dropdown-trigger.active .dropdown-label {
+  color: var(--md-c-brand);
+  font-weight: 700;
   background: var(--md-c-brand-soft);
 }
 
@@ -396,35 +493,82 @@ function openSearch() {
 }
 
 .dropdown-label {
-  gap: 4px;
+  gap: 6px;
 }
 
 .dropdown-arrow {
-  transition: transform 0.2s;
+  color: var(--md-c-text-3);
+  transition: transform 0.2s ease, color 0.2s;
 }
 
-.dropdown-trigger:hover .dropdown-arrow {
+.dropdown-trigger:hover .dropdown-arrow,
+.dropdown-trigger.active .dropdown-arrow {
+  color: inherit;
+}
+
+.dropdown-trigger.open .dropdown-arrow {
   transform: rotate(180deg);
 }
 
-.dropdown-trigger:hover .dropdown-menu {
+.dropdown-trigger.open .dropdown-menu {
   display: block;
 }
 
 /* Dropdown menu */
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  min-width: 280px;
+  min-width: 264px;
   background: var(--md-c-bg);
   border: 1px solid var(--md-c-divider-light);
-  border-radius: 8px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+  border-radius: 10px;
+  box-shadow: var(--md-shadow-3);
   padding: 6px;
   z-index: 1001;
   display: none;
+  animation: dropdown-in .16s ease-out;
+}
+
+/* Invisible bridge over the gap, so moving the pointer from the label to the
+   menu does not close it halfway. */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-menu {
+    animation: none;
+  }
+
+  .dropdown-arrow {
+    transition: none;
+  }
+}
+
+.navbar-divider {
+  display: none;
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--md-c-divider-light);
 }
 
 .dropdown-category-link {
@@ -546,27 +690,35 @@ function openSearch() {
 
 .search-shortcut {
   display: none;
+  align-items: center;
+  gap: 3px;
   margin-left: auto;
-  padding: 3px 6px;
-  font-size: 11px;
-  line-height: 1;
-  font-family: inherit;
-  background: var(--md-c-bg);
-  border: 1px solid var(--md-c-divider-light);
-  border-radius: 4px;
-  color: var(--md-c-text-2);
-  box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
 }
 
-.search:hover .search-title,
-.search:hover .search-shortcut {
+.search-shortcut kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 3px 5px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  font-family: inherit;
+  text-align: center;
+  background: var(--md-c-bg);
+  border: 1px solid var(--md-c-divider-light);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--md-c-text-3);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.search:hover .search-title {
   color: var(--md-c-brand);
 }
 
-.search:hover .search-shortcut {
+.search:hover .search-shortcut kbd {
+  color: var(--md-c-brand);
   border-color: color-mix(in srgb, var(--md-c-brand) 45%, var(--md-c-divider-light));
-  background: var(--md-c-bg);
 }
 
 /* Theme switch */
@@ -581,6 +733,16 @@ function openSearch() {
   background: transparent;
   border: 0;
   padding: 0;
+}
+
+.theme-switch:focus-visible {
+  outline: 2px solid var(--md-c-brand);
+  outline-offset: -2px;
+}
+
+.icon-link:focus-visible {
+  outline: 2px solid var(--md-c-brand);
+  outline-offset: 2px;
 }
 
 .switch-track {
@@ -863,17 +1025,24 @@ function openSearch() {
   }
 
   .text {
-    font-size: 16px;
+    font-size: 15px;
+    letter-spacing: -0.01em;
   }
 
+  /* Sentence case at 13px scans faster than the previous all-caps 11px,
+     especially for Vietnamese labels with diacritics. */
   .navbar-item {
     font-size: 13px;
   }
 
   .navbar {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
+  }
+
+  .navbar-divider {
+    display: block;
   }
 
   .hamburger-btn {
@@ -886,11 +1055,11 @@ function openSearch() {
 
   .search {
     width: auto;
-    min-width: 178px;
-    height: 40px;
-    min-height: 40px;
+    min-width: 210px;
+    height: 36px;
+    min-height: 36px;
     justify-content: flex-start;
-    padding: 0 10px 0 12px;
+    padding: 0 8px 0 12px;
     background: var(--md-c-bg-soft);
   }
 
@@ -899,11 +1068,13 @@ function openSearch() {
   }
 
   .search-shortcut {
-    display: inline-block;
+    display: inline-flex;
   }
 
   .theme-switch {
     display: flex;
+    min-width: 36px;
+    min-height: 36px;
   }
 }
 

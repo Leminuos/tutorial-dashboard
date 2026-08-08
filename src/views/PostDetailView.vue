@@ -633,11 +633,11 @@ function formatDate(dateStr) {
   scrollbar-color: var(--md-c-divider) transparent;
 }
 
-/* Table of Contents */
+/* Table of Contents: takes the leftover sidebar height before related posts do */
 .post-toc {
   display: flex;
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 260px;
   flex-direction: column;
 }
 
@@ -682,14 +682,13 @@ function formatDate(dateStr) {
 /* Sizing of the list box inside the sidebar; the list itself styles its rows */
 .post-toc .toc-list {
   flex: 1 1 auto;
-  min-height: 96px;
-  max-height: 46vh;
+  min-height: 160px;
 }
 
-/* Related Posts Sidebar */
+/* Related Posts Sidebar: yields height to the outline when both are long */
 .related-sidebar {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   min-height: 0;
   flex-direction: column;
 }
@@ -707,9 +706,11 @@ function formatDate(dateStr) {
 
 .related-list {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 12px;
-  max-height: 350px;
+  min-height: 120px;
+  max-height: 280px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;

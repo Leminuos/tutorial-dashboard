@@ -268,20 +268,40 @@
   position: relative;
 }
 
+/* Sits in the 24px gutter .md-content already reserves, out of flow so it never
+   moves heading text. Height = heading line-height / 0.8 (the font-size below),
+   which centers the glyph on the heading's first line. */
 .md-content .header-anchor {
-  display: inline-block;
-  width: 0;
-  overflow: visible;
+  position: absolute;
+  top: 0;
+  left: -24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 17px;
+  height: 1.53em;
   opacity: 0;
-  margin-left: 0;
-  transform: translateX(8px);
+  transform: translateX(4px);
   color: var(--md-c-text-3);
   text-decoration: none;
+  font-size: 0.8em;
   font-weight: 500;
+  line-height: 1;
   white-space: nowrap;
   transition:
     opacity 0.2s,
+    transform 0.2s,
     color 0.2s;
+}
+
+.md-content h3 .header-anchor {
+  height: 1.63em;
+}
+
+.md-content h4 .header-anchor,
+.md-content h5 .header-anchor,
+.md-content h6 .header-anchor {
+  height: 1.69em;
 }
 
 .md-content h2:hover .header-anchor,
@@ -305,6 +325,7 @@
 .md-content h5.is-anchor-visible .header-anchor,
 .md-content h6.is-anchor-visible .header-anchor {
   opacity: 1;
+  transform: translateX(0);
 }
 
 .md-content .header-anchor:hover {

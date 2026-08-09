@@ -5,6 +5,7 @@ import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 
 import HeaderDocument from '@/components/docs/HeaderDocument.vue'
 import SidebarDocument from '@/components/docs/SidebarDocument.vue'
+import FooterDocument from '@/components/docs/FooterDocument.vue'
 import RightPanel from '@/components/docs/RightPanel.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 import FileViewer from '@/components/viewers/FileViewer.vue'
@@ -154,6 +155,9 @@ watch(() => route.params, () => {
       <!-- Right panel (Examples + Attachments) - Desktop only -->
       <right-panel @select-example="onSelectExample" />
     </div>
+
+    <!-- Prev/next footer - mobile only, where the sidebar is behind the hamburger -->
+    <footer-document v-if="isMobile" />
   </div>
 
   <!-- File viewer modal -->

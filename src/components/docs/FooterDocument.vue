@@ -30,7 +30,7 @@ const nav = computed(() => {
 </script>
 
 <template>
-  <nav class="docs-navfooter">
+  <nav class="docs-navfooter" v-if="nav.prev || nav.next">
     <div class="navbar">
       <div class="nav-left">
         <RouterLink v-if="nav.prev" :to="nav.prev.to" class="nav-link">
@@ -112,5 +112,40 @@ const nav = computed(() => {
   color: var(--md-c-text-2);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* Mobile: line the footer up with the article text and make the two targets
+   read as tappable cards, since there is no hover state to reveal them. */
+@media (max-width: 960px) {
+  .navbar {
+    max-width: 820px;
+    gap: 12px;
+    padding: 16px clamp(16px, 2.5vw, 24px) 24px;
+    margin-top: 32px;
+  }
+
+  .nav-left,
+  .nav-right {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .nav-link {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--md-c-divider-light);
+    border-radius: 10px;
+  }
+
+  .nav-link:active {
+    background: var(--md-c-bg-mute);
+  }
+
+  .title {
+    padding-top: 6px;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
 }
 </style>

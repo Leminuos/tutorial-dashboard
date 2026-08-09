@@ -36,7 +36,7 @@ export function createMarkdownRenderer() {
     slugify,             // chuyển text thàng slug
     permalink: anchor.permalink.linkInsideHeader({
       symbol: '#',
-      placement: 'after',
+      placement: 'before',
       class: 'header-anchor',
       ariaHidden: true
     })

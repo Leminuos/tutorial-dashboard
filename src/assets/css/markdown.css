@@ -631,6 +631,11 @@ html.dark .md-content :not(pre) > code {
     0 1px 2px rgba(15, 23, 42, 0.035);
 }
 
+.md-content .md-note.md-custom-block {
+  --custom-block-accent: #1f6feb;
+  --custom-block-surface: rgba(31, 111, 235, 0.12);
+}
+
 .md-content .md-tip.md-custom-block {
   --custom-block-accent: #087f5b;
   --custom-block-surface: rgba(8, 127, 91, 0.13);
@@ -674,6 +679,7 @@ html.dark .md-content :not(pre) > code {
   text-decoration-color: color-mix(in srgb, var(--custom-block-accent) 45%, transparent);
 }
 
+.md-content .md-note .md-custom-block-title::before,
 .md-content .md-tip .md-custom-block-title::before,
 .md-content .md-warning .md-custom-block-title::before {
   display: inline-flex;
@@ -691,6 +697,10 @@ html.dark .md-content :not(pre) > code {
   line-height: 1;
 }
 
+.md-content .md-note .md-custom-block-title::before {
+  content: '\270E';
+}
+
 .md-content .md-tip .md-custom-block-title::before {
   content: 'i';
   font-family: Georgia, serif;
@@ -699,6 +709,11 @@ html.dark .md-content :not(pre) > code {
 
 .md-content .md-warning .md-custom-block-title::before {
   content: '!';
+}
+
+html.dark .md-content .md-note.md-custom-block {
+  --custom-block-accent: #58a6ff;
+  --custom-block-surface: rgba(88, 166, 255, 0.12);
 }
 
 html.dark .md-content .md-tip.md-custom-block {

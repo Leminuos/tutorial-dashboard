@@ -77,6 +77,19 @@ export function createMarkdownRenderer() {
    *  nội dung markdown bình thường
    * :::
    */
+  md.use(container, 'note', {
+    render(tokens, idx) {
+      const info = tokens[idx].info.trim().slice(4).trim() // Lấy title của container
+
+      if (tokens[idx].nesting === 1) {
+        // renderInline để title hỗ trợ inline markdown như `code`
+        const title = md.renderInline(info || 'NOTE')
+        return `<div class="md-note md-custom-block"><p class="md-custom-block-title">${title}</p>\n`
+      }
+      return `</div>\n`
+    }
+  })
+
   md.use(container, 'tip', {
     render(tokens, idx) {
       const info = tokens[idx].info.trim().slice(3).trim() // Lấy title của container

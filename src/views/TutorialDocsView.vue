@@ -6,7 +6,7 @@ import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 import HeaderDocument from '@/components/docs/HeaderDocument.vue'
 import SidebarDocument from '@/components/docs/SidebarDocument.vue'
 import FooterDocument from '@/components/docs/FooterDocument.vue'
-import RightPanel from '@/components/docs/RightPanel.vue'
+import ExamplesButton from '@/components/docs/ExamplesButton.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
 import FileViewer from '@/components/viewers/FileViewer.vue'
 
@@ -151,10 +151,10 @@ watch(() => route.params, () => {
       <div v-else class="loading">
         Loading content...
       </div>
-
-      <!-- Right panel (Examples + Attachments) - Desktop only -->
-      <right-panel @select-example="onSelectExample" />
     </div>
+
+    <!-- Examples + attachments: a floating button that opens the folder tree -->
+    <examples-button @select-example="onSelectExample" />
 
     <!-- Prev/next footer - mobile only, where the sidebar is behind the hamburger -->
     <footer-document v-if="isMobile" />
@@ -235,9 +235,8 @@ watch(() => route.params, () => {
     padding-top: 56px;
   }
 
-  /* The example column is always reserved (RightPanel renders even when empty),
-     so centering the article here gives the same position on every page,
-     with or without examples. */
+  /* Examples live in a floating button, so the article gets the same centered
+     position on every page, with or without examples. */
   .content-wrapper .md-content {
     margin-inline: auto;
   }

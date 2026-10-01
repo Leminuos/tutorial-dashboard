@@ -604,7 +604,7 @@ function collectPageAssets(sectionFiles, pageDir, pagePath, entry, autoCollect) 
   const collectExample = (name, dir) => {
     const files = sectionFiles.filter(p => p.startsWith(`${dir}/`))
     files.forEach(p => claimed.add(p))
-    if (files.length) examples.push({ name, files: files.map(toFileEntry) })
+    if (files.length) examples.push({ name, dir, files: files.map(toFileEntry) })
   }
 
   if (Array.isArray(entry.examples)) {
@@ -622,13 +622,17 @@ function collectPageAssets(sectionFiles, pageDir, pagePath, entry, autoCollect) 
       const rest = path.slice(exampleRoot.length).split('/')
       // Files sitting directly in example/ form a single unnamed group
       const groupName = rest.length > 1 ? rest[0] : 'example'
-      if (!grouped.has(groupName)) grouped.set(groupName, [])
-      grouped.get(groupName).push(path)
+      if (!grouped.has(groupName)) {
+        // `dir` lets the UI rebuild nested folders from paths relative to it
+        const dir = rest.length > 1 ? `${exampleRoot}${groupName}` : exampleRoot.slice(0, -1)
+        grouped.set(groupName, { dir, files: [] })
+      }
+      grouped.get(groupName).files.push(path)
       claimed.add(path)
     }
 
-    for (const [name, files] of grouped) {
-      examples.push({ name, files: files.map(toFileEntry) })
+    for (const [name, { dir, files }] of grouped) {
+      examples.push({ name, dir, files: files.map(toFileEntry) })
     }
   }
 

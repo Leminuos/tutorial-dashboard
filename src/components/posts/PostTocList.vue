@@ -27,7 +27,6 @@ defineEmits(['select'])
 .toc-list {
   display: flex;
   flex-direction: column;
-  padding-left: 2px;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -39,81 +38,84 @@ defineEmits(['select'])
   position: relative;
   /* Flex items must keep their natural height, otherwise the text is squeezed */
   flex: 0 0 auto;
-  display: block;
-  padding: 7px 8px 7px calc(12px + var(--toc-indent, 0px));
+  display: -webkit-box;
+  padding: 6px 10px 6px calc(16px + var(--toc-indent, 0px));
   border-radius: 0 6px 6px 0;
   color: var(--md-c-text-2);
   font-size: 13.5px;
   line-height: 1.5;
   text-decoration: none;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   transition:
     color 0.2s,
     background-color 0.2s;
 }
 
+/* Continuous rail: every row draws its own slice, the active row thickens it */
 .toc-link::before {
   position: absolute;
-  top: 5px;
-  bottom: 5px;
-  left: -2px;
-  width: 2px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
   content: '';
-  background: transparent;
-  border-radius: 2px;
-  transition: background-color 0.2s;
+  background: var(--md-c-divider-light);
+  transition:
+    width 0.2s,
+    background-color 0.2s;
 }
 
 .toc-link.level-2 {
   color: var(--md-c-text-1);
-  font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.toc-link.level-3 {
+  font-size: 13px;
 }
 
 .toc-link.level-4,
 .toc-link.level-5 {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--md-c-text-3);
 }
 
 .toc-link:hover {
-  color: var(--md-c-text-1);
-  background: var(--md-c-bg-soft);
+  color: var(--md-c-brand);
 }
 
-.toc-link:hover::before {
-  background: var(--md-c-divider);
+.toc-link:focus-visible {
+  outline: 2px solid var(--md-c-brand);
+  outline-offset: -2px;
 }
 
 .toc-link.active {
   color: var(--md-c-brand);
-  background: transparent;
+  background: color-mix(in srgb, var(--md-c-brand) 9%, transparent);
   font-weight: 600;
 }
 
 .toc-link.active::before {
+  width: 2px;
   background: var(--md-c-brand);
 }
 
-/* In the mobile sheet there is room to wrap, and the rail helps read depth */
+/* The mobile sheet has more room and needs bigger tap targets */
 @media (max-width: 768px) {
-  .toc-list {
-    padding-left: 3px;
-    border-left: 1px solid var(--md-c-divider-light);
+  .toc-link {
+    min-height: 42px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 14px;
   }
 
-  .toc-link {
-    display: -webkit-box;
-    min-height: 42px;
-    padding-top: 9px;
-    padding-bottom: 9px;
-    font-size: 14px;
-    white-space: normal;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
+  .toc-link.level-4,
+  .toc-link.level-5 {
+    font-size: 13.5px;
   }
 }
 </style>

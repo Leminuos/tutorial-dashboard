@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useDocsStore, buildRawUrl } from '@/stores/docstree'
 import HeaderMain from '@/components/main/HeaderMain.vue'
 import MarkdownViewer from '@/components/viewers/MarkdownViewer.vue'
@@ -8,12 +8,7 @@ import FileViewer from '@/components/viewers/FileViewer.vue'
 import PostTocList from '@/components/posts/PostTocList.vue'
 
 const route = useRoute()
-const router = useRouter()
 const docs = useDocsStore()
-
-function goBack() {
-  router.back()
-}
 
 // Parse path segments
 const pathSegments = computed(() => {
@@ -250,14 +245,6 @@ function formatDate(dateStr) {
       <!-- Main Content Column -->
       <div class="main-content">
         <div class="container">
-          <!-- Back Button -->
-          <button class="back-btn" @click="goBack">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-            Quay lại
-          </button>
-
           <!-- Post Header -->
           <header class="post-header" v-if="postMetadata || currentNode">
             <div class="post-meta" v-if="postMetadata">
@@ -330,7 +317,18 @@ function formatDate(dateStr) {
             aria-controls="post-toc-list"
             @click="tocOpen = !tocOpen"
           >
-            <span class="sidebar-title">Mục lục</span>
+            <span class="toc-heading">
+              <svg class="toc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="9" y1="6" x2="20" y2="6"></line>
+                <line x1="9" y1="12" x2="20" y2="12"></line>
+                <line x1="9" y1="18" x2="20" y2="18"></line>
+                <circle cx="4.5" cy="6" r="1.4" fill="currentColor" stroke="none"></circle>
+                <circle cx="4.5" cy="12" r="1.4" fill="currentColor" stroke="none"></circle>
+                <circle cx="4.5" cy="18" r="1.4" fill="currentColor" stroke="none"></circle>
+              </svg>
+              <span class="toc-title">Mục lục</span>
+              <span class="toc-count">{{ toc.length }}</span>
+            </span>
             <svg
               class="toc-chevron"
               :class="{ open: tocOpen }"
@@ -461,34 +459,6 @@ function formatDate(dateStr) {
   width: 100%;
   min-width: 0;
   max-width: 828px;
-}
-
-/* Back Button */
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--md-c-text-2);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 0;
-  margin-bottom: 32px;
-  transition: color 0.2s;
-}
-
-.back-btn:hover {
-  color: var(--md-c-brand);
-}
-
-.back-btn svg {
-  transition: transform 0.2s;
-}
-
-.back-btn:hover svg {
-  transform: translateX(-3px);
 }
 
 /* Post Header */
@@ -648,31 +618,66 @@ function formatDate(dateStr) {
   gap: 12px;
   flex: 0 0 auto;
   width: 100%;
-  margin-bottom: 10px;
-  padding: 0 0 12px;
+  margin-bottom: 14px;
+  padding: 8px 10px;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--md-c-divider-light);
+  border-radius: 8px;
   color: inherit;
   font-family: inherit;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.toc-toggle:hover .sidebar-title {
+.toc-toggle:hover {
+  background: var(--md-c-bg-soft);
+}
+
+.toc-toggle:focus-visible {
+  outline: 2px solid var(--md-c-brand);
+  outline-offset: 2px;
+}
+
+.toc-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toc-icon {
+  flex: 0 0 auto;
   color: var(--md-c-brand);
 }
 
-.toc-toggle .sidebar-title {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-  transition: color 0.2s;
+.toc-title {
+  color: var(--md-c-text-1);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.toc-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-c-brand) 12%, transparent);
+  color: var(--md-c-brand);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .toc-chevron {
   flex: 0 0 auto;
   color: var(--md-c-text-3);
-  transition: transform 0.25s;
+  transition: transform 0.25s, color 0.2s;
+}
+
+.toc-toggle:hover .toc-chevron {
+  color: var(--md-c-text-1);
 }
 
 .toc-chevron.open {
@@ -779,11 +784,6 @@ function formatDate(dateStr) {
   .post-layout {
     grid-template-columns: 1fr;
     gap: 32px;
-  }
-
-  .back-btn {
-    margin-left: 16px;
-    margin-bottom: 24px;
   }
 
   .post-header {

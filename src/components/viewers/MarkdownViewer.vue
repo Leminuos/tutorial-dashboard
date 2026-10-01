@@ -6,6 +6,8 @@ import { useShikiHighlighter } from '@/service/shiki/useShikiHighlighter'
 import { useScrollSpy } from '@/composables/markdown/useScrollSpy'
 import { useMermaidRenderer } from '@/composables/markdown/useMermaidRenderer'
 import { useThemeStore } from '@/stores/themeStore'
+import { useRouter } from 'vue-router'
+import { useDocsStore, parseRawUrl } from '@/stores/docstree'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -34,6 +36,9 @@ const translateStart = ref({ x: 0, y: 0 })
 const activePointers = ref(new Map()) // pointerId -> {x,y}
 const lastPinchDist = ref(0)
 const lastPinchScale = ref(1)
+
+const router = useRouter()
+const docs = useDocsStore()
 
 const { render } = createMarkdownRenderer()
 const { highlightMarkdownHtml } = useShikiHighlighter()
@@ -88,6 +93,15 @@ function showHeadingAnchor(heading) {
 }
 
 function onContentClick(e) {
+  // Links rewritten to another document of the content repo: navigate with the
+  // router so the page transition stays inside the app.
+  const docLink = e.target.closest('a.md-doc-link[data-route]')
+  if (docLink) {
+    e.preventDefault()
+    router.push(docLink.getAttribute('data-route'))
+    return
+  }
+
   // Handle anchor links - scroll to heading instead of navigating
   const anchor = e.target.closest('a[href^="#"]')
   if (anchor) {
@@ -548,7 +562,11 @@ watchEffect(async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${md_text}`)
 
     const md_url = res.url
-    const { html: rawHtml, toc } = render(md_text, md_url)
+    // The repo path of this document, so relative links resolve from it.
+    const md_path = parseRawUrl(props.src) || parseRawUrl(md_url)
+    const { html: rawHtml, toc } = render(md_text, md_url, {
+      resolveDocLink: (href) => docs.resolveDocLink(href, md_path),
+    })
 
     // Mark mermaid blocks before Shiki highlighting
     const markedHtml = markMermaidBlocks(rawHtml)

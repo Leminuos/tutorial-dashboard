@@ -262,6 +262,36 @@ export function createMarkdownRenderer() {
   }
 
   /**
+   * Thêm đoạn hook khi render link.
+   * Link trỏ tới một tài liệu khác trong repo nội dung (ví dụ
+   * `[3.4](<Linux Kernel/2. OS/3. scheduler>)`) được đổi thành route của app,
+   * nhờ hàm `resolveDocLink` truyền vào qua env. Link tới file không phải trang
+   * thì trỏ thẳng vào raw URL. Anchor `#...` và URL tuyệt đối giữ nguyên.
+   */
+  md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]
+    const href = token.attrGet("href")
+    const resolve = env?.resolveDocLink
+
+    if (href && typeof resolve === "function" && !href.startsWith("#")) {
+      const target = resolve(href)
+
+      if (target?.route) {
+        // data-route để MarkdownViewer điều hướng bằng router thay vì reload.
+        token.attrSet("href", `#${target.route}`)
+        token.attrSet("data-route", target.route)
+        token.attrJoin("class", "md-doc-link")
+      } else if (target?.external && target.href !== href) {
+        token.attrSet("href", target.href)
+        token.attrSet("target", "_blank")
+        token.attrSet("rel", "noopener noreferrer")
+      }
+    }
+
+    return self.renderToken(tokens, idx, options)
+  }
+
+  /**
    * Thêm đoạn hook khi render img, chuyển đường dẫn relative thành absolute
    */
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
@@ -281,9 +311,9 @@ export function createMarkdownRenderer() {
     return self.renderToken(tokens, idx, options)
   };
 
-  function render(md_text, md_url) {
+  function render(md_text, md_url, { resolveDocLink } = {}) {
 
-    const env = { toc: [], baseUrl: new URL("./", md_url).href }
+    const env = { toc: [], baseUrl: new URL("./", md_url).href, resolveDocLink }
     const html = md.render(md_text, env)
 
     return { html, toc: env.toc || [] }

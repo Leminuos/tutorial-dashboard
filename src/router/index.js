@@ -44,14 +44,15 @@ function getDefaultTutorialPage(sectionId) {
   const doc = docs.getDocById(sectionId)
   if (!doc || doc.layout !== 'tutorial') return null
 
-  const firstChapter = doc.chapters?.[0]
-  const firstPage = firstChapter?.pages?.[0]
-
-  if (firstChapter && firstPage) {
-    return {
-      section: sectionId,
-      chapter: firstChapter.id,
-      page: firstPage.id
+  // Redirect entries own no page, so the landing page is the first real one.
+  for (const chapter of doc.chapters || []) {
+    const firstPage = chapter.pages?.find(p => p.path)
+    if (firstPage) {
+      return {
+        section: sectionId,
+        chapter: chapter.id,
+        page: firstPage.id
+      }
     }
   }
   return null
@@ -179,6 +180,22 @@ const routes = [
         next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
         return
       }
+
+      // 3. A redirect entry owns no content: forward to the document it names.
+      if (tutorialPage.redirect) {
+        const target = docs.resolveDocLink(tutorialPage.redirect)
+
+        if (target?.route) {
+          next(target.route)
+        } else if (target?.external) {
+          window.location.href = target.href
+          next(false)
+        } else {
+          next({ name: 'not-found', params: { pathMatch: to.path.substring(1).split('/') } })
+        }
+        return
+      }
+
       next()
     }
   },

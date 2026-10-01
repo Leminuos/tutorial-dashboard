@@ -11,6 +11,11 @@ const TOKEN = config.github.token || ""
 // Cache for raw paths (slug -> raw name mapping)
 const rawPathCache = new Map()
 
+// Lookup tables rebuilt on every load(), used to turn a content-repo path into
+// an in-app route (`redirect` entries and cross-document markdown links).
+let docPathIndex = new Map()   // normalized repo path -> /docs/:section/:chapter/:page
+let repoFileIndex = new Map()  // normalized repo path -> original repo path
+
 export const useDocsStore = defineStore('docs', {
 
   state: () => ({
@@ -59,6 +64,10 @@ export const useDocsStore = defineStore('docs', {
 
         // 5) Flat lists
         this.flatLists = flatPages(this.tree)
+
+        // 6) Path lookup tables for redirects and cross-document links
+        docPathIndex = buildDocPathIndex(this.tree)
+        repoFileIndex = buildRepoFileIndex(allPaths)
 
       } catch (err) {
         this.error = err.message
@@ -152,6 +161,60 @@ export const useDocsStore = defineStore('docs', {
       return rawPathParts.join('/')
     },
 
+    /**
+     * Turn a content-repo path into something the app can link to.
+     * Used both by `redirect` entries in index.json and by markdown links that
+     * point at another document of the content repository.
+     *
+     * `fromPath` is the repo path of the document the link was written in, so
+     * relative targets (`../../other/page`) resolve the way an author expects.
+     *
+     * Returns `{ route }` for an in-app tutorial page, `{ external, href }` for
+     * an outside URL or a repo file with no page of its own, or `null` when the
+     * target cannot be resolved.
+     */
+    resolveDocLink(target, fromPath = '') {
+      if (typeof target !== 'string') return null
+
+      const raw = target.trim()
+      // A bare anchor stays a same-page anchor.
+      if (!raw || raw.startsWith('#')) return null
+
+      // Absolute URLs, mailto:, data:... are passed through untouched.
+      if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//')) {
+        return { external: true, href: raw }
+      }
+
+      const hashAt = raw.indexOf('#')
+      const hash = hashAt >= 0 ? raw.slice(hashAt + 1) : ''
+      const rawPath = (hashAt >= 0 ? raw.slice(0, hashAt) : raw).trim()
+      if (!rawPath) return null
+
+      const cleanPath = decodePath(rawPath).replace(/\\/g, '/').replace(/\/+$/, '')
+      const candidates = []
+
+      if (cleanPath.startsWith('/')) {
+        // A leading slash means "from the root of the content repository".
+        candidates.push(cleanPath.slice(1))
+      } else {
+        candidates.push(cleanPath)
+        if (fromPath) candidates.push(resolveRelativePath(dirName(fromPath), cleanPath))
+      }
+
+      for (const candidate of candidates) {
+        const route = docPathIndex.get(normalizePathKey(candidate))
+        if (route) return { external: false, route: hash ? `${route}#${hash}` : route }
+      }
+
+      // Not a tutorial page: link straight at the file when the repo has it.
+      for (const candidate of candidates) {
+        const file = repoFileIndex.get(normalizePathKey(candidate))
+        if (file) return { external: true, href: buildRawUrl(file) }
+      }
+
+      return null
+    },
+
     getDocById(sectionId) {
       return this.tree?.docs?.find(d => d.id === sectionId) || null
     },
@@ -227,6 +290,99 @@ function extractOrder(filename) {
 export function buildRawUrl(path) {
   const encodedPath = path.split('/').map(seg => encodeURIComponent(seg)).join('/')
   return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${encodedPath}`
+}
+
+/**
+ * Repo paths are compared case-insensitively and without a trailing slash so
+ * that hand-written links keep working when the casing drifts.
+ */
+function normalizePathKey(path) {
+  return String(path)
+    .replace(/\\/g, '/')
+    .replace(/^\.?\//, '')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+}
+
+function decodePath(path) {
+  try {
+    return decodeURIComponent(path)
+  } catch {
+    return path
+  }
+}
+
+/** Resolve `./`, `../` and plain segments of a link against its own folder. */
+function resolveRelativePath(fromDir, relative) {
+  const segments = fromDir ? fromDir.split('/').filter(Boolean) : []
+
+  for (const part of relative.split('/')) {
+    if (!part || part === '.') continue
+    if (part === '..') segments.pop()
+    else segments.push(part)
+  }
+
+  return segments.join('/')
+}
+
+/**
+ * Map every addressable content-repo path of the tutorial sections to its
+ * route. A page answers to its markdown path and, for folder pages, to the
+ * folder itself; a chapter or a whole section answers with its first page.
+ */
+function buildDocPathIndex(tree) {
+  const index = new Map()
+
+  const add = (path, route) => {
+    if (!path || !route) return
+    const key = normalizePathKey(path)
+    if (key && !index.has(key)) index.set(key, route)
+  }
+
+  for (const doc of tree.docs || []) {
+    if (doc.layout !== 'tutorial') continue
+    let sectionRoute = null
+
+    for (const chapter of doc.chapters || []) {
+      let chapterRoute = null
+
+      for (const page of chapter.pages || []) {
+        // Redirect pages own no content, so they are not link targets.
+        if (!page.path) continue
+
+        const route = `/docs/${doc.id}/${chapter.id}/${page.id}`
+        add(page.path, route)
+        add(page.path.replace(/\/README\.md$/i, ''), route)
+        if (!chapterRoute) chapterRoute = route
+      }
+
+      add(chapter.rawPath, chapterRoute)
+      if (!sectionRoute) sectionRoute = chapterRoute
+    }
+
+    add(doc.rawName, sectionRoute)
+  }
+
+  return index
+}
+
+/** Every file of the repo, so links to non-page files can fall back to raw. */
+function buildRepoFileIndex(allPaths) {
+  const index = new Map()
+
+  for (const path of allPaths) {
+    const key = normalizePathKey(path)
+    if (!index.has(key)) index.set(key, path)
+  }
+
+  return index
+}
+
+/** Inverse of buildRawUrl: recover the repo path a raw URL points at. */
+export function parseRawUrl(url) {
+  const prefix = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/`
+  if (typeof url !== 'string' || !url.startsWith(prefix)) return ''
+  return decodePath(url.slice(prefix.length).split(/[?#]/)[0])
 }
 
 async function buildDocsTree(allPaths, docConfig) {
@@ -308,10 +464,33 @@ function normalizeToctree(index, indexPath) {
   return toctree
     .map(entry => (typeof entry === 'string' ? { path: entry } : entry))
     .filter(entry => {
-      const valid = entry && typeof entry.path === 'string' && entry.path.trim()
+      // A redirect entry is a pure link, so it may declare no path of its own.
+      const valid = Boolean(
+        entry &&
+        ((typeof entry.path === 'string' && entry.path.trim()) ||
+          (typeof entry.redirect === 'string' && entry.redirect.trim()))
+      )
       if (!valid) console.warn(`Skipping invalid toctree entry in "${indexPath}"`)
       return valid
     })
+}
+
+/**
+ * Build a toctree entry that carries `redirect`: it points at another document
+ * of the content repo instead of owning content, so it needs neither an
+ * index.json nor a README.md of its own. The target is resolved lazily, once
+ * the whole tree is known.
+ */
+function buildRedirectNode(entry, extra = {}) {
+  const name = baseName(entry.path || entry.redirect)
+  const isMarkdown = getFileType(name) === 'markdown'
+
+  return {
+    id: entry.id || slugify(isMarkdown ? name.replace(/\.md$/i, '') : name),
+    title: entry.title || titleFromFilename(name, isMarkdown),
+    redirect: entry.redirect.trim(),
+    ...extra
+  }
 }
 
 /**
@@ -350,6 +529,9 @@ async function buildTutorialDoc(docData) {
 }
 
 async function buildTutorialChapter(docData, entry) {
+  // A redirecting chapter is only a link in the sidebar; it holds no pages.
+  if (entry.redirect) return buildRedirectNode(entry, { pages: [] })
+
   const chapterDir = `${docData.rawName}/${entry.path}`
   const indexPath = `${chapterDir}/${INDEX_FILE}`
 
@@ -374,11 +556,14 @@ async function buildTutorialChapter(docData, entry) {
   return {
     id: entry.id || slugify(name),
     title: entry.title || index.title || titleFromFilename(name),
+    rawPath: chapterDir,
     pages
   }
 }
 
 function buildTutorialPage(docData, chapterDir, entry) {
+  if (entry.redirect) return buildRedirectNode(entry)
+
   const isMarkdownEntry = getFileType(baseName(entry.path)) === 'markdown'
   const pagePath = isMarkdownEntry
     ? `${chapterDir}/${entry.path}`
@@ -577,6 +762,8 @@ function flatPages(docsTree) {
     if (d.layout === 'tutorial') {
       for (const ch of d.chapters || []) {
         for (const p of ch.pages || []) {
+          // Redirect pages have no page of their own to walk to.
+          if (!p.path) continue
           items.push({
             sectionId: d.id,
             chapterId: ch.id,

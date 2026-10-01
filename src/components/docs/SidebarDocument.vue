@@ -27,6 +27,23 @@ const currentPageKey = computed(() => {
 })
 
 /**
+ * A toctree entry declaring `redirect` points at another document of the
+ * content repo instead of at a page of its own, so the sidebar links to the
+ * resolved target (or to an outside URL when the target is not a docs page).
+ */
+function linkTargetOf(node) {
+  if (!node.redirect) return {}
+
+  const target = docs.resolveDocLink(node.redirect)
+  if (!target) {
+    console.warn(`Cannot resolve redirect "${node.redirect}"`)
+    return { to: null }
+  }
+
+  return target.external ? { to: null, href: target.href } : { to: target.route }
+}
+
+/**
  * Turn the flat toc ([{ level, text, id }]) into a nested tree so that a
  * heading only reveals the headings one level below it when expanded.
  */
@@ -64,6 +81,8 @@ const navTree = computed(() => {
     key: `c:${section.id}/${chapter.id}`,
     kind: 'section',
     title: chapter.title,
+    // A redirecting chapter owns no page: it is only a link somewhere else.
+    ...linkTargetOf(chapter),
     children: (chapter.pages || []).map((page) => {
       const key = `p:${section.id}/${chapter.id}/${page.id}`
       return {
@@ -71,6 +90,7 @@ const navTree = computed(() => {
         kind: 'chapter',
         title: page.title,
         to: `/docs/${section.id}/${chapter.id}/${page.id}`,
+        ...linkTargetOf(page),
         // Headings are only known for the page currently rendered.
         children: key === currentPageKey.value ? buildTocTree(props.toc, key) : [],
       }

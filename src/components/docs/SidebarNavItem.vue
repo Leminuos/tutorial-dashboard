@@ -44,6 +44,17 @@ const isActive = computed(() => nav.isActive(props.node))
       </router-link>
 
       <a
+        v-else-if="node.href"
+        class="nav-label nav-link"
+        :href="node.href"
+        target="_blank"
+        rel="noopener noreferrer"
+        @click="nav.onNavigate(node)"
+      >
+        {{ node.title }}
+      </a>
+
+      <a
         v-else-if="node.headingId"
         class="nav-label nav-link"
         :href="`#${node.headingId}`"
